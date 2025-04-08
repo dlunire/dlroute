@@ -1,0 +1,22 @@
+# Directorio de bibliotecas o plugins:_
+node_modules
+vendor
+
+# Archivos SQL.
+*.sql
+
+# Variables de entorno.
+.env*
+.type*
+
+# Los que se permitirán
+!.env.example
+!.env.type.example
+!.type.example
+
+# Ignorar el directorio de almacenamiento:
+uploads
+storage
+
+# Directorio public
+public

@@ -1,0 +1,21 @@
+{
+    "name": "dlunire/dlroute",
+    "description": "Sistema de rutas simple, eficiente y flexible. Úsalo con DLUnire o intégralo fácilmente en cualquier proyecto PHP",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "DLRoute\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "DLUnire Framework",
+            "email": "dlunireframework@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "imagine/imagine": "^1.3"
+    }
+}
