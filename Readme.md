@@ -1,198 +1,88 @@
-# Sistema de Enrutamiento
+# DLRoute – PHP Routing System
 
-`DLRoute` es un sistema de enrutamiento diseñado para facilitar la gestión de rutas y direcciones URL en aplicaciones web.
+**DLRoute** is a simple, flexible, and efficient routing system designed for web applications in PHP. It provides advanced support for data filtering, parameter types, and clean integration with your application.
 
-Actualmente, permite filtrar por tipos de datos o expresiones regulares, tema que veremos más abajo.
+---
 
-Por otra parte, no solamente soporta el envío de formularios, también de contenido en formato JSON directamente en el cuerpo (`body`).
+## 🌐 Descripción en Español
 
-## Características
+**DLRoute** es un sistema de enrutamiento diseñado para facilitar la gestión de rutas y direcciones URL en aplicaciones web.
+
+Actualmente, permite filtrar por tipos de datos o expresiones regulares. También admite contenido enviado en formato JSON directamente en el cuerpo (`body`) de la petición.
+
+### ✅ Características
 
 - Definición de rutas simples y complejas.
-- Manejo de diferentes métodos `HTTP` como `GET`, `POST`, `PUT`, `PATCH` y `DELETE`, etc.
-- Parámetros variables en las rutas.
-- Permite establecer el tipo de datos que se espera en el parámetros, así como el uso de las expresiones regulares.
-- Uso de controladores y `callbacks` para manejar las rutas.
-- Integración flexible en proyectos web.
+- Manejo de métodos `HTTP`: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.
+- Soporte para parámetros dinámicos y tipados.
+- Validación por tipo o expresión regular.
+- Uso de controladores o funciones anónimas (`callbacks`).
+- Integración flexible con proyectos PHP nativos o con el framework DLUnire.
 
-## Instalación
+### 💾 Instalación
 
-Para comenzar a utilizar `DLRoute`, sigue estos pasos:
+```bash
+composer require dlunire/dlroute
+```
 
-1. Instala `DLRoute` utilizando `Composer`:
+Ubica tu archivo principal en una carpeta pública (como `public/` o `html_public`). Define las rutas y al final, ejecuta:
 
-   ```bash
-   composer require dlunamontilla/dlroute
-    ```
+```php
+DLRoute::execute();
+```
 
-2. Configura el sistema de enrutamiento en tu aplicación.
-   > Recuerda que todas las peticiones deben hacerse a un archivo base (`index.php`) y esta debe estar ubicada en un subdirectorio, por ejemplo, `public/` o `html_public` o uno con un nombre personalizado.
-
-3. Define las rutas utilizando el método adecuado para la petición.
-
-### Sintaxis
-
-Método GET:
+### ✏️ Sintaxis
 
 ```php
 DLRoute::get(string $uri, callable|array|string $controller): DLParamValueType;
-```
-
-Método POST:
-
-```php
 DLRoute::post(string $uri, callable|array|string $controller): DLParamValueType;
-```
-
-Método PUT:
-
-```php
 DLRoute::put(string $uri, callable|array|string $controller): DLParamValueType;
-```
-
-Método PATCH:
-
-```php
 DLRoute::patch(string $uri, callable|array|string $controller): DLParamValueType;
-```
-
-Método DELETE:
-
-```php
 DLRoute::delete(string $uri, callable|array|string $controller): DLParamValueType;
 ```
 
-> Tome en cuenta que para hacer funcionar las rutas, es decir, que ejecuten el controlador debe colocar al final de todas las rutas la siguiente línea:
->
-> ```php
-> DLRoute::execute();
-> ```
->
-> Puede usarse en un proyecto con PHP nativo, pero fue pensado para usarse en el _mini-framework_ **DLUnire** (actualmente en desarrollo).
->
-### Ejemplos de definición de rutas
+### 📌 Ejemplos
 
-Ejemplo de definición de rutas utilizando Array, cadenas de texto y `callbacks`.
-
-Definición de rutas utilizando el método de envío `HTTP GET` con un array como segundo argumento _array_:
+#### Rutas básicas con controlador:
 
 ```php
 use DLRoute\Requests\DLRoute as Route;
 use DLRoute\Test\TestController;
 
 Route::get('/ruta', [TestController::class, 'method']);
-```
-
-De acuerdo al ejemplo anterior, lo que ocurre es que se está ejecutando el método `method` de la clase `TestController` en la _URI_ `/ruta`.
-
-Podemos repetir el mismo ejemplo utilizando rutas parametrizadas; por ejemplo:
-
-```php
-use DLRoute\Requests\DLRoute as Route;
-use DLRoute\Test\TestController;
-
 Route::get('/ruta/{parametro}', [TestController::class, 'method']);
 ```
 
-El ejemplo anterior es un ejemplo de rutas con parámetros que ejecuta el mismo método del mismo controlador.
-
-Recuerda que debe definir el controlador de la siguiente forma:
+#### Definición del controlador:
 
 ```php
-<?php
-
-namespace TuNamespaces\CarpetaControladores;
-use DLRoute\Config\Controller;
-
 final class TestController extends Controller {
-  
-  public function tu_metodo(object $params): object {
-    return $params;
-  }
+    public function tu_metodo(object $params): object|string {
+        return $params; // o HTML si deseas
+    }
 }
 ```
 
-Por ejemplo, el método `public function tu_metodo(object $params): object` debe devolver el tipo de salida que deseamos que se visualice.
-
-Si se desea devolver código HTML, solo tiene que definir el controlador de esta forma:
+#### Rutas con tipos:
 
 ```php
-<?php
-
-namespace TuNamespaces\CarpetaControladores;
-use DLRoute\Config\Controller;
-
-final class TestController extends Controller {
-  
-  public function tu_metodo(object $params): string {
-    return "Tu código HTML"
-  }
-}
+Route::get('/ruta/{id}', [TestController::class, 'method'])
+  ->filter_by_type(['id' => 'numeric']);
 ```
 
-Si estás utilizando el Framework **DLUnire**, puede utilizar la función `view()` que posee dos parámetros. El primero es la ruta de la vista y la segunda, las variables que serán accesibles en la plantilla `tu-plantilla.template.html`
-
-Puedes definir una ruta utilizando tipos, por ejemplo:
+O con expresión regular:
 
 ```php
-use DLRoute\Requests\DLRoute as Route;
-use DLRoute\Test\TestController;
-
-Route::get('/ruta/{parametro}', [TestController::class, 'method'])
-  ->filter_by_type([
-    "parametro" => "numeric"
-  ]);
+->filter_by_type(['token' => '/[a-f0-9]+/']);
 ```
-
-O también, se desea admitir correos electrónicos:
-
-```php
-use DLRoute\Requests\DLRoute as Route;
-use DLRoute\Test\TestController;
-
-Route::get('/ruta/{email}', [TestController::class, 'method'])
-  ->filter_by_type([
-    "email" => "email"
-  ]);
-```
-
-Tome en cuenta que al método `filter_by_type` se le pasa como argumento un _array_ asociativo donde la clave es el parámetro y su valor el tipo que se espera.
-
-Por ejemplo:
-
-```php
-->filter_by_type([
-  "parametro" => "tipo"
-]);
-```
-
-O también, mediante el uso de expresiones regulares:
-
-```php
-->filter_by_type([
-  "parametro" => "/[a-f0-9]+/"
-]);
-```
-
-Para capturar caracteres que van desde el `0` hasta la `f`.
 
 #### Tipos admitidos
 
-Los tipos admitidos por el momento que puede usar sin usar expresiones regulares son:
-
-```php
-integer, float, numeric, boolean, string, email uuid
+```text
+integer, float, numeric, boolean, string, email, uuid
 ```
 
-### Definición de rutas por medio de `callbacks`
-
-Anteriormente, habíamos visto que las rutas las podíamos definir de la siguiente manera:
-
-```php
-Route::get('/ruta/{parametro}', [TestController::class, 'method']);
-```
-
-También la puede definir mediante `callbacks`, por ejemplo:
+#### Uso de callbacks:
 
 ```php
 Route::get('/ruta/{parametro}', function (object $params) {
@@ -200,10 +90,76 @@ Route::get('/ruta/{parametro}', function (object $params) {
 });
 ```
 
-Recuerda, que `$params` se está retornando como ejemplo, pero puede retornar cualquier cosa allí. Lo que retorne allí será vista por el usuario final.
+---
 
-Si retorna un array u objeto (caso de `$params`) la salida devuelta será en formato JSON.
+## 🌍 English Description
 
-> **Importante:**
->
-> El ejemplo que se hizo con el método `HTTP GET` es aplicable a todos los demás métodos de envío. Es exactamente igual. Lo único que cambia es el nombre del método de la clase `DLRoute` para indicar el método de envío.
+**DLRoute** is a routing system designed to simplify URL management in modern PHP applications. It supports type filtering and regular expressions, and accepts JSON payloads directly from the body.
+
+### ✅ Features
+
+- Simple and complex route definitions.
+- Supports `GET`, `POST`, `PUT`, `PATCH`, `DELETE` HTTP methods.
+- Dynamic route parameters with type filtering.
+- Regular expression-based parameter validation.
+- Supports controllers and callbacks.
+- Easily integrates into native PHP or the **DLUnire** framework.
+
+### 💾 Installation
+
+```bash
+composer require dlunire/dlroute
+```
+
+Your `index.php` should be placed in a public folder (e.g., `public/`). Remember to execute all defined routes:
+
+```php
+DLRoute::execute();
+```
+
+### ✏️ Syntax
+
+```php
+DLRoute::get(string $uri, callable|array|string $controller): DLParamValueType;
+DLRoute::post(string $uri, callable|array|string $controller): DLParamValueType;
+DLRoute::put(string $uri, callable|array|string $controller): DLParamValueType;
+DLRoute::patch(string $uri, callable|array|string $controller): DLParamValueType;
+DLRoute::delete(string $uri, callable|array|string $controller): DLParamValueType;
+```
+
+### 📌 Examples
+
+#### Controller usage:
+
+```php
+Route::get('/users', [UserController::class, 'index']);
+Route::get('/users/{id}', [UserController::class, 'show']);
+```
+
+#### Controller structure:
+
+```php
+final class UserController extends Controller {
+    public function index(object $params): string {
+        return view('users.index', ['users' => []]);
+    }
+}
+```
+
+#### With parameter type filtering:
+
+```php
+Route::get('/users/{id}', [UserController::class, 'show'])
+  ->filter_by_type(['id' => 'integer']);
+```
+
+#### Callback usage:
+
+```php
+Route::get('/info', function (object $params) {
+  return ['status' => 'ok'];
+});
+```
+
+> If an array or object is returned, DLRoute will automatically send a JSON response.
+
