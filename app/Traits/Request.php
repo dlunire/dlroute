@@ -6,8 +6,73 @@ use CurlHandle;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Requests\HeadersInit;
 use DLRoute\Requests\RequestInit;
+use InvalidArgumentException;
 
 trait Request {
+
+    /**
+     * Indica si debe seguir o no redirecciones HTTP
+     * 
+     * @var boolean $follow_location
+     */
+    private bool $follow_location = false;
+
+    /**
+     * Indica la cantidad máxima de redirecciones que puede seguir. Por defecto es 10.
+     * 
+     * @var int $max_redirect
+     */
+    private int $max_redirect = 10;
+
+    /**
+     * Indica si el valor debe devolver algún valor
+     * 
+     * @var boolean $return_transfer
+     */
+    private bool $return_transfer = true;
+
+    /**
+     * Establece el agente de usuario del cliente HTTP. El agente de usuario
+     * predeterminado es:
+     * 
+     * ```bash
+     *   Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3
+     * ```
+     */
+    private string $user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
+
+    /**
+     * Indica si debe verificarse el certificado SSL enviado por el servidor.
+     * 
+     * @var boolean $verify_peer
+     */
+    private bool $verify_peer = false;
+
+    /**
+     * Verifica que el nombre del host coincidan con el nombre del certificado. Los alores permitidos son:
+     * 
+     * - Request::VERIFY_HOST
+     * - Request::NOT_VERIFY_HOST
+     * 
+     * Si no incluyen estos valores, entonces, se lanzará una excepción de tipo `InvalidArgumentException`
+     * 
+     * @var integer $verify_host
+     */
+    private int $verify_host = 0;
+
+    /** 
+     * Tiempo máximo de espera de la conexión. El valor por defecto es 10
+     * 
+     * @var int $connect_timeout
+     */
+    private int $connect_timeout = 10;
+
+    /**
+     * Tiempo máximo de espera de respuesta del servidor. El valor por defecto es 30
+     * 
+     * @var int $timeout
+     */
+    private int $timeout = 30;
 
     /**
      * Método de envío HTTP GET
@@ -45,19 +110,132 @@ trait Request {
     public const DELETE = 'DELETE';
 
     /**
-     * Envía una petición HTTP a un servidor remoto
-     *
-     * @param string $url URL
-     * @param string $method
-     * @param HeadersInit|null $headers
-     * @return string|boolean
+     * Indica que debe verificarse el nombre del certificado SSL con el nombre de host
+     * 
+     * @var int
      */
-    protected function request(string $url, string $method = 'GET', ?HeadersInit $headers = null, array $data = []): string|bool {
+    public const VERIFY_HOST = 2;
 
+    /**
+     * Indica que no debe verificarse el nombre del certificado SSL con el nombre de host.
+     */
+    public const NOT_VERIFY_HOST = 0;
+
+    /**
+     * Establece si debe seguir o no las redirecciones HTTP.
+     * 
+     * @param boolean $follow_location [Opcional] Indica si deben seguir o no las redirecciones. El valor 
+     *                                 por defecto es `true`.
+     * 
+     * @return void
+     */
+    public function set_follow_location(bool $follow_location = true): void {
+        $this->follow_location = $follow_location;
+    }
+
+    /**
+     * Indica la cantidad máxima de redirecciones que puede o debe seguir.
+     * 
+     * @param int $max_redirect [Opcional] Indica la cantidad máxima de redirecciones que puede seguir.
+     *                          El valor por defecto ese 10.
+     * @return void
+     */
+    public function set_max_redirect(int $max_redirect = 10): void {
+        $this->max_redirect = $max_redirect;
+    }
+
+    /**
+     * Indica si la transferencia de datos debe retornarse
+     * 
+     * @param boolean $return_transfer [Opcional] Indica si deben retornarse la transferencia de datos o no.
+     *                                 El valor por defecto `true`.
+     * 
+     * @return void
+     */
+    public function set_return_transfer(bool $return_transfer = true): void {
+        $this->return_transfer = $return_transfer;
+    }
+
+    /**
+     * Permite establecer el agente de usuario personalizado.
+     * 
+     * @param string $user_agent [Opcional] Define el agente del usuario que se enviará al servidor.
+     *                          El valor por defecto es `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3`
+     * 
+     * @return void
+     */
+    public function set_user_agent(string $user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'): void {
+        $this->user_agent = trim($user_agent);
+    }
+
+    /**
+     * Verifica la validez del certificado entregado por el servidor al que se le hace la petición HTTP.
+     * 
+     * @param boolean $verify_peer [Opcional] Indica si debe verificarse la validez del cerficado SSL. El valor por defecto es false
+     * @return void
+     * 
+     */
+    public function set_verify_peer(bool $verify_peer = false): void {
+        $this->verify_peer = $verify_peer;
+    }
+
+    /**
+     * Permite establecer si debe verificarse el nombre del certificado con el nombre de dominio. Los valores permitidos
+     * son los siguientes:
+     * 
+     * - Request::VERIFY_HOST
+     * - Request::NOT_VERIFY_HOST
+     * 
+     * @param int $verify_host [Opcional] Indica si debe verificarse el nombre del certificado SSL con el nombre del host que lo envía.
+     * @return void
+     * 
+     * @throws InvalidArgumentException
+     */
+    public function set_verify_host(int $verify_host = self::NOT_VERIFY_HOST): void {
+
+        if ($verify_host !== self::VERIFY_HOST && $verify_host !== self::NOT_VERIFY_HOST) {
+            throw new InvalidArgumentException("Los valos permitidos son 0: Request::NOT_VERIFY_HOST y 2: Request::VERIFY_HOST", 500);
+        }
+
+        $this->verify_host = $verify_host;
+    }
+
+    /**
+     * Establece el tiempo máximo de tiempo de espera de la conexión
+     * 
+     * @param int $connect_timeout [Opcional] Establece el tiempo máximo de espera de la
+     *                             conexión que debe o puede esperarse.
+     * 
+     * @return void
+     */
+    public function set_connect_timeout(int $connect_timeout = 10): void {
+        $this->connect_timeout = $connect_timeout;
+    }
+
+    /**
+     * Estalece el tiempo máximo de espera de la respueta del servidor al que se le envió
+     * la petición HTTP.
+     * 
+     * @param int $timeout [Opcional] Establece el tiempo máximo de espera de la respuesta del servidor.
+     * @return void
+     */
+    public function set_timeout(int $timeout = 30): void {
+        $this->timeout = $timeout;
+    }
+
+    /**
+     * Realiza una solicitud HTTP mediante cURL.
+     *
+     * @param string $url URL de destino.
+     * @param string $method Método HTTP (GET, POST, PUT, DELETE, etc.).
+     * @param HeadersInit|null $headers Cabeceras personalizadas.
+     * @param array $data Datos del cuerpo de la petición (para POST, PUT, etc.).
+     * @return string|bool Respuesta del servidor o false en caso de error.
+     */
+    public function request(string $url, string $method = 'GET', ?HeadersInit $headers = null, array $data = []): string|bool {
         /**
-         * @var CurlHandle|false $curl
+         * @var CurlHandle|false $ch
          */
-        // Inicializar sesión cURL
         $ch = curl_init();
 
         if (!($ch instanceof CurlHandle)) {
@@ -66,7 +244,7 @@ trait Request {
 
         /**
          * Cabeceras actuales
-         * 
+         *
          * @var array $current_headers
          */
         $current_headers = [];
@@ -75,49 +253,69 @@ trait Request {
             $current_headers = $headers->get_headers();
         }
 
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $current_headers);
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => $this->return_transfer,
+            CURLOPT_HTTPHEADER => $current_headers,
+            CURLOPT_USERAGENT => $this->user_agent,
+            CURLOPT_SSL_VERIFYPEER => $this->verify_peer,
+            CURLOPT_SSL_VERIFYHOST => $this->verify_host,
+            CURLOPT_CUSTOMREQUEST => strtoupper($method),
+            CURLOPT_FOLLOWLOCATION => $this->follow_location,   // 🔹 Seguir redirecciones automáticas (302, 301, etc.)
+            CURLOPT_MAXREDIRS => $this->max_redirect,          // 🔹 Límite de redirecciones permitidas
+            CURLOPT_CONNECTTIMEOUT => $this->connect_timeout,
+            CURLOPT_TIMEOUT => $this->timeout,
+        ]);
 
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3');
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        // Manejo de cookies (sesiones persistentes)
+        curl_setopt($ch, CURLOPT_COOKIEJAR, sys_get_temp_dir() . '/dlroute_cookies.txt');
+        curl_setopt($ch, CURLOPT_COOKIEFILE, sys_get_temp_dir() . '/dlroute_cookies.txt');
+
+        // Si el método permite cuerpo, lo enviamos
+        if (in_array(strtoupper($method), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            // Detectar si el encabezado Content-Type indica JSON
+            $is_json = false;
+
+            foreach ($current_headers as $h) {
+                if (stripos($h, 'Content-Type: application/json') !== false) {
+                    $is_json = true;
+                    break;
+                }
+            }
+
+            $payload = $is_json ? json_encode($data) : http_build_query($data);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        }
 
         /**
-         * Respuesta de la solicitud
-         * 
          * @var string|bool $response
          */
         $response = curl_exec($ch);
 
-        if (!$response) {
-            return $response;
-        }
-
-        /**
-         * @var string|int $response_code
-         */
-        $response_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        if (curl_errno($ch)) {
-            echo 'Error en cURL: ' . curl_error($ch);
+        if ($response === false) {
+            $error = curl_error($ch);
+            curl_close($ch);
 
             http_response_code(500);
             DLOutput::get_json([
                 "status" => false,
-                "error" => "Error en cURL {$ch}"
+                "error" => "Error en cURL: {$error}"
             ]);
 
             exit;
         }
+
+        /**
+         * @var int $response_code
+         */
+        $response_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         curl_close($ch);
 
         http_response_code($response_code);
         return $response;
     }
+
 
     /**
      * Envía una petición al servidor remoto
