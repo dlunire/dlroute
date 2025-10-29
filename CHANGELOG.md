@@ -4,7 +4,7 @@ Todas las modificaciones importantes a este proyecto se documentarán en este ar
 
 Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), y utiliza [SemVer](https://semver.org/lang/es/) para el control de versiones.
 
-## [1.0.2] - 2025-10-29
+## [v1.0.2] - 2025-10-29
 
 ### Added
 

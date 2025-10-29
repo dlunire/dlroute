@@ -75,6 +75,13 @@ trait Request {
     private int $timeout = 30;
 
     /**
+     * Ruta de las cookies
+     * 
+     * @var string $cookies
+     */
+    private string $cookies;
+
+    /**
      * Método de envío HTTP GET
      * 
      * @var string
@@ -233,6 +240,8 @@ trait Request {
      * @return string|bool Respuesta del servidor o false en caso de error.
      */
     public function request(string $url, string $method = 'GET', ?HeadersInit $headers = null, array $data = []): string|bool {
+        $this->set_cookies();
+
         /**
          * @var CurlHandle|false $ch
          */
@@ -255,21 +264,42 @@ trait Request {
 
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => $this->return_transfer,
-            CURLOPT_HTTPHEADER => $current_headers,
-            CURLOPT_USERAGENT => $this->user_agent,
-            CURLOPT_SSL_VERIFYPEER => $this->verify_peer,
-            CURLOPT_SSL_VERIFYHOST => $this->verify_host,
-            CURLOPT_CUSTOMREQUEST => strtoupper($method),
-            CURLOPT_FOLLOWLOCATION => $this->follow_location,   // 🔹 Seguir redirecciones automáticas (302, 301, etc.)
-            CURLOPT_MAXREDIRS => $this->max_redirect,          // 🔹 Límite de redirecciones permitidas
-            CURLOPT_CONNECTTIMEOUT => $this->connect_timeout,
-            CURLOPT_TIMEOUT => $this->timeout,
+            CURLOPT_RETURNTRANSFER => $this->return_transfer, // Retornar respuesta como string
+            CURLOPT_HTTPHEADER => $current_headers,           // Cabeceras personalizadas
+            CURLOPT_USERAGENT => $this->user_agent,           // Agente de usuario
+
+            // Seguridad
+            CURLOPT_SSL_VERIFYPEER => $this->verify_peer,     // Verificación de certificado SSL
+            CURLOPT_SSL_VERIFYHOST => $this->verify_host,     // Verificación del nombre del host
+            CURLOPT_CUSTOMREQUEST => strtoupper($method),     // Método HTTP (POST, GET, etc.)
+
+            // Redirecciones
+            CURLOPT_FOLLOWLOCATION => $this->follow_location, // 🔹 Seguir redirecciones 3xx
+            CURLOPT_MAXREDIRS => $this->max_redirect,         // 🔹 Límite de redirecciones
+            CURLOPT_AUTOREFERER => true,                      // 🆕 Actualiza el Referer en redirecciones
+            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS, // 🆕 Protocolos permitidos en redirecciones
+
+            // Cookies
+            CURLOPT_COOKIEJAR => $this->cookies,              // 🆕 Donde se guardarán las cookies
+            CURLOPT_COOKIEFILE => $this->cookies,             // 🆕 De dónde se leerán las cookies
+            CURLOPT_COOKIESESSION => false,                   // 🆕 No reiniciar la sesión al abrir handle nuevo
+
+            // Compresión y headers
+            CURLOPT_ENCODING => '',                           // 🆕 Aceptar gzip, deflate, br (auto)
+            CURLOPT_HEADER => false,                          // No incluir headers en el body
+            CURLINFO_HEADER_OUT => true,                      // 🆕 Permitir inspección de headers enviados
+
+            // Tiempo y conexión
+            CURLOPT_CONNECTTIMEOUT => $this->connect_timeout, // Timeout de conexión
+            CURLOPT_TIMEOUT => $this->timeout,                // Timeout total
+
+            // Depuración opcional (puede comentarse en producción)
+            // CURLOPT_VERBOSE => true,                       // 🆕 Mostrar detalles del tráfico
         ]);
 
         // Manejo de cookies (sesiones persistentes)
-        curl_setopt($ch, CURLOPT_COOKIEJAR, sys_get_temp_dir() . '/dlroute_cookies.txt');
-        curl_setopt($ch, CURLOPT_COOKIEFILE, sys_get_temp_dir() . '/dlroute_cookies.txt');
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $this->cookies);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $this->cookies);
 
         // Si el método permite cuerpo, lo enviamos
         if (in_array(strtoupper($method), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
@@ -330,5 +360,45 @@ trait Request {
         $response = $this->request($action, $init->method, $init->headers, $init->body);
 
         return $response;
+    }
+
+    /**
+     * Establece las cookies para mantener la sesión activa
+     * 
+     * @param string|null $path [Opcional] Indica la ruta de las cookies
+     * @return void
+     */
+    public function set_cookies(?string $path = null): void {
+        /** @var string $separator */
+        $separator = DIRECTORY_SEPARATOR;
+
+        if (!is_string($path)) {
+            $this->cookies = sys_get_temp_dir() . "{$separator}dlroute_cookies.txt";
+            return;
+        }
+
+        $this->cookies = $path;
+    }
+
+    /**
+     * Devuelve la ruta de la cookie, en el caso de que sea posible.
+     * 
+     * @return string|null
+     */
+    public function get_cookies_path(): ?string {
+        return $this->cookies ?? null;
+    }
+
+    /**
+     * Elimina las cookies
+     * 
+     * @return boolean
+     */
+    public function delete_cookies(): bool {
+        if (is_string($this->get_cookies_path()) && file_exists($this->get_cookies_path())) {
+            return @unlink($this->get_cookies_path());
+        }
+
+        return false;
     }
 }
