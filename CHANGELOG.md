@@ -4,32 +4,43 @@ Todas las modificaciones importantes a este proyecto se documentarán en este ar
 
 Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), y utiliza [SemVer](https://semver.org/lang/es/) para el control de versiones.
 
-## [v1.0.2] - 2025-10-29
+## [v1.0.3] - 2025-10-29
 
 ### Added
 
-* Nuevos parámetros de configuración para cURL:
+* **Soporte extendido para manejo de archivos y cookies persistentes:**
 
-  * `CURLOPT_SSL_VERIFYPEER`: permite verificar la validez del certificado SSL del servidor.
-  * `CURLOPT_SSL_VERIFYHOST`: permite verificar si el nombre del certificado coincide con el dominio remoto.
-  * `CURLOPT_FOLLOWLOCATION`: habilita el seguimiento automático de redirecciones HTTP (`301`, `302`, etc.).
-  * `CURLOPT_MAXREDIRS`: define el número máximo de redirecciones permitidas.
-  * `CURLOPT_CONNECTTIMEOUT` y `CURLOPT_TIMEOUT`: controlan los tiempos máximos de conexión y ejecución.
-* Manejo persistente de cookies con archivos temporales generados automáticamente (`dlroute_cookies.txt`).
-* Nuevo comportamiento inteligente en el envío de datos:
+  * Nuevo método `set_cookies()` que permite establecer una ruta personalizada para almacenar cookies.
+  * Nuevo método `get_cookies_path()` para obtener la ruta actual del archivo de cookies.
+  * Nuevo método `delete_cookies()` que elimina de forma segura el archivo de cookies asociado a la sesión HTTP.
+  * Creación automática de archivos temporales de cookies en el directorio del sistema (`sys_get_temp_dir()`).
 
-  * Si no se especifica `Content-Type`, los datos se envían automáticamente como formulario estándar (`application/x-www-form-urlencoded`).
-  * Si se especifica `Content-Type: application/json`, los datos se envían como JSON codificado.
-* Integración del método `set_verify_host()` con validación estricta de argumentos y manejo de errores con `InvalidArgumentException`.
-* Validaciones robustas y respuesta estructurada en caso de errores de conexión cURL.
+* **Nueva clase abstracta `DLRoute\Http\HttpRequest`:**
+
+  * Proporciona una estructura base para implementar clientes HTTP personalizados.
+  * Integra el *trait* `Request`, unificando la gestión de cabeceras, redirecciones, verificación SSL y transferencia de datos.
+  * Establece la base para la extensión de comportamientos en futuras versiones (por ejemplo, soporte para métodos asincrónicos o streams).
+
+* **Mejoras de compatibilidad con archivos y contenido dinámico:**
+
+  * Soporte preliminar para el envío de archivos mediante `multipart/form-data` (preparado para futuras expansiones).
+  * Compatibilidad extendida con encabezados dinámicos al enviar archivos o formularios complejos.
 
 ### Changed
 
-* Mejora del método `request()` para soportar distintos tipos de contenido sin intervención manual del desarrollador.
-* Consolidación de configuraciones de cURL mediante `curl_setopt_array()` para mayor legibilidad y mantenimiento.
-* Documentación ampliada del método `set_verify_host()` para reflejar los valores válidos (`0` y `2`).
+* El sistema de cookies ahora utiliza rutas absolutas y validación de existencia antes de lectura o eliminación.
+* El manejo de redirecciones (`CURLOPT_FOLLOWLOCATION` y `CURLOPT_MAXREDIRS`) ahora se integra con el sistema de verificación SSL (`CURLOPT_SSL_VERIFY*`).
+* Refactorización menor en el método `fetch()` para tipar explícitamente la salida (`string`) y delegar la solicitud principal a `request()`.
 
 ### Documentation
 
-* Actualización de la documentación PHPDoc de la clase `Request` para reflejar los nuevos parámetros y comportamientos.
-* Inclusión de ejemplos sobre cómo enviar datos como formulario HTML o JSON según el encabezado `Content-Type`.
+* Documentación profesional agregada a la clase abstracta `HttpRequest` con licencia MIT, autoría y metadatos de paquete.
+  
+* Actualización de comentarios PHPDoc en los métodos:
+
+  * `set_cookies()`
+  * `get_cookies_path()`
+  * `delete_cookies()`
+  * `fetch()`
+  
+* Detalles ampliados sobre el comportamiento del sistema de cookies y la nueva arquitectura modular basada en traits y clases abstractas.
