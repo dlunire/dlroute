@@ -69,7 +69,7 @@ class DLOutput implements OutputInterface {
         $this->content = is_string($content) ? trim($content) : $content;
     }
 
-    public static function get_json(object | array $content, bool $pretty = false): string {
+    public static function get_json(object|array $content, bool $pretty = false): string {
         $stringData = $pretty
             ? json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK)
             : json_encode($content, JSON_NUMERIC_CHECK);
@@ -91,7 +91,13 @@ class DLOutput implements OutputInterface {
         echo DLOutput::get_json([
             "code" => 404,
             "route" => $route,
-            "message" => "No encontrado"
+            "uri" => DLServer::get_uri(),
+            "base_url" => DLServer::get_base_url(),
+            "message" => "La ruta solicitada no existe",
+            "timestamp" => date(DATE_ATOM),
+            "method" => DLServer::get_method(),
+            "client_ip" => DLServer::get_ipaddress(),
+            "hint" => "Verifica que la ruta sea correcta y esté registrada en el servidor"
         ], true);
 
         exit;

@@ -1,4 +1,29 @@
 <?php
+/**
+ * Copyright (c) 2025 David E Luna M
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @license MIT
+ */
+
+declare(strict_types=1);
 
 namespace DLRoute\Server;
 
@@ -7,11 +32,13 @@ use DLRoute\Interfaces\ServerInterface;
 use DLRoute\Routes\RouteDebugger;
 
 class DLServer implements ServerInterface {
+    use Domain, IPAddress;
 
     public static function get_uri(): string {
+        /** @var string $uri */
         $uri = "";
 
-        if (array_key_exists('REQUEST_URI', $_SERVER)) {
+        if (\array_key_exists('REQUEST_URI', $_SERVER)) {
             $uri = $_SERVER['REQUEST_URI'];
         }
 
@@ -19,19 +46,13 @@ class DLServer implements ServerInterface {
     }
 
     public static function get_hostname(): string {
-        $hostname = "";
-
-        if (array_key_exists('SERVER_NAME', $_SERVER)) {
-            $hostname = $_SERVER['SERVER_NAME'];
-        }
-
-        return trim($hostname);
+        return self::get_host();
     }
 
     public static function get_method(): string {
         $method = "";
 
-        if (array_key_exists('REQUEST_METHOD', $_SERVER)) {
+        if (\array_key_exists('REQUEST_METHOD', $_SERVER)) {
             $method = $_SERVER['REQUEST_METHOD'];
         }
 
@@ -41,7 +62,7 @@ class DLServer implements ServerInterface {
     public static function get_script_filename(): string {
         $script_filename = "";
 
-        if (array_key_exists('SCRIPT_FILENAME', $_SERVER)) {
+        if (\array_key_exists('SCRIPT_FILENAME', $_SERVER)) {
             $script_filename = $_SERVER['SCRIPT_FILENAME'];
         }
 
@@ -49,19 +70,13 @@ class DLServer implements ServerInterface {
     }
 
     public static function get_ipaddress(): string {
-        $ip = "";
-
-        if (array_key_exists('REMOTE_ADDR', $_SERVER)) {
-            $ip = $_SERVER['REMOTE_ADDR'];
-        }
-
-        return trim($ip);
+        return self::get_ip();
     }
 
     public static function get_user_agent(): string {
         $user_agent = "";
 
-        if (array_key_exists('HTTP_USER_AGENT', $_SERVER)) {
+        if (\array_key_exists('HTTP_USER_AGENT', $_SERVER)) {
             $user_agent = $_SERVER['HTTP_USER_AGENT'];
         }
 
@@ -97,8 +112,8 @@ class DLServer implements ServerInterface {
         $http_host = "";
         $protocol = self::get_protocol();
 
-        if (array_key_exists('HTTP_HOST', $_SERVER)) {
-            $http_host = $_SERVER['HTTP_HOST'];
+        if (\array_key_exists('HTTP_HOST', $_SERVER)) {
+            $http_host = self::get_host();
         }
 
         return "{$protocol}{$http_host}";
@@ -117,7 +132,7 @@ class DLServer implements ServerInterface {
          */
         $port = null;
 
-        if (array_key_exists('SERVER_PORT', $_SERVER)) {
+        if (\array_key_exists('SERVER_PORT', $_SERVER)) {
             $port = (int) $_SERVER['SERVER_PORT'];
         }
 
@@ -125,7 +140,7 @@ class DLServer implements ServerInterface {
     }
 
     /**
-     * Devuelve el software del servidor
+     * Devuelve el software del servidor (en el caso de que sea posible)
      *
      * @return string|null
      */
@@ -138,7 +153,7 @@ class DLServer implements ServerInterface {
          */
         $server_software = null;
 
-        if (array_key_exists('SERVER_SOFTWARE', $_SERVER)) {
+        if (\array_key_exists('SERVER_SOFTWARE', $_SERVER)) {
             $server_software = $_SERVER['SERVER_SOFTWARE'];
         }
 

@@ -3,6 +3,8 @@
 ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
+use DLRoute\Server\DLHost;
+use DLRoute\Server\DLServer;
 use DLRoute\Test\TestController;
 
 include dirname(__DIR__) . "/vendor/autoload.php";
@@ -32,10 +34,28 @@ DLRoute::get('/test/{file}', [TestController::class, 'index']);
 
 DLRoute::get('/server', [TestController::class, 'server']);
 
-DLRoute::post('/ciencia/{parametro1}/ciencia/{parametro2}', function (object $params) {
+DLRoute::get('/ciencia/{parametro1}/ciencia/{parametro2}', function (object $params) {
     return DLRoute::get_routes();
 });
 
 DLRoute::post('/file', [TestController::class, 'file']);
+
+DLRoute::get('/ciencia', function() {
+    DLServer::set_external_host('ciencia.com');
+
+    return [
+        "dlunire" => "Mónica [Proyecto de Software de David E Luna M]",
+        "domain" => DLHost::get_domain(),
+        "hostname" => DLHost::get_hostname(),
+        "is_https" => DLHost::is_https(),
+        "IP" => DLServer::get_ipaddress(),
+        "port" => DLServer::get_port(),
+        "url_base" => DLServer::get_base_url(),
+        "method" => DLServer::get_method(),
+        "route" => DLServer::get_route(),
+        "uri" => DLServer::get_uri(),
+        "proxy" => DLServer::is_likely_proxy(),
+    ];
+});
 
 DLRoute::execute();

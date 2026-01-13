@@ -7,22 +7,24 @@ namespace DLRoute\Interfaces;
  * 
  * @package DLRoute\Interfaces;
  * 
- * @version 0.0.0
- * @author David E Luna M <davidlunamontilla@gmail.com>
+ * @version v0.0.1
+ * @author David E Luna M <dlunireframework@gmail.com>
  * @copyright 2023 David E Luna M
  * @license MIT
  */
 interface ServerInterface {
 
     /**
-     * Devuelve la URI de la aplicación.
+     * Devuelve la URI de la aplicación. Es decir, la URI más la ruta registrada
+     * en el caso de que se esté navegando por ella.
      *
      * @return string
      */
     public static function get_uri(): string;
 
     /**
-     * Devuelve el nombre de host.
+     * Devuelve el nombre de host, bien sea, el que se ha determinado o el que se 
+     * impuso por el desarrollador en el entorno de ejecución.
      *
      * @return string
      */
@@ -36,7 +38,7 @@ interface ServerInterface {
     public static function get_method(): string;
 
     /**
-     * Devuelve la dirección IP del cliente.
+     * Devuelve la dirección IP del cliente, siempre que sea posible
      *
      * @return string
      */
@@ -65,7 +67,8 @@ interface ServerInterface {
 
     /**
      * Devuelve el hombre de host con puerto incluido en formato HTTP, es decir,
-     * de una forma similar a esta: `http://localhost:3000/`
+     * de una forma similar a esta: `http://localhost:3000/` o la que impone el 
+     * proxy inverso o similar.
      *
      * @return string
      */
@@ -106,8 +109,8 @@ interface ServerInterface {
     public static function is_delete(): bool;
 
     /**
-     * Devuelve la ruta actual de la petición. Esto es independiente
-     * de la URI, es decir, no devuelve rutas físicas.
+     * Devuelve la ruta lógica registrada por el desarrollador. No la que devuelve el
+     * sistema por medio de $_SERVER. 
      *
      * @return string
      */
