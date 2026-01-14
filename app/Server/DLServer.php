@@ -319,4 +319,43 @@ class DLServer implements ServerInterface {
 
         $input = preg_replace("/{$pattern}/", '', $input);
     }
+
+    /**
+     * Calcula el directorio base de ejecución de la aplicación.
+     *
+     * La lógica se basa en restar la ruta registrada (Route) de la URI completa
+     * solicitada. El resultado corresponde al subdirectorio donde se encuentra
+     * la aplicación dentro del servidor, considerando mayúsculas/minúsculas
+     * de manera insensible.
+     *
+     * Ejemplo:
+     * URI = /subdirectorio/subdirectorio/ciencia
+     * Route = /ciencia
+     * Resultado: /subdirectorio/subdirectorio
+     * 
+     * Porque `/ciencia` es la ruta registrada.
+     *
+     * @return string Directorio base de la aplicación, siempre comenzando con '/'
+     */
+    private static function calculate_dir(): string {
+        /** @var string $uri */
+        $uri = trim(self::get_uri(), '/');
+
+        /** @var string $route */
+        $route = trim(self::get_route(), '/');
+
+        /** @var array|string|null $dir */
+        $dir = preg_replace("/\/*{$route}/i", '', $uri);
+
+        return "/" . \strval($dir ?? '');
+    }
+
+    /**
+     * Devuelve el directorio de ejecución o punto de entrada de la aplicación.
+     *
+     * @return string
+     */
+    public static function get_dir(): string {
+        return self::calculate_dir();
+    }
 }

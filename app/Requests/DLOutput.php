@@ -2,10 +2,25 @@
 
 namespace DLRoute\Requests;
 
+use DLRoute\Errors\OutputException;
 use DLRoute\Interfaces\OutputInterface;
 use DLRoute\Server\DLServer;
 
 class DLOutput implements OutputInterface {
+
+    /**
+     * Permite personalizar el mensaje de error
+     *
+     * @var boolean $personalize
+     */
+    private static bool $personalize = false;
+
+    /**
+     * Carga los datos del error personalizado
+     *
+     * @var array
+     */
+    private static array $error_404 = [];
 
     /**
      * Instancia de clase
@@ -57,7 +72,7 @@ class DLOutput implements OutputInterface {
             $this->content = self::get_json($this->content, true);
         }
 
-        if (!is_null($mime_type)) {
+        if ($mime_type !== null) {
             $mime = $mime_type;
         }
 
@@ -81,22 +96,21 @@ class DLOutput implements OutputInterface {
     public static function not_found(): void {
         header("Content-Type: application/json; charset=utf-8", true, 404);
 
-        /**
-         * Ruta actual de la petición.
-         * 
-         * @var string
-         */
-        $route = DLServer::get_route();
+        if (self::$personalize) {
+            echo self::get_json(self::$error_404, true);
+            exit;
+        }
 
-        echo DLOutput::get_json([
-            "code" => 404,
-            "route" => $route,
-            "uri" => DLServer::get_uri(),
-            "base_url" => DLServer::get_base_url(),
+        echo self::get_json([
             "message" => "La ruta solicitada no existe",
+            "code" => 404,
+            "route" => DLServer::get_route(),
+            "uri" => DLServer::get_uri(),
+            "dir" => DLServer::get_dir(),
+            "base_url" => DLServer::get_base_url(),
             "timestamp" => date(DATE_ATOM),
-            "method" => DLServer::get_method(),
             "client_ip" => DLServer::get_ipaddress(),
+            "method" => DLServer::get_method(),
             "hint" => "Verifica que la ruta sea correcta y esté registrada en el servidor"
         ], true);
 
@@ -109,7 +123,7 @@ class DLOutput implements OutputInterface {
      * @return boolean
      */
     private function is_array(): bool {
-        return is_array($this->content);
+        return \is_array($this->content);
     }
 
     /**
@@ -118,7 +132,7 @@ class DLOutput implements OutputInterface {
      * @return boolean
      */
     private function is_object(): bool {
-        return is_object($this->content);
+        return \is_object($this->content);
     }
 
     /**
@@ -127,7 +141,7 @@ class DLOutput implements OutputInterface {
      * @return boolean
      */
     private function is_boolean(): bool {
-        return is_bool($this->content);
+        return \is_bool($this->content);
     }
 
     /**
@@ -136,7 +150,7 @@ class DLOutput implements OutputInterface {
      * @return boolean
      */
     private function is_null(): bool {
-        return is_null($this->content);
+        return $this->content === null;
     }
 
     /**
@@ -154,6 +168,60 @@ class DLOutput implements OutputInterface {
      * @return boolean
      */
     private function is_string(): bool {
-        return is_string($this->content);
+        return \is_string($this->content);
+    }
+
+    /**
+     * Establece una respuesta personalizada para errores 404.
+     *
+     * Este método permite al desarrollador definir un conjunto de datos que serán
+     * serializados como JSON y enviados cuando la aplicación determine que la
+     * ruta solicitada no existe. La personalización es útil para:
+     * - Mostrar mensajes amigables al usuario.
+     * - Incluir información adicional sobre la petición o contexto.
+     * - Integrarse con sistemas de logging o frontend específicos.
+     *
+     * Comportamiento:
+     * - Los datos proporcionados deben ser un array asociativo.
+     * - Una vez configurados, la salida 404 personalizada se activará
+     *   automáticamente en `not_found()`.
+     * - El código HTTP de la respuesta seguirá siendo 404, independientemente
+     *   del contenido del array.
+     *
+     * Validaciones:
+     * - El array no puede estar vacío. Si se pasa un array vacío, se lanzará
+     *   una excepción `OutputException` para advertir al desarrollador
+     *   sobre la configuración incorrecta.
+     *
+     * Ejemplo de uso:
+     * ```php
+     * <?php
+     * DLOutput::set_error_404([
+     *     "message" => "Página no encontrada",
+     *     "help" => "Verifica que la URL sea correcta o contacta soporte",
+     *     "timestamp" => date(DATE_ATOM)
+     * ]);
+     * ```
+     * 
+     * **Nota:** debes llamar el método al principio de tu aplicación para que el error 404
+     * personalizado tenga efecto en toda la aplicación. Sin embargo, también lo puedes utilizar en un
+     * controlador para personalizar casos de error 404 específicos.
+     *
+     * @param array $data Array asociativo con la información a mostrar en la respuesta 404.
+     *                    Debe contener al menos un elemento.
+     *
+     * @return void
+     *
+     * @throws OutputException Si el array está vacío, indicando un error de configuración
+     *                        por parte del desarrollador.
+     */
+    public static function set_error_404(array $data): void {
+
+        if (\count($data) < 1) {
+            throw new OutputException("Error de configuración: el array de personalización 404 no puede estar vacío.");
+        }
+
+        self::$error_404 = $data;
+        self::$personalize = true;
     }
 }

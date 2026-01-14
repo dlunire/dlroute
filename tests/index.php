@@ -44,6 +44,7 @@ DLRoute::get('/ciencia', function() {
     DLServer::set_external_host('ciencia.com');
 
     return [
+        "dir" => DLServer::get_dir(),
         "dlunire" => "Mónica [Proyecto de Software de David E Luna M]",
         "domain" => DLHost::get_domain(),
         "hostname" => DLHost::get_hostname(),
