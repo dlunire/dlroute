@@ -32,7 +32,7 @@ use DLRoute\Interfaces\ServerInterface;
 use DLRoute\Routes\RouteDebugger;
 
 class DLServer implements ServerInterface {
-    use Domain, IPAddress;
+    use Domain, IPAddress, PortCandidate;
 
     public static function get_uri(): string {
         /** @var string $uri */
@@ -109,34 +109,19 @@ class DLServer implements ServerInterface {
     }
 
     public static function get_http_host(): string {
-        $http_host = "";
-        $protocol = self::get_protocol();
+        /** @var string $http_host */
+        $http_host = self::get_host();
 
-        if (\array_key_exists('HTTP_HOST', $_SERVER)) {
-            $http_host = self::get_host();
-        }
+        /** @var string $scheme */
+        $scheme = self::get_scheme();
 
-        return "{$protocol}{$http_host}";
-    }
+        /** @var int $port */
+        $port = self::get_port();
 
-    /**
-     * Devuelve el puerto de escucha HTTP donde corre la aplicación.
-     *
-     * @return integer|null
-     */
-    public static function get_port(): ?int {
-        /**
-         * Puerto del servidor
-         * 
-         * @var integer
-         */
-        $port = null;
+        /** @var string $host */
+        $host = "{$scheme}://{$http_host}";
 
-        if (\array_key_exists('SERVER_PORT', $_SERVER)) {
-            $port = (int) $_SERVER['SERVER_PORT'];
-        }
-
-        return $port;
+        return $host;
     }
 
     /**
@@ -344,10 +329,20 @@ class DLServer implements ServerInterface {
         /** @var string $route */
         $route = trim(self::get_route(), '/');
 
+        /** @var string $scape_route */
+        $escape_route = self::escape_route($route);
+
+        /** @var string $route_pattern */
+        $route_pattern = "/\/*{$escape_route}/i";
+
         /** @var array|string|null $dir */
-        $dir = preg_replace("/\/*{$route}/i", '', $uri);
+        $dir = preg_replace($route_pattern, '', $uri);
 
         return "/" . \strval($dir ?? '');
+    }
+
+    private static function escape_route(string $input): string {
+        return preg_replace("/\/+/", "\/", $input);
     }
 
     /**

@@ -5,6 +5,7 @@ ini_set('display_errors', 1);
 use DLRoute\Requests\DLRoute;
 use DLRoute\Server\DLHost;
 use DLRoute\Server\DLServer;
+use DLRoute\Server\PortCandidate;
 use DLRoute\Test\TestController;
 
 include dirname(__DIR__) . "/vendor/autoload.php";
@@ -51,6 +52,7 @@ DLRoute::get('/ciencia', function() {
         "is_https" => DLHost::is_https(),
         "IP" => DLServer::get_ipaddress(),
         "port" => DLServer::get_port(),
+        "local_port" => DLServer::get_local_port(),
         "url_base" => DLServer::get_base_url(),
         "method" => DLServer::get_method(),
         "route" => DLServer::get_route(),

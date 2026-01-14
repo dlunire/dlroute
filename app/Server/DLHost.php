@@ -2,6 +2,8 @@
 
 namespace DLRoute\Server;
 
+use DomainException;
+
 /**
  * @package DLRoute
  * @version 1.0.1
@@ -23,7 +25,7 @@ final class DLHost {
      * @param array $hostnames
      */
     public function __construct(array $hostnames = []) {
-        if (count($hostnames) > 0) {
+        if (\count($hostnames) > 0) {
             foreach ($hostnames as $host) {
                 array_push($this->hostnames, $host);
             }
@@ -40,14 +42,25 @@ final class DLHost {
     }
 
     /**
-     * Devuelve el dominio del sitio Web
+     * Devuelve el dominio durante la petición. Si no es posible determinarlo, 
+     * entonces, lanzará una excepción `DomainException`.
      *
      * @return string
+     * @throws DomainException
      */
     public static function get_domain(): string {
-        /** @var string $host */
+        /** @var array|string|null $host */
         $host = self::get_hostname();
-        $host = preg_replace("/:{1}[0-9]+$/", "", $host);
+
+        $host = preg_replace(
+            pattern: "/:{1}[0-9]+$/",
+            replacement: "",
+            subject: $host
+        );
+
+        if (!\is_string($host) || trim($host) === '') {
+            throw new DomainException("No se pudo obtener el dominio");
+        }
 
         return $host ?? '';
     }
@@ -77,7 +90,7 @@ final class DLHost {
             $isHTTPS = isset($_SERVER['HTTP_FRONT_END_HTTPS']) && strtolower($_SERVER['HTTP_FRONT_END_HTTPS']) === 'on';
         }
 
-        return boolval($isHTTPS);
+        return \boolval($isHTTPS);
     }
 
     /**
