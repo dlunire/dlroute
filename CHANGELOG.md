@@ -4,6 +4,88 @@ Todas las modificaciones importantes a este proyecto se documentarán en este ar
 
 Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), y utiliza [SemVer](https://semver.org/lang/es/) para el control de versiones.
 
+---
+
+## [v1.0.4] - 2026-01-15
+
+### Added
+
+* **Nuevo sistema modular para resolución de contexto de servidor (traits):**
+
+  * **Trait `Domain` (`DLRoute\Server\Domain`):**
+
+    * Resolución del dominio o nombre de host desde múltiples fuentes.
+    * Capacidad de imponer un dominio externo de forma opcional u obligatoria.
+    * Nuevo método:
+
+      * `set_external_host(string $host, bool $required = false): void`
+    * Soporte para configuración global (bootstrap) o contextual (tests, escenarios específicos).
+
+  * **Trait `IPAddress` (`DLRoute\Server\IPAddress`):**
+
+    * Deducción de la dirección IP del cliente desde múltiples fuentes posibles.
+    * Retorno seguro de `null` cuando no es posible determinar una IP válida.
+
+  * **Trait `PortCandidate` (`DLRoute\Server\PortCandidate`):**
+
+    * Deducción de un puerto candidato durante la ejecución.
+    * Diferenciación entre puerto local y puerto remoto.
+    * Fallback controlado al puerto `80` en entornos no deterministas (CLI, pruebas automatizadas).
+    * Nuevos métodos:
+
+      * `get_local_port(): int`
+
+  * **Trait `SchemeHTTP` (`DLRoute\Server\SchemeHTTP`):**
+
+    * Determinación determinista del esquema HTTP (`http` o `https`).
+    * Fallback explícito a `http` en entornos CLI.
+    * Facilita la simulación de peticiones HTTP en pruebas automatizadas.
+
+* **Ampliación significativa del contexto expuesto por el servidor:**
+
+  * Inclusión de metadatos adicionales en respuestas y errores:
+
+    * `uri`, `dir`, `base_url`
+    * `domain`, `hostname`
+    * `is_https`
+    * Dirección IP del cliente
+    * Puerto local y puerto remoto diferenciados
+    * Método HTTP
+    * Detección de proxy reverso
+    * Marca temporal (`timestamp`)
+    * Mensajes de ayuda (`hint`) en rutas no registradas
+
+### Changed
+
+* Refactorización interna del sistema de detección de dominio, esquema, IP y puertos:
+
+  * Se reemplaza lógica implícita por traits especializados y reutilizables.
+  * Mayor robustez en entornos con:
+
+    * Reverse proxy
+    * Túneles (por ejemplo, ngrok)
+    * Subdirectorios
+    * Ejecución desde CLI
+
+* Las respuestas para rutas no registradas ahora incluyen contexto completo del entorno de ejecución, facilitando depuración, observabilidad y pruebas.
+
+### Documentation
+
+* Documentación PHPDoc profesional agregada a los nuevos traits:
+
+  * `Domain`
+  * `IPAddress`
+  * `PortCandidate`
+  * `SchemeHTTP`
+
+* Documentación detallada de:
+
+  * Comportamiento en entornos CLI.
+  * Diferenciación entre host/puerto local y remoto.
+  * Uso de `set_external_host()` en escenarios globales y específicos.
+
+---
+
 ## [v1.0.3] - 2025-10-29
 
 ### Added
@@ -35,12 +117,12 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 ### Documentation
 
 * Documentación profesional agregada a la clase abstracta `HttpRequest` con licencia MIT, autoría y metadatos de paquete.
-  
+
 * Actualización de comentarios PHPDoc en los métodos:
 
   * `set_cookies()`
   * `get_cookies_path()`
   * `delete_cookies()`
   * `fetch()`
-  
+
 * Detalles ampliados sobre el comportamiento del sistema de cookies y la nueva arquitectura modular basada en traits y clases abstractas.
