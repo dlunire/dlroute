@@ -1,12 +1,34 @@
 <?php
 
+/**
+ * Copyright (c) 2026 David E Luna M
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @license MIT
+ */
+
 ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
 use DLRoute\Server\DLHost;
 use DLRoute\Server\DLServer;
-use DLRoute\Server\PortCandidate;
-use DLRoute\Test\TestController;
 
 include dirname(__DIR__) . "/vendor/autoload.php";
 
@@ -21,42 +43,22 @@ include dirname(__DIR__) . "/vendor/autoload.php";
  * Lo que sigue más abajo son rutas de ejemplos recién creadas.
  */
 
-DLRoute::post('/regex/{parametro}', [TestController::class, 'index'])->filter_by_type([
-    "parametro" => '/^[0-9]+$/'
-]);
-
-DLRoute::post('/test/{parametro}', function (object $params) {
-    return $params;
-})->filter_by_type([
-    "parametro" => "numeric"
-]);
-
-DLRoute::get('/test/{file}', [TestController::class, 'index']);
-
-DLRoute::get('/server', [TestController::class, 'server']);
-
-DLRoute::get('/ciencia/{parametro1}/ciencia/{parametro2}', function (object $params) {
-    return DLRoute::get_routes();
-});
-
-DLRoute::post('/file', [TestController::class, 'file']);
-
-DLRoute::get('/ciencia', function() {
+DLRoute::get('/ruta/registrada', function() {
     DLServer::set_external_host('ciencia.com');
 
     return [
+        "dlunire" => "Powered by David E Luna M",
         "dir" => DLServer::get_dir(),
-        "dlunire" => "Mónica [Proyecto de Software de David E Luna M]",
+        "route" => DLServer::get_route(),
+        "uri" => DLServer::get_uri(),
+        "url_base" => DLServer::get_base_url(),
         "domain" => DLHost::get_domain(),
         "hostname" => DLHost::get_hostname(),
         "is_https" => DLHost::is_https(),
         "IP" => DLServer::get_ipaddress(),
         "port" => DLServer::get_port(),
         "local_port" => DLServer::get_local_port(),
-        "url_base" => DLServer::get_base_url(),
         "method" => DLServer::get_method(),
-        "route" => DLServer::get_route(),
-        "uri" => DLServer::get_uri(),
         "proxy" => DLServer::is_likely_proxy(),
     ];
 });
