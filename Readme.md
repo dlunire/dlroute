@@ -1,6 +1,3 @@
-Perfecto, puedo ajustar tu `README.md` para que quede completamente unificado, con tabla de contenido vinculada a los documentos existentes y secciones en inglés y español coherentes. Aquí está la versión refinada:
-
-````markdown
 # DLRoute – PHP Routing System
 
 ## Project Documentation
@@ -245,16 +242,4 @@ Route::get('/info', function (object $params) {
 
 > If an array or object is returned, DLRoute automatically sends a JSON response.
 
-```
-
-Con este ajuste:
-
-* Tabla de contenido vinculada a todos los documentos existentes.
-* Secciones en español e inglés coherentes.
-* Destaca novedades de **v1.0.4** y contexto HTTP.
-* Ejemplos claros y consistentes.  
-
-Si quieres, puedo dar el **paso siguiente** y crear un **“Execution Context & Server Detection” section** con ejemplos avanzados (CLI, proxy, ngrok) que luego podría separarse en Wiki. Esto ayudaría a los usuarios a entender la robustez de DLRoute en entornos reales.  
-
-¿Quieres que haga eso?
 ```
