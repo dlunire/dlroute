@@ -6,6 +6,59 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ---
 
+## [v1.0.5] - 2026-02-24
+
+### Added
+
+* **Nueva clase `Router` (`DLRoute\Core\Routing\Router`):**
+
+  * Genera URLs absolutas a partir de rutas relativas (`Router::to()`).
+  * Proporciona telemetría completa de la ruta actualmente visitada (`Router::from()`).
+  * Normaliza rutas y valida formato, lanzando `RouteException` en caso de ruta inválida.
+  * Documentación profesional PHPDoc incluida, ejemplo de uso y licencia MIT.
+
+* **Nueva clase `RouterData` (`DLRoute\Core\Data\RouterData`):**
+
+  * Telemetría completa de la petición HTTP.
+  * Propiedades principales:
+
+    * `url` – URL absoluta de la petición.
+    * `ip_client` – IP del cliente.
+    * `remote_addr` – Dirección remota de la petición.
+    * `user_agent` – Agente de usuario.
+    * `scheme` – Protocolo HTTP (`http` o `https`).
+    * `host` – Nombre de host o dominio.
+    * `port` – Puerto de la ruta.
+    * `local_port` – Puerto local de ejecución de la aplicación.
+    * `dir` – Directorio de ejecución de la aplicación.
+    * `route` – Ruta relativa de la aplicación.
+    * `uri` – URI completa (incluye directorio de ejecución).
+    * `method` – Método HTTP.
+    * `time` – Marca temporal de la consulta.
+  * Integra traits: `SchemeHTTP`, `PortCandidate`, `Domain`.
+  * Documentación profesional PHPDoc incluida y licencia MIT.
+
+* **Ampliación del trait `Domain` (`DLRoute\Server\Domain`):**
+
+  * Nuevo método `set_external_host(string $host, bool $required = false): void`.
+
+    * Permite establecer un dominio externo cuando no se puede determinar un host válido automáticamente.
+    * Parámetro `$required = true` indica que el host impuesto será el único aceptado.
+    * Valida que el host no esté vacío y lanza `DomainException` en caso de error.
+    * Facilita configuraciones globales o específicas forzando el dominio deseado.
+
+### Changed
+
+* No hay cambios retrocompatibles; esta versión introduce nuevas funcionalidades sin modificar funcionalidades previas.
+
+### Documentation
+
+* Se agregaron ejemplos de uso en PHPDoc para `Router` y `RouterData`.
+* Explicación de normalización de rutas, generación de URLs absolutas y telemetría de rutas.
+* Licencia MIT y metadatos de autor integrados en todas las clases y traits actualizados.
+
+---
+
 ## [v1.0.4] - 2026-01-15
 
 ### Added

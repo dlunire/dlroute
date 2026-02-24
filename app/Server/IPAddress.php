@@ -51,6 +51,7 @@ trait IPAddress {
      * @var string[]
      */
     private const IP_KEYS = [
+        'HTTP_CF_CONNECTING_IP',
         'HTTP_X_FORWARDED_FOR',
         'HTTP_CLIENT_IP',
         'REMOTE_ADDR'

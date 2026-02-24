@@ -86,7 +86,7 @@ final class DLHost {
             throw new DomainException("No se pudo obtener el dominio");
         }
 
-        return $host ?? '';
+        return $host;
     }
 
     /**

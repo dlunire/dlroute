@@ -26,6 +26,8 @@
 
 ini_set('display_errors', 1);
 
+use DLRoute\Core\Routing\Router;
+use DLRoute\Requests\DLOutput;
 use DLRoute\Requests\DLRoute;
 use DLRoute\Server\DLHost;
 use DLRoute\Server\DLServer;
@@ -43,8 +45,13 @@ include dirname(__DIR__) . "/vendor/autoload.php";
  * Lo que sigue más abajo son rutas de ejemplos recién creadas.
  */
 
-DLRoute::get('/ruta/registrada', function() {
+DLRoute::get('/', function() {
     DLServer::set_external_host('ciencia.com');
+
+    /** @var non-empty-string $root */
+    $root = DLServer::get_document_root();
+
+    file_put_contents("{$root}/test.json", DLOutput::get_json(Router::from(), true));
 
     return [
         "dlunire" => "Powered by David E Luna M",
@@ -60,6 +67,8 @@ DLRoute::get('/ruta/registrada', function() {
         "local_port" => DLServer::get_local_port(),
         "method" => DLServer::get_method(),
         "proxy" => DLServer::is_likely_proxy(),
+        "Router::to()" => Router::to('/ciencia//entorno'),
+        "Router::from()" => Router::from()
     ];
 });
 

@@ -131,19 +131,7 @@ class DLServer implements ServerInterface {
      * @return string|null
      */
     public static function get_server_software(): ?string {
-
-        /**
-         * Software del servidor
-         * 
-         * @var string|null
-         */
-        $server_software = null;
-
-        if (\array_key_exists('SERVER_SOFTWARE', $_SERVER)) {
-            $server_software = $_SERVER['SERVER_SOFTWARE'];
-        }
-
-        return $server_software;
+        return $_SERVER['SERVER_SOFTWARE'] ?? NULL;
     }
 
     public static function get_route(): string {
@@ -243,7 +231,9 @@ class DLServer implements ServerInterface {
          */
         $basedir = self::get_script_dir();
 
-        return "{$host}/{$basedir}";
+        return trim($basedir) !== ''
+            ? "{$host}/{$basedir}"
+            : trim($host);
     }
 
     /**
@@ -334,7 +324,7 @@ class DLServer implements ServerInterface {
         $escape_route = self::escape_route($route);
 
         /** @var string $route_pattern */
-        $route_pattern = "/\/*{$escape_route}/i";
+        $route_pattern = "/\/*{$escape_route}\b/i";
 
         /** @var array|string|null $dir */
         $dir = preg_replace($route_pattern, '', $uri);

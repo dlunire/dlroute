@@ -1,0 +1,15 @@
+{
+    "url": "https://api.dlunire.dev/routing",
+    "ip_client": "38.226.139.43",
+    "remote_addr": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0",
+    "scheme": "https",
+    "host": "api.dlunire.dev",
+    "port": 443,
+    "local_port": 80,
+    "dir": "/routing",
+    "route": "/",
+    "uri": "/routing/",
+    "method": "GET",
+    "time": "2026-02-24 21:32:43.217734"
+}

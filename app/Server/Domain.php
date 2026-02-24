@@ -58,7 +58,7 @@ trait Domain {
      *
      * @var string|null $host
      */
-    private static ?string $host = null;
+    private static ?string $hostname = null;
 
     private const KEYS = [
         "HTTP_X_FORWARDED_HOST",
@@ -130,7 +130,7 @@ trait Domain {
             throw new DomainException(message: "domain: El dominio o nombre de host personalizado no puede estar vacío");
         }
 
-        self::$host = trim($host);
+        self::$hostname = trim($host);
         self::$required = $required;
     }
 
@@ -141,7 +141,7 @@ trait Domain {
      * @return string|null
      */
     private static function get_external_host(): ?string {
-        return self::$host;
+        return self::$hostname;
     }
 
     /**

@@ -28,16 +28,15 @@ namespace DLRoute\Errors;
 
 use RuntimeException;
 use Throwable;
-use DLRoute\Server\DLOutput;
 
 /**
- * Excepción lanzada cuando se desea devolver un error estructurado
- * como salida JSON o similar al cliente.
+ * Excepción lanzada cuando no es posible resolver la ruta
+ * desde el contexto de ejecución.
  *
- * Permite incluir:
- * - Código de error HTTP.
- * - Mensaje personalizado.
- * - Información adicional opcional.
+ * Puede representar:
+ * - Rutas inexistentes o no registradas.
+ * - Errores de coincidencia (matching) en el router.
+ * - Problemas de configuración en el sistema de rutas.
  *
  * @package DLRoute\Errors
  * 
@@ -46,40 +45,32 @@ use DLRoute\Server\DLOutput;
  * @copyright (c) 2026 David E Luna M
  * @license MIT
  */
-final class OutputException extends RuntimeException {
-
+final class RouteException extends RuntimeException {
     /**
-     * Mensaje base por defecto
+     * Mensaje genérico en caso de que no definan uno durante el lanzamiento de
+     * esta excepción
      */
-    private const BASE_MESSAGE = 'Ocurrió un error inesperado';
-
-    /**
-     * Código HTTP por defecto
-     */
-    private const BASE_CODE = 500;
-
-    /**
-     * Información adicional que puede incluirse en la salida
-     *
-     * @var array<string, mixed>
-     */
-    private array $details = [];
+    private const BASE_MESSAGE = 'Ruta no resuelta o no encontrada';
 
     /**
      * Constructor.
      *
      * @param string|null $message Mensaje específico que complementa el mensaje base.
-     * @param int|null $code Código de error HTTP (por defecto 500).
-     * @param array<string, mixed> $details Información adicional que se incluirá en la salida.
+     * @param int $code Código de error (por defecto 500).
      * @param Throwable|null $previous Excepción previa.
      */
-    public function __construct(
-        ?string $message = null,
-        ?int $code = null,
-        array $details = [],
-        ?Throwable $previous = null
-    ) {
-        parent::__construct($message ?? self::BASE_MESSAGE, $code ?? self::BASE_CODE, $previous);
-        $this->details = $details;
+    public function __construct(?string $message = null, int $code = 500, ?Throwable $previous = null) {
+        parent::__construct(self::resolve_message($message), $code, $previous);
+    }
+
+    /**
+     * Resuelve el mensaje. Si no pasa el mensaje a través del constructor durante la excepción,
+     * entonces utilizará el mensaje genérico de `RouteException::BASE_MESSAGE`.
+     *
+     * @param string|null $message Mensaje que será recibido por el constructor.
+     * @return string
+     */
+    private static function resolve_message(?string $message): string {
+        return $message ?? self::BASE_MESSAGE;
     }
 }
