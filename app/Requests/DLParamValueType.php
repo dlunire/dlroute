@@ -125,7 +125,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
          * 
          * @var string
          */
-        $pattern = '/^[a-f0-9]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/';
+        $pattern = '/^[a-f0-9]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i';
 
         return preg_match($pattern, $value);
     }

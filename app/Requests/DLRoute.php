@@ -160,13 +160,15 @@ class DLRoute extends Route implements RouteInterface {
      * @param callable|array|string $controller Callback o controlador encargado de manejar la solicitud
      * @param array|object $data Permite implementar datos adicionales al controlador
      * @param non-empty-string|null $mime_type Opcional. Permite establecer el tipo MIME de respueta al cliente.
+     * @return void
      * 
      * @throws RouteException Es lanzada si el método ingresado por el usuario no está soportado y/o es inválido.
      */
-    public static function match(array $methods, string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
+    public static function match(array $methods, string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): void {
         self::$route = $uri;
+        
         if (\count($methods) < 1) {
-            return self::get_instance();
+            return;
         }
 
         foreach ($methods as $method) {
@@ -185,13 +187,9 @@ class DLRoute extends Route implements RouteInterface {
             $routes = new RouteGenerator($uri);
 
             $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type, $method) {
-                
-
                 self::request($uri, $controller, $method, $data, $mime_type);
             });
         }
-
-        return self::get_instance();
     }
 
     /**

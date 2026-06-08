@@ -102,16 +102,18 @@ DLRoute::post("/david/{test?}", function (object $params) {
         "info" => "Otra ruta más",
         "params" => $params,
     ];
-});
+})->filter_by_type([
+    "test" => "integer"
+]);
 
 
-DLRoute::match([Methods::GET, Methods::PUT], '/algo/{?}', function (object $params) {
+DLRoute::match([Methods::GET, Methods::PUT], '/algo/{d?}', function (object $params) {
     return [
         "info" => true,
         "params" => $params
     ];
 })->filter_by_type([
-    "id" => "integer"
+    "d" => "integer"
 ]);
 
 DLRoute::execute();
