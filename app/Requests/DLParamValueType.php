@@ -42,7 +42,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
         $route = self::$route;
 
         foreach ($fields as $key => $value) {
-            if (!is_string($key)) {
+            if (!\is_string($key)) {
                 $this->message("Formato de filtro inválido", 500);
                 exit;
             }
@@ -61,7 +61,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
     protected function filter_param(array $filters, object $params): void {
 
         foreach ($params as $key => $value) {
-            if (!array_key_exists($key, $filters)) {
+            if (!\array_key_exists($key, $filters)) {
                 continue;
             }
 
@@ -116,7 +116,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
      * @return bool
      */
     private function is_uuid(mixed $value): bool {
-        if (!is_string($value)) {
+        if (!\is_string($value)) {
             return false;
         }
 
@@ -139,11 +139,11 @@ abstract class DLParamValueType implements ParamTypeInterface {
     private function is_email(string $input): bool {
         $input = trim($input);
 
-        if (strlen($input) < 5) {
+        if (\strlen($input) < 5) {
             return false;
         }
 
-        $email_pattern = '/^[a-z][a-z0-9-_.]{1,63}\@[a-z][a-z0-9-_.]+\.[a-z0-9-]{1,10}$/';
+        $email_pattern = '/^[a-z][a-z0-9-_.]{1,63}\@[a-z][a-z0-9-_.]+\.[a-z0-9-]{1,10}$/i';
 
         /**
          * Resultado de un análisis previo hecho para validar un correo electrónico.
@@ -177,7 +177,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
      * @return boolean
      */
     private function is_integer(mixed $input): bool {
-        return is_int($input);
+        return \is_int($input);
     }
 
     /**
@@ -187,7 +187,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
      * @return boolean
      */
     private function is_boolean(mixed $input): bool {
-        return is_bool($input);
+        return \is_bool($input);
     }
 
     /**
@@ -197,7 +197,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
      * @return boolean
      */
     private function is_float(mixed $input): bool {
-        return is_float($input);
+        return \is_float($input);
     }
 
     /**
@@ -207,7 +207,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
      * @return boolean
      */
     private function is_string(mixed $input): bool {
-        return is_string($input);
+        return \is_string($input);
     }
 
     /**
@@ -225,7 +225,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
      * @return boolean
      */
     private function is_password(mixed $input): bool {
-        if (!is_string($input)) {
+        if (!\is_string($input)) {
             return false;
         }
 
@@ -234,7 +234,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
          * 
          * @var integer
          */
-        $length = strlen($input);
+        $length = \strlen($input);
 
         if ($length < 8) {
             return false;

@@ -46,7 +46,7 @@ include dirname(__DIR__) . "/vendor/autoload.php";
  */
 
 DLRoute::get('/', function() {
-    DLServer::set_external_host('ciencia.com');
+    DLServer::set_external_host('dlunire.dev');
 
     /** @var non-empty-string $root */
     $root = DLServer::get_document_root();
@@ -71,5 +71,14 @@ DLRoute::get('/', function() {
         "Router::from()" => Router::from()
     ];
 });
+
+
+DLRoute::options('/', function() {
+    return file_get_contents("test.html");
+}, [], "text/html");
+
+DLRoute::head('/', function() {
+    return file_get_contents("test.html");
+}, [], "text/html");
 
 DLRoute::execute();

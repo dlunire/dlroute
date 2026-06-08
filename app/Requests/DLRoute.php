@@ -2,6 +2,8 @@
 
 namespace DLRoute\Requests;
 
+use DLRoute\Enums\Methods;
+use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\RouteInterface;
 use DLRoute\Server\DLServer;
 
@@ -10,11 +12,10 @@ use DLRoute\Server\DLServer;
  * 
  * @package DLRoute
  * 
- * @version 1.0.0
- * @author David E Luna M <davidlunamontilla@gmail.com>
+ * @version v1.0.1
+ * @author David E Luna M <dlunireframework@gmail.com>
  * @copyright 2023 David E Luna M
  * @license MIT
- * 
  */
 class DLRoute extends Route implements RouteInterface {
     private static ?self $instance = null;
@@ -26,7 +27,57 @@ class DLRoute extends Route implements RouteInterface {
             return self::get_instance();
         }
 
-        self::request($uri, $controller, 'GET', $data, $mime_type);
+        self::request($uri, $controller, Methods::GET, $data, $mime_type);
+
+        return self::get_instance();
+    }
+
+    /**
+     * Define una ruta para manejar solicitudes `HTTP HEAD`.
+     * 
+     * Permite definir una ruta para manejar solicitudes `HTTP HEAD`. El callback o controlador
+     * proporcionado se ejecutará cuando la URI definida sea accedida utilizando
+     * el método `HTTP HEAD`.
+     * 
+     * @param string $uri Patrón URI que se comparará con las solicitudes entrantes
+     * @param callable|array|string $controller `callback` o controlador encargado de manejar la solicitud
+     * @param array|object $data Permite implementar datos adicionales al controlador.
+     * @param mixed $mime_type Permite establecer el tipo MIME de respuesta al cliente.
+     * @return DLParamValueType
+     */
+    public static function head(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
+        self::$route = $uri;
+
+        if (!DLServer::is_head()) {
+            return self::get_instance();
+        }
+
+        self::request($uri, $controller, Methods::HEAD, $data, $mime_type);
+
+        return self::get_instance();
+    }
+
+    /**
+     * Define una ruta para manejar solicitudes `HTTP OPTIONS`.
+     * 
+     * Permite definir una ruta para manejar solicitudes `HTTP OPTIONS`. El callback o controlador
+     * proporcionado se ejecutará cuando la URI definida sea accedida utilizando
+     * el método `HTTP OPTIONS`.
+     * 
+     * @param string $uri Patrón URI que se comparará con las solicitudes entrantes
+     * @param callable|array|string $controller `callback` o controlador encargado de manejar la solicitud
+     * @param array|object $data Permite implementar datos adicionales al controlador.
+     * @param mixed $mime_type Permite establecer el tipo MIME de respuesta al cliente.
+     * @return DLParamValueType
+     */
+    public static function options(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
+        self::$route = $uri;
+
+        if (!DLServer::is_options()) {
+            return self::get_instance();
+        }
+
+        self::request($uri, $controller, Methods::OPTIONS, $data, $mime_type);
 
         return self::get_instance();
     }
@@ -38,7 +89,7 @@ class DLRoute extends Route implements RouteInterface {
             return self::get_instance();
         }
 
-        self::request($uri, $controller, 'POST', $data, $mime_type);
+        self::request($uri, $controller, Methods::POST, $data, $mime_type);
 
         return self::get_instance();
     }
@@ -50,7 +101,7 @@ class DLRoute extends Route implements RouteInterface {
             return self::get_instance();
         }
 
-        self::request($uri, $controller, 'PUT', $data, $mime_type);
+        self::request($uri, $controller, Methods::PUT, $data, $mime_type);
 
         return self::get_instance();
     }
@@ -62,7 +113,7 @@ class DLRoute extends Route implements RouteInterface {
             return self::get_instance();
         }
 
-        self::request($uri, $controller, 'PATCH', $data, $mime_type);
+        self::request($uri, $controller, Methods::PATCH, $data, $mime_type);
 
         return self::get_instance();
     }
@@ -74,9 +125,46 @@ class DLRoute extends Route implements RouteInterface {
             return self::get_instance();
         }
 
-        self::request($uri, $controller, 'DELETE', $data, $mime_type);
+        self::request($uri, $controller, Methods::DELETE, $data, $mime_type);
 
         return self::get_instance();
+    }
+
+    /**
+     * Resumen de métodos HTTP que comparten la misma ruta
+     * @param array<Methods> $methods Métodos HTTP a la ruta asignada.
+     * @param string $uri Ruta a ser registrada con los métodos soportados por el enrutador.
+     * @param callable|array|string $controller Callback o controlador encargado de manejar la solicitud
+     * @param array|object $data Permite implementar datos adicionales al controlador
+     * @param non-empty-string|null $mime_type Opcional. Permite establecer el tipo MIME de respueta al cliente.
+     * 
+     * @throws RouteException Es lanzada si el método ingresado por el usuario no está soportado y/o es inválido.
+     */
+    public static function match(array $methods, string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null) {
+        self::$route = $uri;
+
+        if (\count($methods) < 1) {
+            return self::get_instance();
+        }
+
+        foreach ($methods as $method) {
+
+            if (!($method instanceof Methods)) {
+                /** @var string $value */
+                $value = \preg_replace("/\s+/", ' ', print_r($method, true));
+
+                /** @var string $type */
+                $type = \gettype($method);
+
+                throw new RouteException(
+                    "El método «{$value}» no está soportado. Además, se esperaba un ENUM, pero en su lugar, devolvió «{$type}»"
+                );
+            }
+
+            self::request($uri, $controller, $method, $data, $mime_type);
+        }
+
+
     }
 
     /**
@@ -124,19 +212,19 @@ class DLRoute extends Route implements RouteInterface {
          */
         $registered_current_route = self::$current_param[$route] ?? null;
 
-        if (is_null(self::$params)) {
+        if (\is_null(self::$params) === null) {
             self::run();
         }
 
-        if (is_null($registered_current_route)) {
+        if ($registered_current_route === null) {
             self::run();
         }
 
-        if (!array_key_exists($method, $filters)) {
+        if (!\array_key_exists($method, $filters)) {
             self::run();
         }
 
-        if (!array_key_exists($registered_current_route, $filters[$method])) {
+        if (!\array_key_exists($registered_current_route, $filters[$method])) {
             self::run();
         }
 

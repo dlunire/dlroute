@@ -6,6 +6,28 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ---
 
+## [v1.0.6] - 2026-06-07
+
+### Added
+
+* **Soporte para los métodos HTTP `HEAD` y `OPTIONS` en el router:**
+
+  * El router ahora responde correctamente a peticiones `HEAD` en todas las rutas registradas.
+  * Las respuestas `HEAD` devuelven los mismos headers que `GET` sin body, cumpliendo con el estándar HTTP/1.1 (RFC 7231).
+  * El router ahora responde correctamente a peticiones `OPTIONS`, permitiendo la negociación de capacidades entre cliente y servidor (CORS preflight).
+  * Mejora la compatibilidad con scrapers y crawlers externos (Facebook, Twitter, WhatsApp) que verifican la existencia de recursos mediante `HEAD` antes de realizar el `GET`.
+  * Mejora la compatibilidad con clientes que realizan peticiones CORS o necesitan descubrir los métodos disponibles en una ruta.
+
+### Changed
+
+* No hay cambios retrocompatibles; esta versión extiende el soporte de métodos HTTP sin modificar funcionalidades previas.
+
+### Documentation
+
+* Documentación PHPDoc actualizada para reflejar el soporte de los métodos `HEAD` y `OPTIONS` en las clases y traits del sistema de routing.
+
+---
+
 ## [v1.0.5] - 2026-02-24
 
 ### Added

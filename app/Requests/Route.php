@@ -2,6 +2,7 @@
 
 namespace DLRoute\Requests;
 
+use DLRoute\Enums\Methods;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Server\DLServer;
 
@@ -16,6 +17,13 @@ abstract class Route extends DLParamValueType{
     protected static array $routes = [];
 
     /**
+     * Permite seleccionar múltiples métodos HTTP para registrar rutas
+     * 
+     * @var array<non-empty-string> $matches
+     */
+    protected static array $matches = [];
+
+    /**
      * Variables globales para el controlador.
      *
      * @var array|object
@@ -28,13 +36,13 @@ abstract class Route extends DLParamValueType{
      *
      * @param string $uri Ruta a registrar.
      * @param callable|array|string $controller
-     * @param string $method Método de envío HTTP.
+     * @param Methods $method Método de envío HTTP.
      * @param array|object $vars Datos que pueden ser usados como parámetros del método del controlador.
      * @return void
      */
-    protected static function request(string $uri, callable|array|string $controller, string $method, array|object $vars, string $mime_type = null): void {
-        self::register_routes($method, $uri, $controller);
-        self::$vars[$method][$uri] = $vars;
+    protected static function request(string $uri, callable|array|string $controller, Methods $method, array|object $vars, string $mime_type = null): void {
+        self::register_routes($method->value, $uri, $controller);
+        self::$vars[$method->value][$uri] = $vars;
         self::$mime_types[$uri] = $mime_type;
     }
 
@@ -42,7 +50,7 @@ abstract class Route extends DLParamValueType{
      * Devuelve el tipo `mime` personalizado.
      *
      * @param string $route
-     * @return void
+     * @return string|null
      */
     protected static function get_mime_type(string $route): string | null {
         return self::$mime_types[$route] ?? null;

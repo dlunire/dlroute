@@ -97,6 +97,24 @@ class DLServer implements ServerInterface {
         return self::get_method() === "GET";
     }
 
+    /**
+     * Determina si el método HTTP es HEAD.
+     * 
+     * @return bool
+     */
+    public static function is_head(): bool {
+        return self::get_method() === "HEAD";
+    }
+    
+    /**
+     * Determina si el método HTTP es OPTIONS.
+     * 
+     * @return bool
+     */
+    public static function is_options(): bool {
+        return self::get_method() === "OPTIONS";
+    }
+
     public static function is_put(): bool {
         return self::get_method() === "PUT";
     }
