@@ -45,7 +45,7 @@ class DLServer implements ServerInterface {
 
         $uri = trim($uri, "/");
 
-        return trim($uri);
+        return $uri === '' ? '/' : trim($uri);
     }
 
     public static function get_hostname(): string {

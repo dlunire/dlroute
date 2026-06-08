@@ -1,16 +1,16 @@
 {
-    "url": "http://localhost:4000",
+    "url": "http://localhost:4000/d",
     "ip_client": "127.0.0.1",
     "remote_addr": "127.0.0.1",
-    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 OPR/132.0.0.0",
+    "user_agent": "PostmanRuntime/7.49.1",
     "scheme": "http",
     "host": "localhost",
     "port": 4000,
     "local_port": 4000,
     "dir": "/",
-    "route": "/",
-    "uri": "/",
+    "route": "/d",
+    "uri": "d",
     "method": "GET",
-    "time": "2026-06-08 19:10:48.820739",
+    "time": "2026-06-08 22:04:19.273434",
     "developer": "David E Luna M"
 }

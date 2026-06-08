@@ -26,7 +26,7 @@ class DLRoute extends Route implements RouteInterface {
 
         $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
             self::$route = $uri;
-
+            
             if (!DLServer::is_get()) {
                 return self::get_instance();
             }
@@ -166,7 +166,7 @@ class DLRoute extends Route implements RouteInterface {
      */
     public static function match(array $methods, string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): void {
         self::$route = $uri;
-        
+
         if (\count($methods) < 1) {
             return;
         }
