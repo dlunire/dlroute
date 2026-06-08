@@ -82,7 +82,7 @@ class DLOutput implements OutputInterface {
     }
 
     public function set_content(mixed $content): void {
-        $this->content = is_string($content) ? trim($content) : $content;
+        $this->content =  \is_string($content) ? trim($content) : $content;
     }
 
     public static function get_json(object|array $content, bool $pretty = false): string {

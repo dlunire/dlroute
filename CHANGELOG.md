@@ -22,6 +22,7 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
   * Permite registrar una misma ruta para múltiples métodos HTTP simultáneamente.
   * Acepta un array de casos del enum `Methods` como primer argumento.
   * Compatible con rutas paramétricas y el sistema de filtros por tipo (`filter_by_type()`).
+  * La validación de tipos se delega a las definiciones individuales de cada ruta.
   * Elimina la necesidad de registrar la misma ruta varias veces para distintos verbos HTTP.
 
 * **Nuevo enum `Methods` (`DLRoute\Enums\Methods`):**
@@ -30,13 +31,42 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
   * Reemplaza el uso de strings literales en las llamadas internas a `self::request()`.
   * Mejora la seguridad de tipos y la detección temprana de errores en tiempo de desarrollo.
 
+* **Soporte de parámetros opcionales en rutas mediante autómata finito:**
+
+  * Se implementa el analizador léxico `RouterLexer` (`DLRoute\Core\Routing\Automaton\RouterLexer`) que tokeniza la URI byte a byte, clasificando cada segmento como texto literal (`TokenType::TEXT_PLAIN`) o parámetro dinámico (`TokenType::PARAM`).
+  * Se implementa el generador de rutas `RouteGenerator` (`DLRoute\Core\Routing\Automaton\RouteGenerator`) que consume los tokens del lexer y produce todas las variantes válidas de una URI cuando contiene parámetros opcionales.
+  * Cada parámetro opcional genera una variante de ruta adicional truncada en ese punto, siguiendo el modelo explícito de declaración de rutas.
+  * Ejemplo de uso:
+
+```php
+    // Genera automáticamente: ["/blog", "/blog/{id}/comentarios"]
+    DLRoute::get('/blog/{id?}/comentarios', ...);
+
+    // Con validación de tipo sobre parámetro obligatorio:
+    DLRoute::get('/ruta/{id}', function(object $params) {
+        // ...
+    })->filter_by_type(["id" => "integer"]);
+```
+
+  * Todos los métodos HTTP (`get`, `head`, `post`, `put`, `patch`, `delete`, `options`, `match`) integran `RouteGenerator` internamente mediante `load_routes()`.
+  * Se agrega validación de sintaxis de rutas: el uso incorrecto del marcador `?` fuera de un parámetro lanza `RouteException` con la posición exacta del error.
+  * Nuevo enum `TokenType` (`DLRoute\Core\Routing\Automaton\TokenType`) con los casos `TEXT_PLAIN` y `PARAM`.
+  * Nueva interfaz `RouteLexerInterface` (`DLRoute\Interfaces\Routing\RouteLexerInterface`) con las constantes de tokens del autómata: `BRACKET_OPEN`, `BRACKET_CLOSE`, `OPTIONAL_PARAMETER`, `WHITE_SPACE` y `SLASH`.
+
+* **Nueva telemetría en `DLOutput`:**
+
+  * Nuevo método `telemetry(string $message): Telemetry` que captura una instantánea inmutable del estado del entorno de ejecución, incluyendo metadatos de red, cabeceras HTTP y el mapa del enrutador.
+  * Retorna un objeto `Telemetry` de solo lectura para diagnóstico y observabilidad del servidor.
+
 ### Changed
 
 * Los métodos `get()`, `head()`, `post()`, `put()`, `patch()`, `delete()` y `options()` ahora usan `Methods::*` en lugar de strings literales al invocar `self::request()`.
+* Todos los métodos de registro de rutas integran `RouteGenerator` para soportar parámetros opcionales de forma transparente.
 
 ### Documentation
 
 * Documentación PHPDoc agregada a los métodos `head()`, `options()` y `match()`.
+* Documentación completa de `RouterLexer`, `RouteGenerator`, `TokenType` y `RouteLexerInterface`.
 * La documentación pública de los métodos heredados permanece en `RouteInterface`.
 
 ---
