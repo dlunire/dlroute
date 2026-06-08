@@ -86,7 +86,7 @@ DLRoute::match([Methods::GET, Methods::POST], '/test/{int}', function(object $pa
     return [
         "test" => $params
     ];
-}, [], "text/html")->filter_by_type([
+}, [])->filter_by_type([
     "int" => "integer"
 ]);
 
