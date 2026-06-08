@@ -212,7 +212,7 @@ class DLRoute extends Route implements RouteInterface {
          */
         $registered_current_route = self::$current_param[$route] ?? null;
 
-        if (\is_null(self::$params) === null) {
+        if (self::$params === null) {
             self::run();
         }
 
