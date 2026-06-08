@@ -47,8 +47,8 @@ final class RouterLexer implements RouteLexerInterface {
             /** @var non-empty-string $byte */
             $byte = self::$uri[self::$offset];
 
-            if (self::BRACKET_OPEN === $byte) {
-                $this->tokenizer_params();
+            if ($byte !== self::WHITE_SPACE) {
+                $this->tokenizer();
             }
 
             self::$offset++;
@@ -79,6 +79,43 @@ final class RouterLexer implements RouteLexerInterface {
          * @var int $length
          */
         $length = $end - ($current_offset - 1);
+
+        /** @var non-empty-string $lexeme */
+        $lexeme = \substr(self::$uri, $current_offset, $length);
+
+        /** @var boolean $is_optional */
+        $is_optional = $this->is_optional($lexeme, $length);
+
+        self::$tokens[] = [
+            "lexeme" => \substr(self::$uri, $current_offset, $length),
+            "optional" => $is_optional,
+            "content" => self::$uri
+        ];
+
+        self::$offset = $end;
+    }
+
+    private function tokenizer(): void {
+
+        /** @var integer $current_offset */
+        $current_offset = self::$offset;
+
+        $end = \strpos(
+            haystack: self::$uri,
+            needle: self::SLASH,
+            offset: $current_offset
+        );
+
+        if ($end === false) {
+            $end = self::$size;
+        }
+
+        /**
+         * Tamaño del lexema.
+         * 
+         * @var int $length
+         */
+        $length = $end - ($current_offset);
 
         /** @var non-empty-string $lexeme */
         $lexeme = \substr(self::$uri, $current_offset, $length);

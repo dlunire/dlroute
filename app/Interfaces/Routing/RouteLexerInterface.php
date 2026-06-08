@@ -47,4 +47,18 @@ interface RouteLexerInterface {
      * @var non-empty-string 
      */
     public const OPTIONAL_PARAMETER = "\x3f";
+
+    /**
+     * Espacio en blanco
+     * 
+     * @var non-empty-string
+     */
+    public const WHITE_SPACE = "\x20";
+
+    /**
+     * Barra diagonal derecha `/`
+     * 
+     * @var non-empty-string
+     */
+    public const SLASH = "\x2f";
 }
