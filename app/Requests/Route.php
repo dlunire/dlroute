@@ -3,10 +3,11 @@
 namespace DLRoute\Requests;
 
 use DLRoute\Enums\Methods;
+use DLRoute\Interfaces\RouteInterface;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Server\DLServer;
 
-abstract class Route extends DLParamValueType{
+abstract class Route extends DLParamValueType implements RouteInterface{
     use RouteParams;
 
     /**
@@ -42,6 +43,10 @@ abstract class Route extends DLParamValueType{
      * @return void
      */
     protected static function request(string $uri, callable|array|string $controller, Methods $method, array|object $vars, ?string $mime_type = null): void {
+
+        /** @var non-empty-string $uri Puesto temporalmente hasta que el autómata se haga cargo */
+        $uri = preg_replace("/\/+$/", '', $uri);
+    
         self::register_routes($method->value, $uri, $controller);
         self::$vars[$method->value][$uri] = $vars;
         self::$mime_types[$uri] = $mime_type;

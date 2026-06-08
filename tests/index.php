@@ -49,64 +49,72 @@ include dirname(__DIR__) . "/vendor/autoload.php";
  * Lo que sigue más abajo son rutas de ejemplos recién creadas.
  */
 
-DLRoute::get('/', function () {
-    DLServer::set_external_host('dlunire.dev');
+// DLRoute::get('/', function () {
+//     DLServer::set_external_host('dlunire.dev');
 
-    /** @var non-empty-string $root */
-    $root = DLServer::get_document_root();
+//     /** @var non-empty-string $root */
+//     $root = DLServer::get_document_root();
 
-    file_put_contents("{$root}/test.json", DLOutput::get_json(Router::from(), true));
+//     file_put_contents("{$root}/test.json", DLOutput::get_json(Router::from(), true));
 
-    return [
-        "dlunire" => "Powered by David E Luna M",
-        "dir" => DLServer::get_dir(),
-        "route" => DLServer::get_route(),
-        "uri" => DLServer::get_uri(),
-        "url_base" => DLServer::get_base_url(),
-        "domain" => DLHost::get_domain(),
-        "hostname" => DLHost::get_hostname(),
-        "is_https" => DLHost::is_https(),
-        "IP" => DLServer::get_ipaddress(),
-        "port" => DLServer::get_port(),
-        "local_port" => DLServer::get_local_port(),
-        "method" => DLServer::get_method(),
-        "proxy" => DLServer::is_likely_proxy(),
-        "Router::to()" => Router::to('/ciencia//entorno'),
-        "Router::from()" => Router::from()
-    ];
-});
+//     return [
+//         "dlunire" => "Powered by David E Luna M",
+//         "dir" => DLServer::get_dir(),
+//         "route" => DLServer::get_route(),
+//         "uri" => DLServer::get_uri(),
+//         "url_base" => DLServer::get_base_url(),
+//         "domain" => DLHost::get_domain(),
+//         "hostname" => DLHost::get_hostname(),
+//         "is_https" => DLHost::is_https(),
+//         "IP" => DLServer::get_ipaddress(),
+//         "port" => DLServer::get_port(),
+//         "local_port" => DLServer::get_local_port(),
+//         "method" => DLServer::get_method(),
+//         "proxy" => DLServer::is_likely_proxy(),
+//         "Router::to()" => Router::to('/ciencia//entorno'),
+//         "Router::from()" => Router::from()
+//     ];
+// });
 
 
-DLRoute::options('/', fn() => file_get_contents("test.html"), [], "text/html");
-DLRoute::match(
-    methods: [
-        Methods::GET,
-        Methods::POST,
-        Methods::PUT,
-    ],
-    uri: '/test/{int}',
-    controller: fn(object $params): array => [
-        "test" => $params,
-        "from" => Router::from()
-    ],
-    data: []
-)->filter_by_type(fields: [
-    "int" => "integer"
-]);
+// DLRoute::options('/', fn() => file_get_contents("test.html"), [], "text/html");
+// DLRoute::match(
+//     methods: [
+//         Methods::GET,
+//         Methods::POST,
+//         Methods::PUT,
+//     ],
+//     uri: '/test/{int}',
+//     controller: fn(object $params): array => [
+//         "test" => $params,
+//         "from" => Router::from()
+//     ],
+//     data: []
+// )->filter_by_type(fields: [
+//     "int" => "integer"
+// ]);
 
-# Ruta con parámetros opcionales:
-DLRoute::get("/opcionales/{test }", function (object $params) {
 
-    /** @var RouterLexer */
-    $lexer = new RouteGenerator("/");
-    // $lexer = new RouteGenerator("/blog/ver-post?v=2/{id?}");
-
-    $lexer->generate();
-
+DLRoute::get("/ciencia/{test?}", function (object $params) {
     return [
         "info" => "Ruta con parámetros opcionales",
         "params" => $params,
     ];
 });
+
+DLRoute::get("/david/{test?}", function (object $params) {
+    return [
+        "info" => "Otra ruta más",
+        "params" => $params,
+    ];
+});
+
+
+// DLRoute::match([Methods::GET, Methods::POST], '/algo/{id?}', function (object $params) {
+//     return [
+//         "info" => true,
+//         "params" => $params
+//     ];
+// });
 
 DLRoute::execute();

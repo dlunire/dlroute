@@ -39,21 +39,21 @@ abstract class RouterLexer implements RouteLexerInterface {
      *
      * @var string
      */
-    private static string $uri;
+    private readonly string $uri;
 
     /**
      * Posición del cursor del autómata.
      *
      * @var integer
      */
-    private static int $offset = 0;
+    private int $offset = 0;
 
     /**
      * Tamaño de la cadena a ser analizada.
      *
      * @var integer
      */
-    private static int $size = 0;
+    private readonly int $size;
 
     /**
      * Tokens capturados de la ruta.
@@ -78,8 +78,8 @@ abstract class RouterLexer implements RouteLexerInterface {
      * @param string $uri URI del patrón de ruta a tokenizar.
      */
     public function __construct(string $uri) {
-        self::$uri = trim($uri);
-        self::$size = \strlen(self::$uri);
+        $this->uri = trim($uri);
+        $this->size = \strlen($this->uri);
     }
 
     /**
@@ -89,15 +89,15 @@ abstract class RouterLexer implements RouteLexerInterface {
      */
     public function scanner(): void {
 
-        while (self::$offset < self::$size) {
+        while ($this->offset < $this->size) {
             /** @var non-empty-string $byte */
-            $byte = self::$uri[self::$offset];
+            $byte = $this->uri[$this->offset];
 
             if ($byte !== self::WHITE_SPACE) {
                 $this->tokenizer();
             }
 
-            self::$offset++;
+            $this->offset++;
         }
     }
 
@@ -113,12 +113,12 @@ abstract class RouterLexer implements RouteLexerInterface {
     private function tokenizer(): void {
 
         /** @var integer $current_offset */
-        $current_offset = self::$offset;
+        $current_offset = $this->offset;
 
         $end = $this->next_delimiter($current_offset);
 
         if ($end === false) {
-            $end = self::$size;
+            $end = $this->size;
         }
 
         /**
@@ -129,10 +129,10 @@ abstract class RouterLexer implements RouteLexerInterface {
         $length = $end - ($current_offset);
 
         /** @var non-empty-string $lexeme */
-        $lexeme = \substr(self::$uri, $current_offset, $length);
+        $lexeme = \substr($this->uri, $current_offset, $length);
 
         if ($lexeme === '') {
-            self::$offset = $end;
+            $this->offset = $end;
             return;
         }
 
@@ -147,7 +147,7 @@ abstract class RouterLexer implements RouteLexerInterface {
             "offset" => $current_offset
         ];
 
-        self::$offset = $end;
+        $this->offset = $end;
     }
 
     /**
@@ -163,12 +163,12 @@ abstract class RouterLexer implements RouteLexerInterface {
      */
     private function next_delimiter(int $offset): int {
 
-        while ($offset < self::$size) {
+        while ($offset < $this->size) {
             /** @var non-empty-string $byte */
-            $byte = self::$uri[$offset];
+            $byte = $this->uri[$offset];
 
             /** @var non-empty-string|null $pick */
-            $pick = self::$uri[$offset + 1] ?? null;
+            $pick = $this->uri[$offset + 1] ?? null;
 
             if ($byte === self::SLASH) {
                 return $offset;
@@ -177,14 +177,14 @@ abstract class RouterLexer implements RouteLexerInterface {
             if ($byte === self::OPTIONAL_PARAMETER && self::BRACKET_CLOSE !== $pick) {
                 throw new RouteException(
                     "La sintaxis de la ruta es incorrecta a partir de la posición «{$offset}». Subcadena: «"
-                        . \substr(self::$uri, $offset, self::$size - $offset) . "»"
+                        . \substr($this->uri, $offset, $this->size - $offset) . "»"
                 );
             }
 
             $offset++;
         }
 
-        return self::$size;
+        return $this->size;
     }
 
     /**
