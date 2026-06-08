@@ -69,7 +69,7 @@ trait Request {
      *
      * @var CurlHandle|false
      */
-    private CurlHandle|false $ch = false;
+    private CurlHandle|false|null $ch = false;
 
     /** @var bool Indica si debe seguir redirecciones HTTP */
     private bool $follow_location = false;
@@ -113,24 +113,19 @@ trait Request {
     /** @var string[] Métodos que envían cuerpo de datos */
     public const METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
-    /**
+/**
      * Destructor del trait `Request`.
      *
-     * Libera los recursos asociados a la sesión cURL activa al finalizar
-     * la instancia del objeto que utilice este trait.  
-     * 
-     * Si el manejador `$this->ch` es una instancia válida de `CurlHandle`,
-     * se invoca internamente `curl_close()` para cerrar la conexión y 
-     * liberar memoria del sistema.
-     *
-     * Esta acción es automática y no requiere intervención del desarrollador,
-     * asegurando una correcta gestión de recursos.
+     * Libera de forma automática los recursos asociados a la sesión cURL activa 
+     * al finalizar la instancia del objeto que utilice este trait.
+     * * Al destruirse la propiedad o la instancia, el recolector de objetos de PHP 
+     * libera el socket y la memoria subyacente de la instancia de `CurlHandle`.
      *
      * @return void
      */
     public function __destruct() {
         if ($this->ch instanceof CurlHandle) {
-            curl_close($this->ch);
+            $this->ch = null;
         }
     }
 

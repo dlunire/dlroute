@@ -81,7 +81,7 @@ final class Router {
      * @param string $route [Opcional] La ruta relativa hacia donde se desea navegar. Por defecto `'/'`.
      * @return non-empty-string URL absoluta generada.
      *
-     * @throws \DLRoute\Errors\RouteException Si la ruta tiene un formato inválido tras normalizarla.
+     * @throws DLRoute\Errors\RouteException Si la ruta tiene un formato inválido tras normalizarla.
      */
     public static function to(string $route = '/'): string {
         self::normalize_route($route);

@@ -20,6 +20,15 @@ use DLRoute\Server\DLServer;
 class DLRoute extends Route implements RouteInterface {
     private static ?self $instance = null;
 
+    private static function separe_route(string $uri) {
+
+        /** @var non-empty-string $pattern */
+        $pattern = "/(.*)?\?/";
+
+        /** @var array|false $components */
+        $components = preg_split("/\/+/", $uri);
+    }
+
     public static function get(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
         self::$route = $uri;
 

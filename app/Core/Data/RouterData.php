@@ -141,6 +141,13 @@ final class RouterData {
      */
     public readonly string $time;
 
+    /**
+     * Devuelve el nombre del desarrollador del sistema de rutas.
+     *
+     * @var non-empty-string $developer
+     */
+    public readonly string $developer;
+
     public function __construct(string $url) {
         $this->ip_client = DLServer::get_ipaddress();
         $this->remote_addr = DLServer::get_remote_addr();
@@ -155,5 +162,6 @@ final class RouterData {
         $this->uri = DLServer::get_uri();
         $this->method = DLServer::get_method();
         $this->time = DLTime::now_string();
+        $this->developer = "David E Luna M";
     }
 }

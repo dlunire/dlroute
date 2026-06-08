@@ -14,7 +14,7 @@ trait Path {
      */
     private function get_path(?string $path): string {
 
-        if (is_null($path)) {
+        if ($path === null) {
             $path = "";
         }
 
@@ -48,7 +48,7 @@ trait Path {
      */
     public function get_absolute_path(?string $path): string {
 
-        if (is_null($path)) {
+        if ($path === null) {
             $path = "";
         }
 

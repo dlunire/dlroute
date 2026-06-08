@@ -1,5 +1,7 @@
 <?php
 
+use DLRoute\Core\Routing\Automaton\RouterLexer;
+
 /**
  * Copyright (c) 2026 David E Luna M
  *
@@ -46,7 +48,7 @@ include dirname(__DIR__) . "/vendor/autoload.php";
  * Lo que sigue más abajo son rutas de ejemplos recién creadas.
  */
 
-DLRoute::get('/', function() {
+DLRoute::get('/', function () {
     DLServer::set_external_host('dlunire.dev');
 
     /** @var non-empty-string $root */
@@ -74,20 +76,35 @@ DLRoute::get('/', function() {
 });
 
 
-DLRoute::options('/', function() {
-    return file_get_contents("test.html");
-}, [], "text/html");
-
-DLRoute::match([Methods::GET, Methods::POST], '/test', function() {
-    return file_get_contents("test.html");
-}, [], "text/html");
-
-DLRoute::match([Methods::GET, Methods::POST], '/test/{int}', function(object $params) {
-    return [
-        "test" => $params
-    ];
-}, [])->filter_by_type([
+DLRoute::options('/', fn() => file_get_contents("test.html"), [], "text/html");
+DLRoute::match(
+    methods: [
+        Methods::GET,
+        Methods::POST,
+        Methods::PUT,
+    ],
+    uri: '/test/{int}',
+    controller: fn(object $params): array => [
+        "test" => $params,
+        "from" => Router::from()
+    ],
+    data: []
+)->filter_by_type(fields: [
     "int" => "integer"
 ]);
+
+# Ruta con parámetros opcionales:
+DLRoute::get("/opcionales/{test?}", function (object $params) {
+
+    /** @var RouterLexer */
+    $lexer = new RouterLexer("/opcionales/{cuaderno?}/david/{entorno}/{algo?}");
+
+    $lexer->scanner();
+
+    return [
+        "info" => "Ruta con parámetros opcionales",
+        "params" => $params,
+    ];
+});
 
 DLRoute::execute();

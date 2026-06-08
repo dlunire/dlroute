@@ -38,9 +38,10 @@ abstract class Route extends DLParamValueType{
      * @param callable|array|string $controller
      * @param Methods $method Método de envío HTTP.
      * @param array|object $vars Datos que pueden ser usados como parámetros del método del controlador.
+     * @param non-empty-string|null $mime_type Opcional. Permite establecer el tipo MIME de respueta al cliente.
      * @return void
      */
-    protected static function request(string $uri, callable|array|string $controller, Methods $method, array|object $vars, string $mime_type = null): void {
+    protected static function request(string $uri, callable|array|string $controller, Methods $method, array|object $vars, ?string $mime_type = null): void {
         self::register_routes($method->value, $uri, $controller);
         self::$vars[$method->value][$uri] = $vars;
         self::$mime_types[$uri] = $mime_type;
@@ -98,7 +99,7 @@ abstract class Route extends DLParamValueType{
         $controller = self::get_controller($route);
 
 
-        if (is_null($controller)) {
+        if ($controller === null) {
             DLOutput::not_found();
         }
 
@@ -154,11 +155,11 @@ abstract class Route extends DLParamValueType{
          */
         $controller = null;
 
-        if (!array_key_exists($method, self::$routes)) {
+        if (!\array_key_exists($method, self::$routes)) {
             return $controller;
         }
 
-        if (!array_key_exists($route, self::$routes[$method])) {
+        if (!\array_key_exists($route, self::$routes[$method])) {
             return $controller;
         }
 
@@ -221,7 +222,7 @@ abstract class Route extends DLParamValueType{
          */
         $error = "";
 
-        if (!is_string($controller_name)) {
+        if (!\is_string($controller_name)) {
             self::response_code(500);
 
             $error = DLOutput::get_json([
@@ -238,7 +239,7 @@ abstract class Route extends DLParamValueType{
             exit;
         }
 
-        if (!is_string($controller_method)) {
+        if (!\is_string($controller_method)) {
             self::response_code(500);
 
             $error = DLOutput::get_json([
@@ -312,7 +313,7 @@ abstract class Route extends DLParamValueType{
          */
         $content = $instance->{$controller_method}($params, $data);
 
-        if (is_string($content)) {
+        if (\is_string($content)) {
             $content = trim($content);
         }
 
@@ -336,7 +337,7 @@ abstract class Route extends DLParamValueType{
          * 
          * @var int
          */
-        $quantity = count($matches[0]);
+        $quantity = \count($matches[0]);
 
         /**
          * Información de errores del sistema en formato JSON.
@@ -370,7 +371,7 @@ abstract class Route extends DLParamValueType{
          */
         $content = null;
 
-        if (is_array($parts_controller)) {
+        if (\is_array($parts_controller)) {
             $content = self::array_controller($parts_controller, $data);
         }
 
@@ -420,7 +421,7 @@ abstract class Route extends DLParamValueType{
          * 
          * @var int
          */
-        $index = count($parts) - 1;
+        $index = \count($parts) - 1;
 
         /**
          * Nombre del controlador.
@@ -514,7 +515,7 @@ abstract class Route extends DLParamValueType{
      * @return boolean
      */
     public static function is_production(): bool {
-        if (defined('DL_PRODUCTION')) {
+        if (\defined('DL_PRODUCTION')) {
             return constant('DL_PRODUCTION');
         }
 
@@ -570,11 +571,11 @@ abstract class Route extends DLParamValueType{
          */
         $vars = [];
 
-        if (!array_key_exists($method, self::$vars)) {
+        if (!\array_key_exists($method, self::$vars)) {
             return $vars;
         }
 
-        if (!array_key_exists($route, self::$vars[$method])) {
+        if (!\array_key_exists($route, self::$vars[$method])) {
             return $vars;
         }
 
