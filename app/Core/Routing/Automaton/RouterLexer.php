@@ -57,44 +57,6 @@ final class RouterLexer implements RouteLexerInterface {
         print_r(self::$tokens);
     }
 
-    private function tokenizer_params() {
-
-        /** @var integer $current_offset */
-        $current_offset = self::$offset;
-
-        /** @var int|false $end */
-        $end = \strpos(
-            haystack: self::$uri,
-            needle: self::BRACKET_CLOSE,
-            offset: $current_offset
-        );
-
-        if ($end === false) {
-            $end = self::$size;
-        }
-
-        /**
-         * Tamaño del lexema a ser extraído.
-         * 
-         * @var int $length
-         */
-        $length = $end - ($current_offset - 1);
-
-        /** @var non-empty-string $lexeme */
-        $lexeme = \substr(self::$uri, $current_offset, $length);
-
-        /** @var boolean $is_optional */
-        $is_optional = $this->is_optional($lexeme, $length);
-
-        self::$tokens[] = [
-            "lexeme" => \substr(self::$uri, $current_offset, $length),
-            "optional" => $is_optional,
-            "content" => self::$uri
-        ];
-
-        self::$offset = $end;
-    }
-
     private function tokenizer(): void {
 
         /** @var integer $current_offset */
@@ -119,6 +81,11 @@ final class RouterLexer implements RouteLexerInterface {
 
         /** @var non-empty-string $lexeme */
         $lexeme = \substr(self::$uri, $current_offset, $length);
+
+        if ($lexeme === '') {
+            self::$offset = $end;
+            return;
+        }
 
         /** @var boolean $is_optional */
         $is_optional = $this->is_optional($lexeme, $length);
