@@ -16,15 +16,28 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
   * Las respuestas `HEAD` devuelven los mismos headers que `GET` sin body, cumpliendo con el estándar HTTP/1.1 (RFC 7231).
   * El router ahora responde correctamente a peticiones `OPTIONS`, permitiendo la negociación de capacidades entre cliente y servidor (CORS preflight).
   * Mejora la compatibilidad con scrapers y crawlers externos (Facebook, Twitter, WhatsApp) que verifican la existencia de recursos mediante `HEAD` antes de realizar el `GET`.
-  * Mejora la compatibilidad con clientes que realizan peticiones CORS o necesitan descubrir los métodos disponibles en una ruta.
+
+* **Nuevo método estático `match()` en `DLRoute`:**
+
+  * Permite registrar una misma ruta para múltiples métodos HTTP simultáneamente.
+  * Acepta un array de casos del enum `Methods` como primer argumento.
+  * Compatible con rutas paramétricas y el sistema de filtros por tipo (`filter_by_type()`).
+  * Elimina la necesidad de registrar la misma ruta varias veces para distintos verbos HTTP.
+
+* **Nuevo enum `Methods` (`DLRoute\Enums\Methods`):**
+
+  * Centraliza los métodos HTTP soportados como casos tipados: `GET`, `HEAD`, `OPTIONS`, `POST`, `PUT`, `PATCH`, `DELETE`.
+  * Reemplaza el uso de strings literales en las llamadas internas a `self::request()`.
+  * Mejora la seguridad de tipos y la detección temprana de errores en tiempo de desarrollo.
 
 ### Changed
 
-* No hay cambios retrocompatibles; esta versión extiende el soporte de métodos HTTP sin modificar funcionalidades previas.
+* Los métodos `get()`, `head()`, `post()`, `put()`, `patch()`, `delete()` y `options()` ahora usan `Methods::*` en lugar de strings literales al invocar `self::request()`.
 
 ### Documentation
 
-* Documentación PHPDoc actualizada para reflejar el soporte de los métodos `HEAD` y `OPTIONS` en las clases y traits del sistema de routing.
+* Documentación PHPDoc agregada a los métodos `head()`, `options()` y `match()`.
+* La documentación pública de los métodos heredados permanece en `RouteInterface`.
 
 ---
 
