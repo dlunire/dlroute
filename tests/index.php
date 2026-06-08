@@ -27,6 +27,7 @@
 ini_set('display_errors', 1);
 
 use DLRoute\Core\Routing\Router;
+use DLRoute\Enums\Methods;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Requests\DLRoute;
 use DLRoute\Server\DLHost;
@@ -77,8 +78,16 @@ DLRoute::options('/', function() {
     return file_get_contents("test.html");
 }, [], "text/html");
 
-DLRoute::head('/', function() {
+DLRoute::match([Methods::GET, Methods::POST], '/test', function() {
     return file_get_contents("test.html");
 }, [], "text/html");
+
+DLRoute::match([Methods::GET, Methods::POST], '/test/{int}', function(object $params) {
+    return [
+        "test" => $params
+    ];
+}, [], "text/html")->filter_by_type([
+    "int" => "integer"
+]);
 
 DLRoute::execute();
