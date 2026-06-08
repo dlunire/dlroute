@@ -57,6 +57,11 @@ final class RouterLexer implements RouteLexerInterface {
         print_r(self::$tokens);
     }
 
+    /**
+     * Descompone la URI en sus componentes en un token.
+     *
+     * @return void
+     */
     private function tokenizer(): void {
 
         /** @var integer $current_offset */
@@ -91,9 +96,9 @@ final class RouterLexer implements RouteLexerInterface {
         $is_optional = $this->is_optional($lexeme, $length);
 
         self::$tokens[] = [
-            "lexeme" => \substr(self::$uri, $current_offset, $length),
+            "lexeme" => $lexeme,
             "optional" => $is_optional,
-            "content" => self::$uri
+            "tokentype" => $this->get_tokentype($lexeme, $length)
         ];
 
         self::$offset = $end;
@@ -108,5 +113,22 @@ final class RouterLexer implements RouteLexerInterface {
      */
     private function is_optional(string &$lexeme, int &$length): bool {
         return ($lexeme[$length - 2] ?? '') === self::OPTIONAL_PARAMETER;
+    }
+
+    /**
+     * Determina el tipo de token capturado en la URI.
+     *
+     * @param string $lexeme Lexema capturado durante el análisis léxico.
+     * @param integer $length Tamaño del lexema.
+     * @return TokenType
+     */
+    private function get_tokentype(string &$lexeme, int $length): TokenType {
+
+        /** @var int $end */
+        $end = $length - 1;
+
+        return ($lexeme[0] === self::BRACKET_OPEN && $lexeme[$end] === self::BRACKET_CLOSE)
+            ? TokenType::PARAM
+            : TokenType::TEXT_PLAIN;
     }
 }
