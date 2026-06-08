@@ -26,11 +26,11 @@ class DLRoute extends Route implements RouteInterface {
 
         $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
             self::$route = $uri;
-            
+
             if (!DLServer::is_get()) {
                 return self::get_instance();
             }
-
+            
             self::request($uri, $controller, Methods::GET, $data, $mime_type);
         });
 

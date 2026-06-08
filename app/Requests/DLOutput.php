@@ -2,6 +2,7 @@
 
 namespace DLRoute\Requests;
 
+use DLRoute\Core\Data\Telemetry;
 use DLRoute\Errors\OutputException;
 use DLRoute\Interfaces\OutputInterface;
 use DLRoute\Server\DLServer;
@@ -93,6 +94,20 @@ class DLOutput implements OutputInterface {
         return trim($stringData);
     }
 
+    /**
+     * Devuelve una instantánea inmutable de la telemetría de la petición actual.
+     *
+     * Captura en caliente el estado del entorno de ejecución, los metadatos de red,
+     * las cabeceras HTTP y el mapa del enrutador en un objeto de diagnóstico dedicado.
+     * Permite evaluar el comportamiento y rendimiento del servidor de manera aislada.
+     *
+     * @param string $message Mensaje opcional para contextualizar o etiquetar el reporte de diagnóstico.
+     * @return Telemetry Objeto de solo lectura con las métricas recolectadas del sistema.
+     */
+    public function telemetry(string $message = "Mensaje de la telemetría"): Telemetry {
+        return new Telemetry($message);
+    }
+
     public static function not_found(): void {
         header("Content-Type: application/json; charset=utf-8", true, 404);
 
@@ -102,16 +117,13 @@ class DLOutput implements OutputInterface {
         }
 
         echo self::get_json([
-            "message" => "La ruta solicitada no existe",
             "code" => 404,
+            "method" => DLServer::get_method(),
+            "message" => "La ruta solicitada no existe",
             "route" => DLServer::get_route(),
             "uri" => DLServer::get_uri(),
-            "dir" => DLServer::get_dir(),
-            "base_url" => DLServer::get_base_url(),
             "timestamp" => date(DATE_ATOM),
-            "client_ip" => DLServer::get_ipaddress(),
-            "method" => DLServer::get_method(),
-            "hint" => "Verifica que la ruta sea correcta y esté registrada en el servidor"
+            "hint" => "Verifica si la ruta que ha vistado es correcta"
         ], true);
 
         exit;

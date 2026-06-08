@@ -104,7 +104,7 @@ abstract class Route extends DLParamValueType implements RouteInterface {
             DLOutput::not_found();
         }
 
-        if (is_string($controller)) {
+        if (\is_string($controller)) {
             $data = self::string_controller($controller, $vars);
         }
 
@@ -112,7 +112,7 @@ abstract class Route extends DLParamValueType implements RouteInterface {
             $data = self::callable_controller($controller, $vars);
         }
 
-        if (is_array($controller)) {
+        if (\is_array($controller)) {
             $data = self::array_controller($controller, $vars);
         }
 
