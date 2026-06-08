@@ -122,7 +122,7 @@ final class RouteGenerator extends RouterLexer {
         // Verifica si el lexema corresponde exactamente a una estructura de parámetro vacía "{}"
         if (($lexeme[0] ?? null) === self::BRACKET_OPEN && ($lexeme[1] ?? null) === self::BRACKET_CLOSE) {
             throw new RouteException(
-                "La sintaxis de la ruta es incorrecta. Un parámetro dinámico no puede estar vacío en la posición «{$offset}». Sintaxis detectada: «{}»"
+                "La sintaxis de la ruta es incorrecta. Un parámetro dinámico no puede estar vacío en la posición «{$offset}». Sintaxis detectada: «{?}»"
             );
         }
     }
@@ -167,7 +167,6 @@ final class RouteGenerator extends RouterLexer {
      * @return void
      */
     public function load_routes(callable $callback): void {
-        print_r($this->routes);
         foreach ($this->routes as $route) {
             $callback($route);
         }
