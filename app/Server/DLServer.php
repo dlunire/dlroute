@@ -43,6 +43,8 @@ class DLServer implements ServerInterface {
             $uri = $_SERVER['REQUEST_URI'];
         }
 
+        $uri = trim($uri, "/");
+
         return trim($uri);
     }
 

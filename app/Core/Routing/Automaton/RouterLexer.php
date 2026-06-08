@@ -67,7 +67,7 @@ abstract class RouterLexer implements RouteLexerInterface {
      *
      * @var array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int}>
      */
-    private static array $tokens = [];
+    private array $tokens = [];
 
     /**
      * Inicializa el autómata con la URI a analizar.
@@ -139,7 +139,7 @@ abstract class RouterLexer implements RouteLexerInterface {
         /** @var boolean $is_optional */
         $is_optional = $this->is_optional($lexeme, $length);
 
-        self::$tokens[] = [
+        $this->tokens[] = [
             "lexeme" => $lexeme,
             "length" => $length,
             "optional" => $is_optional,
@@ -228,6 +228,6 @@ abstract class RouterLexer implements RouteLexerInterface {
      * @return array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int}> Lista de tokens producidos por {@see scanner()}.
      */
     protected function get_tokens(): array {
-        return self::$tokens;
+        return $this->tokens;
     }
 }

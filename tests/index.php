@@ -1,7 +1,7 @@
 <?php
 
 use DLRoute\Core\Routing\Automaton\RouteGenerator;
-use DLRoute\Core\Routing\Automaton\RouterLexer;
+use DLRoute\Enums\Methods;
 
 /**
  * Copyright (c) 2026 David E Luna M
@@ -29,12 +29,7 @@ use DLRoute\Core\Routing\Automaton\RouterLexer;
 
 ini_set('display_errors', 1);
 
-use DLRoute\Core\Routing\Router;
-use DLRoute\Enums\Methods;
-use DLRoute\Requests\DLOutput;
 use DLRoute\Requests\DLRoute;
-use DLRoute\Server\DLHost;
-use DLRoute\Server\DLServer;
 
 include dirname(__DIR__) . "/vendor/autoload.php";
 
@@ -102,7 +97,7 @@ DLRoute::get("/ciencia/{test?}", function (object $params) {
     ];
 });
 
-DLRoute::get("/david/{test?}", function (object $params) {
+DLRoute::post("/david/{test?}", function (object $params) {
     return [
         "info" => "Otra ruta más",
         "params" => $params,
@@ -110,11 +105,13 @@ DLRoute::get("/david/{test?}", function (object $params) {
 });
 
 
-// DLRoute::match([Methods::GET, Methods::POST], '/algo/{id?}', function (object $params) {
-//     return [
-//         "info" => true,
-//         "params" => $params
-//     ];
-// });
+DLRoute::match([Methods::GET, Methods::PUT], '/algo/{?}', function (object $params) {
+    return [
+        "info" => true,
+        "params" => $params
+    ];
+})->filter_by_type([
+    "id" => "integer"
+]);
 
 DLRoute::execute();

@@ -85,10 +85,10 @@ final class RouteGenerator extends RouterLexer {
             $tokentype = $token['tokentype'];
 
             /** @var int $offset */
-            $ofsset = \intval($token['offset']);
+            $offset = \intval($token['offset']);
 
             if (!$tokentype instanceof TokenType) {
-                throw new RouteException("El token «{$lexeme}» es inesperado en la posición «{$ofsset}»", 500);
+                throw new RouteException("El token «{$lexeme}» es inesperado en la posición «{$offset}»", 500);
             }
 
             $this->remove_param($lexeme, $length);
@@ -97,10 +97,34 @@ final class RouteGenerator extends RouterLexer {
                 $this->routes[] = self::SLASH . implode(self::SLASH, $buffer);
             }
 
+            $this->validate_lexeme($lexeme, $offset);
+
             $buffer[] = $lexeme;
         }
 
         $this->routes[] = self::SLASH . implode(self::SLASH, $buffer);
+    }
+
+    /**
+     * Valida que el parámetro dinámico capturado no esté vacío.
+     *
+     * Examina el lexema y bloquea la presencia de llaves de apertura y cierre
+     * consecutivas ("{}") sin un identificador de variable válido, evitando
+     * anomalías en el mapeo posterior de propiedades en el enrutador.
+     *
+     * @param string $lexeme Referencia al lexema extraído de la URI.
+     * @param int $offset Posición del cursor en la URI donde se detectó el lexema.
+     * * @throws RouteException Si el parámetro está vacío o carece de nombre.
+     * @return void
+     */
+    private function validate_lexeme(string &$lexeme, int $offset): void {
+
+        // Verifica si el lexema corresponde exactamente a una estructura de parámetro vacía "{}"
+        if (($lexeme[0] ?? null) === self::BRACKET_OPEN && ($lexeme[1] ?? null) === self::BRACKET_CLOSE) {
+            throw new RouteException(
+                "La sintaxis de la ruta es incorrecta. Un parámetro dinámico no puede estar vacío en la posición «{$offset}». Sintaxis detectada: «{}»"
+            );
+        }
     }
 
     /**
@@ -114,6 +138,7 @@ final class RouteGenerator extends RouterLexer {
      * @return void
      */
     private function remove_param(string &$lexeme, int $length): void {
+
         if (self::OPTIONAL_PARAMETER === $lexeme[$length - 2]) {
             $lexeme = \substr($lexeme, 0, $length - 2) . "}";
         }
@@ -142,6 +167,7 @@ final class RouteGenerator extends RouterLexer {
      * @return void
      */
     public function load_routes(callable $callback): void {
+        print_r($this->routes);
         foreach ($this->routes as $route) {
             $callback($route);
         }

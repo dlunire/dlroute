@@ -22,13 +22,17 @@ class DLRoute extends Route implements RouteInterface {
     private static ?self $instance = null;
 
     public static function get(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        self::$route = $uri;
+        $routes = new RouteGenerator($uri);
 
-        if (!DLServer::is_get()) {
-            return self::get_instance();
-        }
+        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
+            self::$route = $uri;
 
-        self::request($uri, $controller, Methods::GET, $data, $mime_type);
+            if (!DLServer::is_get()) {
+                return self::get_instance();
+            }
+
+            self::request($uri, $controller, Methods::GET, $data, $mime_type);
+        });
 
         return self::get_instance();
     }
@@ -47,14 +51,17 @@ class DLRoute extends Route implements RouteInterface {
      * @return DLParamValueType
      */
     public static function head(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        self::$route = $uri;
+        $routes = new RouteGenerator($uri);
 
-        if (!DLServer::is_head()) {
-            return self::get_instance();
-        }
+        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
+            self::$route = $uri;
 
-        self::request($uri, $controller, Methods::HEAD, $data, $mime_type);
+            if (!DLServer::is_head()) {
+                return self::get_instance();
+            }
 
+            self::request($uri, $controller, Methods::HEAD, $data, $mime_type);
+        });
         return self::get_instance();
     }
 
@@ -72,62 +79,77 @@ class DLRoute extends Route implements RouteInterface {
      * @return DLParamValueType
      */
     public static function options(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        self::$route = $uri;
+        $routes = new RouteGenerator($uri);
 
-        if (!DLServer::is_options()) {
-            return self::get_instance();
-        }
+        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
+            self::$route = $uri;
 
-        self::request($uri, $controller, Methods::OPTIONS, $data, $mime_type);
+            if (!DLServer::is_options()) {
+                return self::get_instance();
+            }
 
+            self::request($uri, $controller, Methods::OPTIONS, $data, $mime_type);
+        });
         return self::get_instance();
     }
 
     public static function post(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        self::$route = $uri;
+        $routes = new RouteGenerator($uri);
 
-        if (!DLServer::is_post()) {
-            return self::get_instance();
-        }
+        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
+            self::$route = $uri;
 
-        self::request($uri, $controller, Methods::POST, $data, $mime_type);
+            if (!DLServer::is_post()) {
+                return self::get_instance();
+            }
 
+            self::request($uri, $controller, Methods::POST, $data, $mime_type);
+        });
         return self::get_instance();
     }
 
     public static function put(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        self::$route = $uri;
+        $routes = new RouteGenerator($uri);
 
-        if (!DLServer::is_put()) {
-            return self::get_instance();
-        }
+        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
+            self::$route = $uri;
 
-        self::request($uri, $controller, Methods::PUT, $data, $mime_type);
+            if (!DLServer::is_put()) {
+                return self::get_instance();
+            }
 
+            self::request($uri, $controller, Methods::PUT, $data, $mime_type);
+        });
         return self::get_instance();
     }
 
     public static function patch(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        self::$route = $uri;
+        $routes = new RouteGenerator($uri);
 
-        if (!DLServer::is_patch()) {
-            return self::get_instance();
-        }
+        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
+            self::$route = $uri;
 
-        self::request($uri, $controller, Methods::PATCH, $data, $mime_type);
+            if (!DLServer::is_patch()) {
+                return self::get_instance();
+            }
 
+            self::request($uri, $controller, Methods::PATCH, $data, $mime_type);
+        });
         return self::get_instance();
     }
 
     public static function delete(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        self::$route = $uri;
+        $routes = new RouteGenerator($uri);
 
-        if (!DLServer::is_delete()) {
-            return self::get_instance();
-        }
+        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
+            self::$route = $uri;
 
-        self::request($uri, $controller, Methods::DELETE, $data, $mime_type);
+            if (!DLServer::is_delete()) {
+                return self::get_instance();
+            }
 
+            self::request($uri, $controller, Methods::DELETE, $data, $mime_type);
+        });
         return self::get_instance();
     }
 
@@ -143,7 +165,6 @@ class DLRoute extends Route implements RouteInterface {
      */
     public static function match(array $methods, string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
         self::$route = $uri;
-
         if (\count($methods) < 1) {
             return self::get_instance();
         }
@@ -161,8 +182,13 @@ class DLRoute extends Route implements RouteInterface {
                     "El método «{$value}» no está soportado. Además, se esperaba un ENUM, pero en su lugar, devolvió «{$type}»"
                 );
             }
+            $routes = new RouteGenerator($uri);
 
-            self::request($uri, $controller, $method, $data, $mime_type);
+            $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type, $method) {
+                
+
+                self::request($uri, $controller, $method, $data, $mime_type);
+            });
         }
 
         return self::get_instance();
