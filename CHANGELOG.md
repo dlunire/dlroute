@@ -5,6 +5,13 @@ Todas las modificaciones importantes a este proyecto se documentarán en este ar
 Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), y utiliza [SemVer](https://semver.org/lang/es/) para el control de versiones.
 
 ---
+## [v1.0.7] - 2026-06-07
+
+### Changed
+
+* Limpieza del archivo `index.php`: se eliminó código residual dejado durante el desarrollo de `v1.0.6` sin afectar ninguna funcionalidad existente.
+  
+---
 
 ## [v1.0.6] - 2026-06-07
 
