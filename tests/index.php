@@ -1,9 +1,6 @@
 <?php
 
-use DLRoute\Core\Routing\Automaton\RouteGenerator;
 use DLRoute\Core\Routing\Router;
-use DLRoute\Enums\Methods;
-use DLRoute\Requests\DLOutput;
 
 /**
  * Copyright (c) 2026 David E Luna M
@@ -48,7 +45,7 @@ include dirname(__DIR__) . "/vendor/autoload.php";
  * Lo que sigue más abajo son rutas de ejemplos recién creadas.
  */
 
-DLRoute::get('/', function () {
+DLRoute::get('/{david?}', function () {
     return [
         "dlunire" => "Powered by David E Luna M",
         "dir" => DLServer::get_dir(),
@@ -63,34 +60,9 @@ DLRoute::get('/', function () {
         "local_port" => DLServer::get_local_port(),
         "method" => DLServer::get_method(),
         "proxy" => DLServer::is_likely_proxy(),
-        "Router::to()" => Router::to('/ciencia//entorno'),
+        "Router::to()" => Router::to('/test'),
         "Router::from()" => Router::from()
     ];
 });
-
-
-// DLRoute::get("/ciencia/{test?}", function (object $params) {
-//     return [
-//         "info" => "Ruta con parámetros opcionales",
-//         "params" => $params,
-//     ];
-// });
-
-// DLRoute::post("/david/{test?}", function (object $params) {
-//     return [
-//         "info" => "Otra ruta más",
-//         "params" => $params,
-//     ];
-// })->filter_by_type([
-//     "test" => "integer"
-// ]);
-
-
-// DLRoute::match([Methods::GET, Methods::PUT], '/algo/{d?}', function (object $params) {
-//     return [
-//         "info" => true,
-//         "params" => $params
-//     ];
-// });
 
 DLRoute::execute();
