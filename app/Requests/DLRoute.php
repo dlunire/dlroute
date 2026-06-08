@@ -140,7 +140,7 @@ class DLRoute extends Route implements RouteInterface {
      * 
      * @throws RouteException Es lanzada si el método ingresado por el usuario no está soportado y/o es inválido.
      */
-    public static function match(array $methods, string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null) {
+    public static function match(array $methods, string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
         self::$route = $uri;
 
         if (\count($methods) < 1) {
@@ -164,7 +164,7 @@ class DLRoute extends Route implements RouteInterface {
             self::request($uri, $controller, $method, $data, $mime_type);
         }
 
-
+        return self::get_instance();
     }
 
     /**
@@ -180,7 +180,7 @@ class DLRoute extends Route implements RouteInterface {
          */
         $instance = self::$instance;
 
-        if (is_null($instance)) {
+        if ($instance === null) {
             self::run();
         }
 
