@@ -6,7 +6,7 @@ namespace DLRoute\Core\Routing\Automaton;
 
 use DLRoute\Interfaces\Routing\RouteLexerInterface;
 
-final class RouterLexer implements RouteLexerInterface {
+class RouterLexer implements RouteLexerInterface {
 
     private static string $uri;
 
@@ -53,8 +53,6 @@ final class RouterLexer implements RouteLexerInterface {
 
             self::$offset++;
         }
-
-        print_r(self::$tokens);
     }
 
     /**
@@ -130,5 +128,14 @@ final class RouterLexer implements RouteLexerInterface {
         return ($lexeme[0] === self::BRACKET_OPEN && $lexeme[$end] === self::BRACKET_CLOSE)
             ? TokenType::PARAM
             : TokenType::TEXT_PLAIN;
+    }
+
+    /**
+     * Devuelve todos los tokens capturados durante el análisis léxico.
+     *
+     * @return array
+     */
+    protected function get_tokens(): array {
+        return self::$tokens;
     }
 }

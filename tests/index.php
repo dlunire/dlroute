@@ -97,7 +97,7 @@ DLRoute::match(
 DLRoute::get("/opcionales/{test?}", function (object $params) {
 
     /** @var RouterLexer */
-    $lexer = new RouterLexer("/opcionales/{cuaderno?}/david/{entorno}/{algo?}");
+    $lexer = new RouterLexer("/api//usuarios/{id?}/");
 
     $lexer->scanner();
 
