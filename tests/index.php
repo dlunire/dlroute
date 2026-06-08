@@ -1,5 +1,6 @@
 <?php
 
+use DLRoute\Core\Routing\Automaton\RouteGenerator;
 use DLRoute\Core\Routing\Automaton\RouterLexer;
 
 /**
@@ -94,12 +95,13 @@ DLRoute::match(
 ]);
 
 # Ruta con parámetros opcionales:
-DLRoute::get("/opcionales/{test?}", function (object $params) {
+DLRoute::get("/opcionales/{test }", function (object $params) {
 
     /** @var RouterLexer */
-    $lexer = new RouterLexer("/api//usuarios/{id?}/");
+    $lexer = new RouteGenerator("/");
+    // $lexer = new RouteGenerator("/blog/ver-post?v=2/{id?}");
 
-    $lexer->scanner();
+    $lexer->generate();
 
     return [
         "info" => "Ruta con parámetros opcionales",

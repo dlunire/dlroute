@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DLRoute\Core\Routing\Automaton;
 
+use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\Routing\RouteLexerInterface;
 
 /**
@@ -17,7 +18,6 @@ use DLRoute\Interfaces\Routing\RouteLexerInterface;
  *
  * Ejemplo de tokenización:
  * ```php
- * $lexer = new RouterLexer('/users/{id}/{slug?}');
  * $lexer->scanner();
  * // Tokens producidos:
  * // ["lexeme" => "/users/", "optional" => false, "tokentype" => TokenType::TEXT_PLAIN]
@@ -32,7 +32,7 @@ use DLRoute\Interfaces\Routing\RouteLexerInterface;
  * @copyright (c) 2026 David E Luna M
  * @license MIT
  */
-class RouterLexer implements RouteLexerInterface {
+abstract class RouterLexer implements RouteLexerInterface {
 
     /**
      * URI a ser analizada por el autómata.
@@ -59,14 +59,24 @@ class RouterLexer implements RouteLexerInterface {
      * Tokens capturados de la ruta.
      *
      * Cada entrada contiene:
-     * - `lexeme`    — segmento extraído de la URI.
+     * - `lexeme`    — Segmento extraído de la URI.
+     * - `length`    — Longitud del lexema.
      * - `optional`  — indica si el parámetro es opcional.
      * - `tokentype` — clasificación del segmento ({@see TokenType}).
+     * - `offset`    — Posición del cursor durante la emisión del token.
      *
-     * @var array<int, array{lexeme: string, option: boolean, tokentype: TokenType}>
+     * @var array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int}>
      */
     private static array $tokens = [];
 
+    /**
+     * Inicializa el autómata con la URI a analizar.
+     *
+     * Normaliza la URI eliminando espacios en blanco al inicio y al final,
+     * y calcula su tamaño en bytes para controlar el recorrido del cursor.
+     *
+     * @param string $uri URI del patrón de ruta a tokenizar.
+     */
     public function __construct(string $uri) {
         self::$uri = trim($uri);
         self::$size = \strlen(self::$uri);
@@ -105,11 +115,7 @@ class RouterLexer implements RouteLexerInterface {
         /** @var integer $current_offset */
         $current_offset = self::$offset;
 
-        $end = \strpos(
-            haystack: self::$uri,
-            needle: self::SLASH,
-            offset: $current_offset
-        );
+        $end = $this->next_delimiter($current_offset);
 
         if ($end === false) {
             $end = self::$size;
@@ -135,11 +141,50 @@ class RouterLexer implements RouteLexerInterface {
 
         self::$tokens[] = [
             "lexeme" => $lexeme,
+            "length" => $length,
             "optional" => $is_optional,
-            "tokentype" => $this->get_tokentype($lexeme, $length)
+            "tokentype" => $this->get_tokentype($lexeme, $length),
+            "offset" => $current_offset
         ];
 
         self::$offset = $end;
+    }
+
+    /**
+     * Busca la posición del próximo delimitador `/` en la URI desde un offset dado.
+     *
+     * Recorre la URI byte a byte desde `$offset` hasta encontrar una barra diagonal
+     * o el final de la cadena. Valida además que el signo `?` solo aparezca
+     * inmediatamente antes de `}`, lanzando una excepción si la sintaxis es incorrecta.
+     *
+     * @param integer $offset Posición inicial del cursor en la URI.
+     * @throws RouteException Si el signo `?` aparece en una posición inválida dentro del patrón.
+     * @return integer Posición del próximo `/` encontrado, o {@see RouterLexer::$size} si no hay más delimitadores.
+     */
+    private function next_delimiter(int $offset): int {
+
+        while ($offset < self::$size) {
+            /** @var non-empty-string $byte */
+            $byte = self::$uri[$offset];
+
+            /** @var non-empty-string|null $pick */
+            $pick = self::$uri[$offset + 1] ?? null;
+
+            if ($byte === self::SLASH) {
+                return $offset;
+            }
+
+            if ($byte === self::OPTIONAL_PARAMETER && self::BRACKET_CLOSE !== $pick) {
+                throw new RouteException(
+                    "La sintaxis de la ruta es incorrecta a partir de la posición «{$offset}». Subcadena: «"
+                        . \substr(self::$uri, $offset, self::$size - $offset) . "»"
+                );
+            }
+
+            $offset++;
+        }
+
+        return self::$size;
     }
 
     /**
@@ -180,7 +225,7 @@ class RouterLexer implements RouteLexerInterface {
     /**
      * Devuelve todos los tokens capturados durante el análisis léxico.
      *
-     * @return array<int, array{lexeme: string, option: boolean, tokentype: TokenType}> Lista de tokens producidos por {@see scanner()}.
+     * @return array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int}> Lista de tokens producidos por {@see scanner()}.
      */
     protected function get_tokens(): array {
         return self::$tokens;
