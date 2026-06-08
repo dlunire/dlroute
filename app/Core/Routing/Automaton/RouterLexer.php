@@ -63,7 +63,7 @@ class RouterLexer implements RouteLexerInterface {
      * - `optional`  — indica si el parámetro es opcional.
      * - `tokentype` — clasificación del segmento ({@see TokenType}).
      *
-     * @var array{lexeme: string, option: boolean, tokentype: TokenType}
+     * @var array<int, array{lexeme: string, option: boolean, tokentype: TokenType}>
      */
     private static array $tokens = [];
 
@@ -180,7 +180,7 @@ class RouterLexer implements RouteLexerInterface {
     /**
      * Devuelve todos los tokens capturados durante el análisis léxico.
      *
-     * @return array{lexeme: string, option: boolean, tokentype: TokenType} Lista de tokens producidos por {@see scanner()}.
+     * @return array<int, array{lexeme: string, option: boolean, tokentype: TokenType}> Lista de tokens producidos por {@see scanner()}.
      */
     protected function get_tokens(): array {
         return self::$tokens;
