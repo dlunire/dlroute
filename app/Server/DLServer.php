@@ -107,7 +107,7 @@ class DLServer implements ServerInterface {
     public static function is_head(): bool {
         return self::get_method() === "HEAD";
     }
-    
+
     /**
      * Determina si el método HTTP es OPTIONS.
      * 
@@ -163,7 +163,10 @@ class DLServer implements ServerInterface {
         $uri = self::get_uri();
         $uri = urldecode($uri);
 
-        self::remove_query($uri);
+        /** @var int $uri_length */
+        $uri_length = \strlen($uri);
+
+        self::remove_querystring($uri);
 
         /**
          * Nombre del script
@@ -172,39 +175,22 @@ class DLServer implements ServerInterface {
          */
         $script_name = self::get_script_name();
 
-        /**
-         * Ruta relativa de ejecución de la aplicación.
-         * 
-         * @var string
-         */
-        $relative_route = dirname($script_name);
-        $relative_route = trim($relative_route);
-        $relative_route = urldecode($relative_route);
+        $dirname = \dirname($script_name);
+        $dirname = \trim($dirname, '/');
+        $dirname = \trim($dirname);
 
-        if ($relative_route === "/") {
-            $relative_route = "";
-        }
+        /** @var int $offset */
+        $offset = \strlen($dirname);
 
-        /**
-         * Ruta virtual.
-         * 
-         * @var string
-         */
-        $virtual_route = str_replace($relative_route, '', $uri);
-        $virtual_route = trim($virtual_route);
-        $virtual_route = "/{$virtual_route}";
-        $virtual_route = preg_replace("/\/+/", '/', $virtual_route);
-
-        if (empty($virtual_route)) {
-            $virtual_route .= "/";
-        }
-
-        return $virtual_route;
+        /** @var non-empty-string $route */
+        $route = \substr($uri, $offset, $uri_length);
+        
+        return "/" . trim($route, "/");
     }
 
     public static function get_script_name(): string {
         $script_name = $_SERVER['SCRIPT_NAME'] ?? '';
-        return urldecode($script_name);
+        return trim(urldecode($script_name));
     }
 
     /**
@@ -281,39 +267,23 @@ class DLServer implements ServerInterface {
     }
 
     /**
-     * Devuelve el protocolo HTTP que se está usando, es decir: `http` o `https`.
-     *
-     * @return string
-     */
-    private static function get_protocol(): string {
-        $is_https = DLHost::is_https();
-
-        $protocol = "http://";
-
-        if ($is_https) {
-            $protocol = "https://";
-        }
-
-        return $protocol;
-    }
-
-    /**
      * Remueve las query de las URI.
      *
      * @param string $input Entrada a ser procesada
      * @return void
      */
-    private static function remove_query(string &$input): void {
-        /**
-         * Patrón de búsqueda de las query a ser removida.
-         * 
-         * @var string
-         */
-        $pattern = '\?(.*)$';
-
+    private static function remove_querystring(string &$input): void {
         $input = trim($input);
 
-        $input = preg_replace("/{$pattern}/", '', $input);
+        /** @var int|false $offset */
+        $offset = \strpos($input, '?', 0);
+
+        if ($offset === false) {
+            $offset = \strlen($input);
+        }
+
+        $input = \substr($input, 0, $offset);
+        $input = \trim($input, "/");
     }
 
     /**
@@ -349,7 +319,18 @@ class DLServer implements ServerInterface {
         /** @var array|string|null $dir */
         $dir = preg_replace($route_pattern, '', $uri);
 
-        return "/" . \strval($dir ?? '');
+        /** @var int|bool $offset */
+        $offset = \strpos($dir, "?");
+
+        if ($offset === false) {
+            $offset = \strlen($dir);
+        }
+
+        /** @var string $current_dir */
+        $current_dir = \substr($dir, 0, $offset);
+        $current_dir = trim($current_dir, "/");
+
+        return "/" . \strval($current_dir ?? '');
     }
 
     private static function escape_route(string $input): string {

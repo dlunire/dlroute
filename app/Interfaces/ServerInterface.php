@@ -136,7 +136,7 @@ interface ServerInterface {
 
     /**
      * Devuelve la ruta lógica registrada por el desarrollador. No la que devuelve el
-     * sistema por medio de $_SERVER. 
+     * sistema por medio de `$_SERVER` de forma directa.
      *
      * @return string
      */
