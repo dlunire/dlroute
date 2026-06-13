@@ -31,13 +31,17 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
     alineando la clase con la convención de namespaces del ecosistema DLUnire.
   * El `@package` del docblock de `TelemetryRequest` se actualiza en consecuencia.
 
-* **Eliminación de `$code` en `Telemetry`:**
+* **Actualización de `index.php` (archivo de ejemplo):**
 
-  * Se elimina la propiedad `$code` y su asignación hardcodeada (`404`), que no correspondía
-    al propósito de un objeto de telemetría de entorno.
+  * La ruta de ejemplo se define como `/{telemetry?}` con parámetro opcional, permitiendo
+    acceder desde la raíz `/` sin configuración adicional.
+  * La inclusión del autoloader migra de concatenación con `/` a `DIRECTORY_SEPARATOR`,
+    mejorando la compatibilidad multiplataforma (Linux, Windows, macOS).
 
 ### Fixed
 
+* Eliminación de la propiedad `$code` y su asignación hardcodeada (`404`) en `Telemetry`,
+  valor que no correspondía al propósito de un objeto de telemetría de entorno.
 * Comentario residual `// return new Telemetry($message);` eliminado de `TelemetryInterface`.
 * Etiqueta `* *` duplicada corregida en el docblock de la clase `Telemetry`.
 

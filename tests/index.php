@@ -30,7 +30,7 @@ ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
 
-include dirname(__DIR__) . "/vendor/autoload.php";
+include dirname(__DIR__) . DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . "autoload.php";
 
 /**
  * Este archivo se incorpora como ejemplo de uso del sistema de rutas. Sea el controlador
