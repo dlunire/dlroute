@@ -15,7 +15,7 @@ use Override;
  * el estado inmutable del entorno de ejecución en el momento de la llamada.
  *
  * @package DLRoute\Interfaces\Telemetry
- * @author  David E. Narváez <david.narvaez@dlunire.dev>
+ * @author  David E Luna M <dlunireframework@gmail.com>
  * @license MIT
  */
 final class TelemetryRequest implements TelemetryInterface {
