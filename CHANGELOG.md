@@ -6,7 +6,10 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ## [v1.0.9] - 2026-06-13
 
-Se corrigen los nombres de espacios.
+Se ejecutaron los siguientes cambios:
+
+- Se corrige el nombre de espacios.
+- Se agrega el autor con los perfiles de las redes sociales en `README.md`
 
 ---
 
