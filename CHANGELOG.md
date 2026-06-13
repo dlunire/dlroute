@@ -4,12 +4,42 @@ Todas las modificaciones importantes a este proyecto se documentarán en este ar
 
 Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), y utiliza [SemVer](https://semver.org/lang/es/) para el control de versiones.
 
+---
+
 ## [v1.0.9] - 2026-06-13
 
-Se ejecutaron los siguientes cambios:
+### Added
 
-- Se corrige el nombre de espacios.
-- Se agrega el autor con los perfiles de las redes sociales en `README.md`
+* **Nuevas propiedades en la clase `Telemetry` (`DLRoute\Core\Data\Telemetry`):**
+
+  * `$domain` — dominio o nombre de host sin puerto (`DLHost::get_domain()`).
+  * `$hostname` — hostname completo, incluyendo puerto cuando no es estándar (`DLHost::get_hostname()`).
+  * `$is_https` — indica si la conexión utiliza HTTPS (`DLHost::is_https()`).
+  * `$port` — puerto expuesto al cliente HTTP (`DLServer::get_port()`).
+  * `$local_port` — puerto local donde se ejecuta la aplicación (`DLServer::get_local_port()`).
+  * `$proxy` — indica si la petición proviene probablemente de un proxy inverso (`DLServer::is_likely_proxy()`).
+
+* **Autor agregado al `README.md`:**
+
+  * Se incluye sección de autoría con nombre, correo y perfiles de redes sociales de David E Luna M.
+
+### Changed
+
+* **Corrección de namespaces:**
+
+  * `TelemetryRequest` se reubica de `DLRoute\Interfaces\Telemetry` a `DLRoute\Core\Telemetry`,
+    alineando la clase con la convención de namespaces del ecosistema DLUnire.
+  * El `@package` del docblock de `TelemetryRequest` se actualiza en consecuencia.
+
+* **Eliminación de `$code` en `Telemetry`:**
+
+  * Se elimina la propiedad `$code` y su asignación hardcodeada (`404`), que no correspondía
+    al propósito de un objeto de telemetría de entorno.
+
+### Fixed
+
+* Comentario residual `// return new Telemetry($message);` eliminado de `TelemetryInterface`.
+* Etiqueta `* *` duplicada corregida en el docblock de la clase `Telemetry`.
 
 ---
 
