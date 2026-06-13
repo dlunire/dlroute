@@ -23,5 +23,3 @@ interface TelemetryInterface {
      */
     public static function telemetry(string $message = ""): Telemetry;
 }
-
-// return new Telemetry($message);

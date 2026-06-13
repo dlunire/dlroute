@@ -15,7 +15,7 @@ use Override;
  * Delega la construcción del objeto de diagnóstico a `Telemetry`, que encapsula
  * el estado inmutable del entorno de ejecución en el momento de la llamada.
  *
- * @package DLRoute\Interfaces\Telemetry
+ * @package DLRoute\Core\Telemetry
  * @author  David E Luna M <dlunireframework@gmail.com>
  * @copyright (c) 2026 David E Luna M
  * @license MIT
