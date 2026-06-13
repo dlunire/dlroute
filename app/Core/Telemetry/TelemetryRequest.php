@@ -16,6 +16,7 @@ use Override;
  *
  * @package DLRoute\Interfaces\Telemetry
  * @author  David E Luna M <dlunireframework@gmail.com>
+ * @copyright (c) 2026 David E Luna M
  * @license MIT
  */
 final class TelemetryRequest implements TelemetryInterface {
