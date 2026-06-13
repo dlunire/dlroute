@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DLRoute\Interfaces\Telemetry;
+namespace DLRoute\Core\Telemetry;
 
 use DLRoute\Core\Data\Telemetry;
+use DLRoute\Interfaces\Telemetry\TelemetryInterface;
 use Override;
 
 /**

@@ -243,3 +243,14 @@ Route::get('/info', function (object $params) {
 > If an array or object is returned, DLRoute automatically sends a JSON response.
 
 ```
+
+## 👤 Author
+
+**David E Luna M**
+Creator and lead developer of [DLUnire](https://github.com/dlunire) — a PHP ecosystem for building fast, API-oriented web applications.
+
+- GitHub: [@dlunire](https://github.com/dlunire "Perfil en GitHub")
+- Email: [dlunireframework@gmail.com](dlunireframework@gmail.com "Correo electrónico de contacto")
+- License: MIT
+- X: [@dlunire](https://x.com/dlunire "Perfil de DLUnire en X")
+- Facebook: [DLUnire Framework](https://www.facebook.com/profile.php?id=61575156278078)

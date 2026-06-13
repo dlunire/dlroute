@@ -4,6 +4,10 @@ Todas las modificaciones importantes a este proyecto se documentarán en este ar
 
 Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), y utiliza [SemVer](https://semver.org/lang/es/) para el control de versiones.
 
+## [v1.0.9] - 2026-06-13
+
+Se corrigen los nombres de espacios.
+
 ---
 
 ## [v1.0.8] - 2026-06-13

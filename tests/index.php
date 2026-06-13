@@ -1,6 +1,7 @@
 <?php
 
 use DLRoute\Core\Routing\Router;
+use DLRoute\Core\Telemetry\TelemetryRequest;
 
 /**
  * Copyright (c) 2026 David E Luna M
@@ -65,4 +66,7 @@ DLRoute::get('/{david?}', function () {
     ];
 });
 
+DLRoute::get('/test', function() {
+    return TelemetryRequest::telemetry();
+});
 DLRoute::execute();
