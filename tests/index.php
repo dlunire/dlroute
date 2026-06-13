@@ -29,6 +29,7 @@ use DLRoute\Core\Telemetry\TelemetryRequest;
 ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
+use DLRoute\Server\DLServer;
 
 include dirname(__DIR__) . DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . "autoload.php";
 
@@ -43,7 +44,11 @@ include dirname(__DIR__) . DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR 
  * Lo que sigue más abajo son rutas de ejemplos recién creadas.
  */
 
-DLRoute::get('/{telemetry?}', function () {
+DLRoute::get('/test/{telemetry?}', function () {
+    return TelemetryRequest::telemetry("Telemetría de la petición");
+});
+
+DLRoute::get('/ciencia', function() {
     return TelemetryRequest::telemetry("Telemetría de la petición");
 });
 
