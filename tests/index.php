@@ -1,6 +1,5 @@
 <?php
 
-use DLRoute\Core\Routing\Router;
 use DLRoute\Core\Telemetry\TelemetryRequest;
 
 /**
@@ -30,8 +29,6 @@ use DLRoute\Core\Telemetry\TelemetryRequest;
 ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
-use DLRoute\Server\DLHost;
-use DLRoute\Server\DLServer;
 
 include dirname(__DIR__) . "/vendor/autoload.php";
 
@@ -46,27 +43,8 @@ include dirname(__DIR__) . "/vendor/autoload.php";
  * Lo que sigue más abajo son rutas de ejemplos recién creadas.
  */
 
-DLRoute::get('/{david?}', function () {
-    return [
-        "dlunire" => "Powered by David E Luna M",
-        "dir" => DLServer::get_dir(),
-        "route" => DLServer::get_route(),
-        "uri" => DLServer::get_uri(),
-        "url_base" => DLServer::get_base_url(),
-        "domain" => DLHost::get_domain(),
-        "hostname" => DLHost::get_hostname(),
-        "is_https" => DLHost::is_https(),
-        "IP" => DLServer::get_ipaddress(),
-        "port" => DLServer::get_port(),
-        "local_port" => DLServer::get_local_port(),
-        "method" => DLServer::get_method(),
-        "proxy" => DLServer::is_likely_proxy(),
-        "Router::to()" => Router::to('/test'),
-        "Router::from()" => Router::from()
-    ];
+DLRoute::get('/{telemetry?}', function () {
+    return TelemetryRequest::telemetry("Telemetría de la petición");
 });
 
-DLRoute::get('/test', function() {
-    return TelemetryRequest::telemetry();
-});
 DLRoute::execute();

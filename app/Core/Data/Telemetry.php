@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DLRoute\Core\Data;
 
 use DLRoute\Core\Routing\Router;
+use DLRoute\Server\DLHost;
 use DLRoute\Server\DLServer;
 
 /**
@@ -58,6 +59,41 @@ final class Telemetry {
     public readonly string $base_url;
 
     /**
+     * Dominio o nombre de host sin puerto.
+     *
+     * @var string
+     */
+    public readonly string $domain;
+
+    /**
+     * Hostname completo, incluyendo el puerto cuando no es estándar (ej. localhost:4000).
+     *
+     * @var string
+     */
+    public readonly string $hostname;
+
+    /**
+     * Indica si la conexión utiliza HTTPS.
+     *
+     * @var bool
+     */
+    public readonly bool $is_https;
+
+    /**
+     * Puerto expuesto al cliente HTTP (puerto remoto).
+     *
+     * @var int
+     */
+    public readonly int $port;
+
+    /**
+     * Puerto local donde se ejecuta la aplicación.
+     *
+     * @var int
+     */
+    public readonly int $local_port;
+
+    /**
      * Estampa de tiempo en formato ISO 8601 (DATE_ATOM).
      *
      * @var string
@@ -86,6 +122,13 @@ final class Telemetry {
     public readonly string $user_agent;
 
     /**
+     * Indica si la petición proviene probablemente de un proxy inverso.
+     *
+     * @var bool
+     */
+    public readonly bool $proxy;
+
+    /**
      * Información del mapa y el almacén de datos del enrutador.
      *
      * @var RouterData
@@ -106,10 +149,16 @@ final class Telemetry {
         $this->uri        = DLServer::get_uri();
         $this->dir        = DLServer::get_dir();
         $this->base_url   = DLServer::get_base_url();
+        $this->domain     = DLHost::get_domain();
+        $this->hostname   = DLHost::get_hostname();
+        $this->is_https   = DLHost::is_https();
+        $this->port       = DLServer::get_port();
+        $this->local_port = DLServer::get_local_port();
         $this->timestamp  = date(DATE_ATOM);
         $this->cliente_ip = DLServer::get_ipaddress();
         $this->method     = DLServer::get_method();
         $this->user_agent = DLServer::get_user_agent();
+        $this->proxy      = DLServer::is_likely_proxy();
         $this->from       = Router::from();
     }
 }
