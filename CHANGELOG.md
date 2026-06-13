@@ -5,6 +5,42 @@ Todas las modificaciones importantes a este proyecto se documentarán en este ar
 Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), y utiliza [SemVer](https://semver.org/lang/es/) para el control de versiones.
 
 ---
+
+## [v1.0.8] - 2026-06-13
+
+### Added
+
+* **Nueva interfaz `TelemetryInterface` (`DLRoute\Interfaces\Telemetry\TelemetryInterface`):**
+
+  * Define el contrato para la captura de telemetría en el ciclo de vida de una petición HTTP.
+  * Declara el método estático `telemetry(string $message = ""): Telemetry`, que retorna una
+    instantánea inmutable del entorno de ejecución, incluyendo metadatos de red, cabeceras HTTP
+    y el mapa del enrutador.
+  * Permite implementaciones alternativas o especializadas del sistema de diagnóstico.
+
+* **Nueva clase `TelemetryRequest` (`DLRoute\Interfaces\Telemetry\TelemetryRequest`):**
+
+  * Implementación concreta de `TelemetryInterface`.
+  * Expone el método estático `TelemetryRequest::telemetry(string $message = ""): Telemetry`.
+  * Delega la construcción del objeto de diagnóstico a `Telemetry`, encapsulando el estado
+    inmutable del entorno en el momento de la llamada.
+
+### Changed
+
+* El método `telemetry()` fue removido de `DLOutput`, donde existía como método de instancia
+  sin contrato formal.
+* La funcionalidad se reubica en `TelemetryRequest` como método estático, bajo una interfaz
+  dedicada, mejorando la cohesión, la testabilidad y la extensibilidad del sistema de telemetría.
+
+### Documentation
+
+* Documentación PHPDoc completa agregada a `TelemetryInterface`, incluyendo descripción del
+  contrato, parámetros y valor de retorno.
+* Documentación PHPDoc agregada a `TelemetryRequest` con `{@inheritdoc}` en el método
+  implementado, delegando la documentación canónica a la interfaz.
+
+---
+
 ## [v1.0.7] - 2026-06-07
 
 ### Changed

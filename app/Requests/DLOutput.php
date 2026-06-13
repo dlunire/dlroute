@@ -94,20 +94,6 @@ class DLOutput implements OutputInterface {
         return trim($stringData);
     }
 
-    /**
-     * Devuelve una instantánea inmutable de la telemetría de la petición actual.
-     *
-     * Captura en caliente el estado del entorno de ejecución, los metadatos de red,
-     * las cabeceras HTTP y el mapa del enrutador en un objeto de diagnóstico dedicado.
-     * Permite evaluar el comportamiento y rendimiento del servidor de manera aislada.
-     *
-     * @param string $message Mensaje opcional para contextualizar o etiquetar el reporte de diagnóstico.
-     * @return Telemetry Objeto de solo lectura con las métricas recolectadas del sistema.
-     */
-    public function telemetry(string $message = "Mensaje de la telemetría"): Telemetry {
-        return new Telemetry($message);
-    }
-
     public static function not_found(): void {
         header("Content-Type: application/json; charset=utf-8", true, 404);
 
