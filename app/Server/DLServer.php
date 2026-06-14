@@ -45,7 +45,7 @@ class DLServer implements ServerInterface {
 
         $uri = trim($uri, "/");
 
-        return $uri === '' ? '/' : trim($uri);
+        return "/{$uri}";
     }
 
     public static function get_hostname(): string {
@@ -167,24 +167,13 @@ class DLServer implements ServerInterface {
         $uri_length = \strlen($uri);
 
         self::remove_querystring($uri);
-
-        /**
-         * Nombre del script
-         * 
-         * @var string
-         */
-        $script_name = self::get_script_name();
-
-        $dirname = \dirname($script_name);
-        $dirname = \trim($dirname, '/');
-        $dirname = \trim($dirname);
-
+        
         /** @var int $offset */
-        $offset = \strlen($dirname);
+        $offset = \strlen(self::get_script_dir()) - 1;
 
         /** @var non-empty-string $route */
         $route = \substr($uri, $offset, $uri_length);
-        
+
         return "/" . trim($route, "/");
     }
 
@@ -212,9 +201,10 @@ class DLServer implements ServerInterface {
          * @var string
          */
         $script_dir = dirname($file);
-        $script_dir = RouteDebugger::trim_slash($script_dir);
+        $script_dir = trim($script_dir, '/');
+        $script_dir = trim($script_dir);
 
-        return $script_dir;
+        return "/{$script_dir}";
     }
 
     /**
@@ -226,20 +216,21 @@ class DLServer implements ServerInterface {
         /**
          * Ruta del host de ejecución de la aplicación.
          * 
-         * @var string
+         * @var non-empty-string $host
          */
         $host = self::get_http_host();
 
         /**
          * Directorio base de ejecución de la aplicación.
          * 
-         * @var string
+         * @var string $basedir
          */
         $basedir = self::get_script_dir();
 
-        return trim($basedir) !== ''
-            ? "{$host}/{$basedir}"
-            : trim($host);
+        /** @var non-empty-string $base_url */
+        $base_url = trim("{$host}{$basedir}", '/');
+
+        return $base_url;
     }
 
     /**
@@ -287,62 +278,11 @@ class DLServer implements ServerInterface {
     }
 
     /**
-     * Calcula el directorio base de ejecución de la aplicación.
-     *
-     * La lógica se basa en restar la ruta registrada (Route) de la URI completa
-     * solicitada. El resultado corresponde al subdirectorio donde se encuentra
-     * la aplicación dentro del servidor, considerando mayúsculas/minúsculas
-     * de manera insensible.
-     *
-     * Ejemplo:
-     * URI = /subdirectorio/subdirectorio/ciencia
-     * Route = /ciencia
-     * Resultado: /subdirectorio/subdirectorio
-     * 
-     * Porque `/ciencia` es la ruta registrada.
-     *
-     * @return string Directorio base de la aplicación, siempre comenzando con '/'
-     */
-    private static function calculate_dir(): string {
-        /** @var string $uri */
-        $uri = trim(self::get_uri(), '/');
-
-        /** @var string $route */
-        $route = trim(self::get_route(), '/');
-
-        /** @var string $scape_route */
-        $escape_route = self::escape_route($route);
-
-        /** @var string $route_pattern */
-        $route_pattern = "/\/*{$escape_route}\b/i";
-
-        /** @var array|string|null $dir */
-        $dir = preg_replace($route_pattern, '', $uri);
-
-        /** @var int|bool $offset */
-        $offset = \strpos($dir, "?");
-
-        if ($offset === false) {
-            $offset = \strlen($dir);
-        }
-
-        /** @var string $current_dir */
-        $current_dir = \substr($dir, 0, $offset);
-        $current_dir = trim($current_dir, "/");
-
-        return "/" . \strval($current_dir ?? '');
-    }
-
-    private static function escape_route(string $input): string {
-        return preg_replace("/\/+/", "\/", $input);
-    }
-
-    /**
      * Devuelve el directorio de ejecución o punto de entrada de la aplicación.
      *
      * @return string
      */
     public static function get_dir(): string {
-        return self::calculate_dir();
+        return self::get_script_dir();
     }
 }

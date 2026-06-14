@@ -174,11 +174,18 @@ abstract class RouterLexer implements RouteLexerInterface {
                 return $offset;
             }
 
-            if ($byte === self::OPTIONAL_PARAMETER && self::BRACKET_CLOSE !== $pick) {
-                throw new RouteException(
-                    "La sintaxis de la ruta es incorrecta a partir de la posición «{$offset}». Subcadena: «"
-                        . \substr($this->uri, $offset, $this->size - $offset) . "»"
-                );
+            if ($byte === self::OPTIONAL_PARAMETER && $pick !== self::BRACKET_CLOSE) {
+                $fragment = \substr($this->uri, $offset, $this->size - $offset);
+
+                throw new RouteException(\sprintf(
+                    "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). " .
+                        "En su lugar, se recibió «%s».\n" .
+                        "Los parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.\n" .
+                        "Ruta definida: «%s»",
+                    $offset,
+                    $fragment,
+                    $this->uri
+                ));
             }
 
             $offset++;
