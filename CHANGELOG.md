@@ -10,38 +10,46 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ### Added
 
+* **Analizadores Léxicos y Autómata (QueryString):**
+  * Se agregó el analizador léxico `QueryStringLexer`, el cual implementa `RouteLexerInterface`.
+  * Se agregaron clases para la composición y análisis de la cadena de consulta: `QueryParamComposer.php`, `QueryStringLexer.php` y `QueryStringTokenType.php`.
+* **Archivos y clases base del autómata de rutas:**
+  * Se agregaron formalmente al núcleo los archivos `RouterGenerator.php`, `RouterLexer.php` y `TokenType.php`.
+* **Nuevos DTOs (Data Transfer Objects):**
+  * Se incorporaron `QueryParam.php`, `QueryParamValue.php`, `RouterData.php` y `Telemetry.php`.
 * **Nuevas propiedades en la clase `Telemetry` (`DLRoute\Core\Data\Telemetry`):**
-
   * `$domain` — dominio o nombre de host sin puerto (`DLHost::get_domain()`).
   * `$hostname` — hostname completo, incluyendo puerto cuando no es estándar (`DLHost::get_hostname()`).
   * `$is_https` — indica si la conexión utiliza HTTPS (`DLHost::is_https()`).
   * `$port` — puerto expuesto al cliente HTTP (`DLServer::get_port()`).
   * `$local_port` — puerto local donde se ejecuta la aplicación (`DLServer::get_local_port()`).
   * `$proxy` — indica si la petición proviene probablemente de un proxy inverso (`DLServer::is_likely_proxy()`).
-
 * **Autor agregado al `README.md`:**
-
   * Se incluye sección de autoría con nombre, correo y perfiles de redes sociales de David E Luna M.
 
 ### Changed
 
+* **Clase `DLServer`:**
+  * Se renombra el método `remove_query(string &$input): void` a `remove_querystring(string &$input): void`.
+* **Mejora en el autómata:**
+  * Se mejoró el mensaje de error del autómata, haciéndolo mucho más explicativo cuando ocurre un error de sintaxis en el registro de rutas.
 * **Corrección de namespaces:**
-
-  * `TelemetryRequest` se reubica de `DLRoute\Interfaces\Telemetry` a `DLRoute\Core\Telemetry`,
-    alineando la clase con la convención de namespaces del ecosistema DLUnire.
+  * `TelemetryRequest` se reubica de `DLRoute\Interfaces\Telemetry` a `DLRoute\Core\Telemetry`, alineando la clase con la convención de namespaces del ecosistema DLUnire.
   * El `@package` del docblock de `TelemetryRequest` se actualiza en consecuencia.
-
 * **Actualización de `index.php` (archivo de ejemplo):**
+  * La ruta de ejemplo se define como `/{telemetry?}` con parámetro opcional, permitiendo acceder desde la raíz `/` sin configuración adicional.
+  * La inclusión del autoloader migra de concatenación con `/` a `DIRECTORY_SEPARATOR`, mejorando la compatibilidad multiplataforma.
 
-  * La ruta de ejemplo se define como `/{telemetry?}` con parámetro opcional, permitiendo
-    acceder desde la raíz `/` sin configuración adicional.
-  * La inclusión del autoloader migra de concatenación con `/` a `DIRECTORY_SEPARATOR`,
-    mejorando la compatibilidad multiplataforma (Linux, Windows, macOS).
+### Removed
+
+* **Clase `DLServer`:**
+  * Se elimina el método `calculate_dir()`.
+  * Se elimina el método `get_protocol()`, su uso se reemplaza directamente por `get_scheme()`.
+  * Se elimina el método `escape_route()`.
 
 ### Fixed
 
-* Eliminación de la propiedad `$code` y su asignación hardcodeada (`404`) en `Telemetry`,
-  valor que no correspondía al propósito de un objeto de telemetría de entorno.
+* Eliminación de la propiedad `$code` y su asignación hardcodeada (`404`) en `Telemetry`, valor que no correspondía al propósito de un objeto de telemetría de entorno.
 * Comentario residual `// return new Telemetry($message);` eliminado de `TelemetryInterface`.
 * Etiqueta `* *` duplicada corregida en el docblock de la clase `Telemetry`.
 
