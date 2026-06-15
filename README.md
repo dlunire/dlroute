@@ -155,11 +155,11 @@ DLRoute::delete(string $uri, callable|array|string $controller): DLParamValueTyp
 ### Rutas básicas con controlador
 
 ```php
-use DLRoute\Requests\DLRoute as Route;
+use DLRoute\Requests\DLRoutes;
 use DLRoute\Test\TestController;
 
-Route::get('/ruta', [TestController::class, 'method']);
-Route::get('/ruta/{parametro}', [TestController::class, 'method']);
+DLRoute::get('/ruta', [TestController::class, 'method']);
+DLRoute::get('/ruta/{parametro}', [TestController::class, 'method']);
 ```
 
 ### Definición del controlador
@@ -174,8 +174,10 @@ final class TestController extends Controller {
 
 ### Rutas con tipos
 
+Puedes definir los tipos en las rutas parametrizadas:
+
 ```php
-Route::get('/ruta/{id}', [TestController::class, 'method'])
+DLRoute::get('/ruta/{id}', [TestController::class, 'method'])
   ->filter_by_type(['id' => 'numeric']);
 ```
 
@@ -187,14 +189,15 @@ Route::get('/ruta/{id}', [TestController::class, 'method'])
 
 ### Tipos admitidos
 
-```text
-integer, float, numeric, boolean, string, email, uuid
-```
+Los tipos admitidos son los siguientes:
+
+- `string`, `uuid`, `email`, `integer`, `float`, `numeric` y `boolean`.
+- Los tipos no soportados deben ser definidos utilizando expresiones regulares.
 
 ### Uso de callbacks
 
 ```php
-Route::get('/ruta/{parametro}', function (object $params) {
+DLRoute::get('/ruta/{parametro}', function (object $params) {
     return $params;
 });
 ```
@@ -223,7 +226,7 @@ Since **v1.0.4**, DLRoute exposes a normalized and deterministic HTTP context, e
 ## ✅ Features
 
 * Simple and complex route definitions.
-* Supports `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.
+* Supports `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE` y `OPTIONS`.
 * Dynamic route parameters with type filtering.
 * Regular expression-based parameter validation.
 * Supports controllers and callbacks.
@@ -235,9 +238,34 @@ Since **v1.0.4**, DLRoute exposes a normalized and deterministic HTTP context, e
 ## 📌 Callback example
 
 ```php
-Route::get('/info', function (object $params) {
+DLRoute::get(uri: '/info', controller: function () {
     return ['status' => 'ok'];
 });
+```
+
+También permite definir rutas con parámetros opcionales:
+
+```php
+DLRoute::get('/products/{uuid?}/product-name', [ProductController::class, 'products']);
+```
+
+Donde un ruta como la siguiente:
+
+```bash
+/products/{uuid?}/product-name
+```
+
+Registra:
+
+```bash
+/products
+/products/.../product-name
+```
+
+Porque sigue el mismo principio que los `nullable` de los lenguajes de programación, es decir, es como si estuvieras utilizando algo parecido a esto:
+
+```php
+$products->uuid?->product_name
 ```
 
 > If an array or object is returned, DLRoute automatically sends a JSON response.
