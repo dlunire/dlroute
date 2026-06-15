@@ -272,11 +272,12 @@ $products->uuid?->product_name
 
 > If an array or object is returned, DLRoute automatically sends a JSON response.
 
-```
+---
 
 ## 👤 Author
 
 **David E Luna M**
+
 Creator and lead developer of [DLUnire](https://github.com/dlunire) — a PHP ecosystem for building fast, API-oriented web applications.
 
 - GitHub: [@dlunire](https://github.com/dlunire "Perfil en GitHub")
