@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DLRoute\Core\Routing\Automaton;
+namespace DLRoute\Core\Routing\Automaton\QueryParams;
 
 /**
  * Representa el tipo de un token capturado durante el análisis léxico

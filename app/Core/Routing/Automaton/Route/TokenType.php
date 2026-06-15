@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DLRoute\Core\Routing\Automaton;
+namespace DLRoute\Core\Routing\Automaton\Route;
 
 /**
  * Tipos de token producidos por el analizador léxico de rutas.

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DLRoute\Core\Routing\Automaton;
+namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Errors\RouteException;
 

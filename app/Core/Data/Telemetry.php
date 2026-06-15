@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DLRoute\Core\Data;
 
+use DLRoute\Core\Routing\Automaton\QueryParams\QueryParamComposer;
 use DLRoute\Core\Routing\Router;
 use DLRoute\Server\DLHost;
 use DLRoute\Server\DLServer;
@@ -128,6 +129,21 @@ final class Telemetry {
      */
     public readonly bool $proxy;
 
+
+    /**
+     * Parámetros del querystring de la petición, compuestos como pares «nombre → valor».
+     *
+     * Cada elemento es una instancia inmutable de QueryParamValue con el nombre,
+     * el valor y la longitud del parámetro. El valor es «null» cuando el parámetro
+     * no tiene valor asignado o su valor es una cadena vacía o en blanco.
+     *
+     * Los parámetros huérfanos (sin nombre) son descartados por el autómata
+     * y no aparecen en este array.
+     *
+     * @var QueryParamValue[]
+     */
+    public readonly array $query_param;
+
     /**
      * Información del mapa y el almacén de datos del enrutador.
      *
@@ -159,6 +175,7 @@ final class Telemetry {
         $this->method     = DLServer::get_method();
         $this->user_agent = DLServer::get_user_agent();
         $this->proxy      = DLServer::is_likely_proxy();
+        $this->query_param = (new QueryParamComposer())->get_query_params();
         $this->from       = Router::from();
     }
 }

@@ -2,7 +2,7 @@
 
 namespace DLRoute\Requests;
 
-use DLRoute\Core\Routing\Automaton\RouteGenerator;
+use DLRoute\Core\Routing\Automaton\Route\RouteGenerator;
 use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\RouteInterface;
