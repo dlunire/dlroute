@@ -142,10 +142,12 @@ DLRoute::execute();
 
 ```php
 DLRoute::get(string $uri, callable|array|string $controller): DLParamValueType;
+DLRoute::head(string $uri, callable|array|string $controller): DLParamValueType;
 DLRoute::post(string $uri, callable|array|string $controller): DLParamValueType;
 DLRoute::put(string $uri, callable|array|string $controller): DLParamValueType;
 DLRoute::patch(string $uri, callable|array|string $controller): DLParamValueType;
 DLRoute::delete(string $uri, callable|array|string $controller): DLParamValueType;
+DLRoute::options(string $uri, callable|array|string $controller): DLParamValueType;
 ```
 
 ---
