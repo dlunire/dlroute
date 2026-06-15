@@ -61,4 +61,30 @@ interface RouteLexerInterface {
      * @var non-empty-string
      */
     public const SLASH = "\x2f";
+
+    /**
+     * Separador entre parámetros del querystring.
+     *
+     * Corresponde al carácter «&» (0x26 en ASCII), que delimita cada par
+     * «nombre=valor» en la cadena de parámetros de la petición HTTP.
+     *
+     * Ejemplo: en «nombre=David&rol=admin», el byte «&» indica al autómata
+     * que el parámetro actual ha terminado y comienza uno nuevo.
+     *
+     * @var string
+     */
+    public const QUERY_SEPARATOR = "\x26";
+
+    /**
+     * Separador entre el nombre y el valor de un parámetro del querystring.
+     *
+     * Corresponde al carácter «=» (0x3D en ASCII), que delimita el nombre
+     * del parámetro de su valor en cada par «nombre=valor».
+     *
+     * Ejemplo: en «nombre=David&rol=admin», el byte «=» indica al autómata
+     * que el nombre del parámetro ha terminado y comienza su valor.
+     *
+     * @var string
+     */
+    public const QUERY_ASSIGN = "\x3d";
 }
