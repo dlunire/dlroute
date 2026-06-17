@@ -22,13 +22,13 @@ Esta abstracción es el pilar central que permite el funcionamiento del método 
 
 Todas las propiedades de la clase son públicas para permitir un acceso directo de baja latencia ($O(1)$) por parte de los componentes internos del despachador, eliminando por completo la sobrecarga en CPU asociada a las llamadas de métodos de envoltura (*getters* y *setters*).
 
-| Propiedad | Tipo | Por Defecto | Descripción |
-| --- | --- | --- | --- |
-| **`$uri`** | `string` | *Requerido* | La URI de la petición o patrón de la ruta. Admite la sintaxis nativa de parámetros dinámicos (`{id}`) y opcionales (`{param?}`). |
-| **`$controller`** | `callable|array|string` | *Requerido* | El componente encargado de procesar la petición. Admite funciones anónimas (callbacks), arrays de clase y método `[MiClase::class, 'metodo']`, o identificadores en cadena `MiClaseController@metodo`. |
-| **`$data`** | `array|object` | `[]` | Colección de datos estáticos o variables de contexto inyectadas a la ruta, quedando disponibles para el controlador durante el ciclo de vida de la petición. |
-| **`$mime_type`** | `?string` | `null` | Especifica de manera explícita la cabecera `Content-Type` de la respuesta HTTP asociada a este endpoint (por ejemplo, `application/json`, `text/html`). |
-| **`$handler_filters`** | `array<string, string>` | `[]` | Un mapa asociativo donde las llaves representan los parámetros dinámicos definidos en la `$uri` y los valores corresponden al tipo de validación requerido (`integer`, `uuid`, `string`, etc.). |
+| Propiedad              | Tipo                    | Por Defecto | Descripción                                                                                                                                                                                     |
+| ---------------------- | ----------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`$uri`**             | `string`                | *Requerido* | La URI de la petición o patrón de la ruta. Admite la sintaxis nativa de parámetros dinámicos (`{id}`) y opcionales (`{param?}`).                                                                |
+| **`$controller`**      | `callable               | array       | string`                                                                                                                                                                                         | *Requerido*                                                                                                                                                  | El componente encargado de procesar la petición. Admite funciones anónimas (callbacks), arrays de clase y método `[MiClase::class, 'metodo']`, o identificadores en cadena `MiClaseController@metodo`. |
+| **`$data`**            | `array                  | object`     | `[]`                                                                                                                                                                                            | Colección de datos estáticos o variables de contexto inyectadas a la ruta, quedando disponibles para el controlador durante el ciclo de vida de la petición. |
+| **`$mime_type`**       | `?string`               | `null`      | Especifica de manera explícita la cabecera `Content-Type` de la respuesta HTTP asociada a este endpoint (por ejemplo, `application/json`, `text/html`).                                         |
+| **`$handler_filters`** | `array<string, string>` | `[]`        | Un mapa asociativo donde las llaves representan los parámetros dinámicos definidos en la `$uri` y los valores corresponden al tipo de validación requerido (`integer`, `uuid`, `string`, etc.). |
 
 ---
 
