@@ -6,6 +6,29 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ---
 
+## [1.0.10] - 2026-06-17
+
+### Added
+
+* **Registro multipropósito masivo:** Incorporación del método estático `DLRoute::match(array $methods, RouteHandler $route): void` para asociar múltiples verbos HTTP a una misma ruta y controlador en una única llamada.
+* **Data Transfer Object (`RouteHandler`):** Introducción de la clase final `DLRoute\Core\Data\RouteHandler` como contenedor desacoplado para encapsular la URI, el controlador, los datos inyectados, el tipo MIME y las restricciones de parámetros antes de su registro definitivo.
+* **Validaciones de integridad en tiempo de diseño:** Implementación de excepciones estrictas (`RouteException`) dentro de `DLRoute::match()` que notifican con claridad si el listado de métodos está vacío (Código 500) o si se suministró un elemento ajeno al enum estricto `Methods`.
+* **Automatización de la interfaz fluida de filtrado:** Mapeo automático de capas de restricciones mediante el método `filter_by_type()` evaluando la cantidad de filtros del DTO de forma determinista mediante `get_quantity()`.
+* **Saneamiento de URIs por referencia (`DLServer`):** Adición del método estático `public static function remove_duplicate_slash(string &$input): void` en la clase `DLServer`, diseñado para normalizar cadenas limpiando barras diagonales repetidas de forma eficiente directamente en memoria.
+
+### Changed
+
+* **Optimización del Analizador Léxico:** Mejoras estructurales en el lexer para refinar la precisión del análisis de rutas carácter a carácter y robustecer el motor de coincidencia determinista del sistema.
+* **Normalización preventiva de rutas:** Integración y llamada obligatoria del método `remove_duplicate_slash` dentro del método ejecutor `DLServer::get_route()`, garantizando que cualquier URI procesada por el despachador esté completamente libre de barras redundantes antes de ser evaluada.
+
+### Corrected
+
+* **Estabilización del autómata de QueryString (`QueryStringLexer`):** Ajuste en la matriz de estados carácter por carácter para descartar de forma silenciosa asignaciones huérfanas (ej. `?=valor`) y absorber linealmente el ruido estructural provocado por separadores repetidos consecutivos (`&&&&`) sin alterar el puntero de lectura.
+* **Normalización estricta de valores opacos:** Corrección en el analizador léxico de parámetros de consulta para forzar el mapeo a tipo `null` de aquellos parámetros presentes en el querystring pero carentes de un lexema de valor o compuestos exclusivamente por espacios en blanco.
+* **Saneamiento de claves en `QueryParamComposer`:** Implementación de una regla de normalización semántica en el compositor que sustituye de manera determinista espacios inválidos presentes en las llaves por guiones bajos (`_`) antes de la construcción inmutable de los objetos `QueryParamValue`.
+
+---
+
 ## [v1.0.9] - 2026-06-13
 
 ### Added
