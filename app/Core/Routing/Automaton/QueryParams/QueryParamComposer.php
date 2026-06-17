@@ -45,12 +45,6 @@ final class QueryParamComposer extends QueryStringLexer {
     public function __construct() {
         parent::__construct();
         $this->build_tokens();
-
-        // print_r($_SERVER['QUERY_STRING'] . "\n");
-        // print_r($this->tokens);
-        // print_r($_GET);
-
-        // exit;
     }
 
     /**
