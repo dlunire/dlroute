@@ -48,7 +48,7 @@ DLRoute::execute(): void
 Registra una misma ruta para múltiples métodos HTTP simultáneamente.
 
 ```php
-public static function match(array $methods, RouteHandler $route): RouteHandler
+public static function match(array $methods, RouteHandler $route): void
 ```
 
 ### Parámetros
@@ -60,7 +60,7 @@ public static function match(array $methods, RouteHandler $route): RouteHandler
 
 ### Retorno
 
-Devuelve la misma instancia de `RouteHandler` recibida, lo que permite encadenar operaciones si fuera necesario.
+Este método no devuelve ningún valor (`void`). Realiza de manera interna y dinámica el registro de cada método HTTP en la tabla de enrutamiento principal.
 
 ### Comportamiento interno
 
