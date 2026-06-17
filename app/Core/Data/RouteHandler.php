@@ -21,7 +21,7 @@ use DLRoute\Requests\DLParamValueType;
  *
  * Uso básico:
  * ```php
- * DLRoute::match(new RouteHandler(
+ * DLRoute::get(new RouteHandler(
  *     uri:        '/productos/{uuid}',
  *     controller: [ProductController::class, 'show'],
  *     mime_type:  'application/json',
@@ -30,7 +30,7 @@ use DLRoute\Requests\DLParamValueType;
  *
  * Uso con filtros de tipo declarados en el constructor:
  * ```php
- * DLRoute::match(new RouteHandler(
+ * DLRoute::get(new RouteHandler(
  *     uri:             '/productos/{uuid}',
  *     controller:      [ProductController::class, 'show'],
  *     handler_filters: ['uuid' => 'uuid'],
@@ -48,8 +48,8 @@ final class RouteHandler extends DLParamValueType {
     /**
      * Cantidad de filtros de tipo registrados para los parámetros dinámicos.
      *
-     * Se calcula de forma diferida en «get_quantity()» y se almacena en O(1)
-     * para evitar llamadas repetidas a «count()» sobre «$handler_filters».
+     * Se calcula de forma diferida en «`get_quantity()`» y se almacena en `O(1)`
+     * para evitar llamadas repetidas a «`count()`» sobre «$handler_filters».
      *
      * @var int
      */
@@ -85,17 +85,18 @@ final class RouteHandler extends DLParamValueType {
         public readonly array|object $data = [],
         public readonly ?string $mime_type = null,
         public readonly array $handler_filters = []
-    ) {}
+    ) {
+    }
 
     /**
      * Devuelve la cantidad de filtros de tipo registrados para los parámetros
      * dinámicos de la ruta.
      *
      * El valor se calcula de forma diferida en la primera llamada y se almacena
-     * en «$this->count» para accesos posteriores en O(1), evitando llamadas
-     * repetidas a «count()» sobre «$handler_filters».
+     * en «`$this->count`» para accesos posteriores en O(1), evitando llamadas
+     * repetidas a «count()» sobre «`$handler_filters`».
      *
-     * @return int Número de filtros registrados. Vale 0 si «$handler_filters»
+     * @return int Número de filtros registrados. Vale 0 si «`$handler_filters`»
      *             está vacío.
      */
     public function get_quantity(): int {
