@@ -4,10 +4,11 @@ namespace DLRoute\Requests;
 
 use DLRoute\Enums\Methods;
 use DLRoute\Interfaces\RouteInterface;
+use DLRoute\Interfaces\Routing\RouteLexerInterface;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Server\DLServer;
 
-abstract class Route extends DLParamValueType implements RouteInterface {
+abstract class Route extends DLParamValueType implements RouteInterface, RouteLexerInterface {
     use RouteParams;
 
     /**
@@ -131,8 +132,42 @@ abstract class Route extends DLParamValueType implements RouteInterface {
      * @return void
      */
     protected static function register_routes(string $method, string $route, callable|array|string $controller): void {
+        if (isset(self::$routes[$method][$route])) return;
+        
         self::process_params($route);
         self::$routes[$method][$route] = $controller;
+    }
+
+    /**
+     * Cuenta la cantidad de barras diagonales (slashes) en una URI.
+     *
+     * Este método realiza un recorrido lineal sobre la cadena de entrada 
+     * utilizando un puntero de desplazamiento para identificar el carácter 
+     * definido como separador de ruta (self::SLASH).
+     *
+     * @param string $input La URI depurada a analizar.
+     * @param int    $quantity Variable pasada por referencia que almacena el 
+     * conteo acumulado. Este valor es incrementado por cada
+     * incidencia encontrada.
+     * 
+     * @return void
+     */
+    public static function count_slash(string $input, int &$quantity): void {
+        /** @var int $offset Puntero de posición actual en la cadena */
+        $offset = 0;
+
+        /** @var int $length Longitud total de la cadena de entrada */
+        $length = \strlen($input);
+
+        while ($offset < $length) {
+            $byte = $input[$offset];
+
+            if ($byte === self::SLASH) {
+                $quantity++;
+            }
+
+            $offset++;
+        }
     }
 
     /**

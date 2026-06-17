@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Errors\RouteException;
+use DLRoute\Server\DLServer;
 
 /**
  * Generador de variantes de rutas a partir de parámetros opcionales.
@@ -167,6 +168,14 @@ final class RouteGenerator extends RouterLexer {
      * @return void
      */
     public function load_routes(callable $callback): void {
+        /** @var non-empty-string|null $current_route */
+        $current_route = $this->routes[0] ?? null;
+
+        if (DLServer::get_route() === $current_route && DLServer::get_route() === "/") {
+            $callback($this->routes[0]);
+            return;
+        }
+
         foreach ($this->routes as $route) {
             $callback($route);
         }

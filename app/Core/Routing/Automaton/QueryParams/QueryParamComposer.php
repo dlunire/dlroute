@@ -45,6 +45,12 @@ final class QueryParamComposer extends QueryStringLexer {
     public function __construct() {
         parent::__construct();
         $this->build_tokens();
+
+        // print_r($_SERVER['QUERY_STRING'] . "\n");
+        // print_r($this->tokens);
+        // print_r($_GET);
+
+        // exit;
     }
 
     /**
@@ -115,11 +121,55 @@ final class QueryParamComposer extends QueryStringLexer {
                 : $next_token->length;
         }
 
+        if (trim($token->lexeme) === '') {
+            return;
+        }
+
+        /** @var non-empty-string $lexeme */
+        $lexeme = $token->lexeme;
+
+        $this->normalize_key($lexeme);
+
         $this->query_params[] = new QueryParamValue(...[
-            "name" => $token->lexeme,
+            "name" => $lexeme,
             "value" => $value,
             "length" => $length,
         ]);
+    }
+
+    /**
+     * Normaliza el nombre de una clave (key) extraída del querystring.
+     *
+     * Este método purifica el identificador de la clave preparándolo para el
+     * análisis semántico. Opera directamente sobre el espacio de memoria de 
+     * la variable original mediante paso por referencia, evitando la creación 
+     * de copias intermedias de la cadena.
+     *
+     * El proceso de normalización consta de dos fases:
+     * 1. Saneamiento de bordes: Elimina espacios en blanco al inicio y al
+     * final utilizando «trim()».
+     * 2. Sustitución interna: Realiza un recorrido secuencial (byte a byte)
+     * sobre la cadena resultante, reemplazando cada coincidencia de
+     * «self::WHITE_SPACE» por el carácter seguro «self::UNDERSCORE».
+     *
+     * @param string &$input Referencia a la cadena de texto de la clave a 
+     * normalizar. La variable es mutada internamente.
+     * @return void
+     */
+    private function normalize_key(string &$input): void {
+        $input = trim($input);
+
+        /** @var int $length */
+        $length = \strlen($input);
+
+        for ($index = 0; $index < $length; $index++) {
+            /** @var non-empty-string $byte */
+            $byte = $input[$index];
+
+            if ($byte === self::WHITE_SPACE) {
+                $input[$index] = self::UNDERSCORE;
+            }
+        }
     }
 
     /**

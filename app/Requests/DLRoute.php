@@ -2,6 +2,7 @@
 
 namespace DLRoute\Requests;
 
+use DLRoute\Core\Data\RouteHandler;
 use DLRoute\Core\Routing\Automaton\Route\RouteGenerator;
 use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
@@ -30,7 +31,7 @@ class DLRoute extends Route implements RouteInterface {
             if (!DLServer::is_get()) {
                 return self::get_instance();
             }
-            
+
             self::request($uri, $controller, Methods::GET, $data, $mime_type);
         });
 
@@ -153,43 +154,48 @@ class DLRoute extends Route implements RouteInterface {
         return self::get_instance();
     }
 
-    /**
-     * Resumen de métodos HTTP que comparten la misma ruta
-     * @param array<Methods> $methods Métodos HTTP a la ruta asignada.
-     * @param string $uri Ruta a ser registrada con los métodos soportados por el enrutador.
-     * @param callable|array|string $controller Callback o controlador encargado de manejar la solicitud
-     * @param array|object $data Permite implementar datos adicionales al controlador
-     * @param non-empty-string|null $mime_type Opcional. Permite establecer el tipo MIME de respueta al cliente.
-     * @return void
-     * 
-     * @throws RouteException Es lanzada si el método ingresado por el usuario no está soportado y/o es inválido.
-     */
-    public static function match(array $methods, string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): void {
-        self::$route = $uri;
+
+    public static function match(array $methods, RouteHandler $route): RouteHandler {
 
         if (\count($methods) < 1) {
-            return;
+            throw new RouteException("Debe definir, al menos, un método HTTP", 500);
         }
+
+        /**
+         * Devuelve los filtros listos para ser utilizado para los métodos HTTP
+         * que comparten la misma ruta.
+         * 
+         * @var array<string,string> $filters
+         */
+        $filters = $route->get_filters();
+
+        /**
+         * Devuelve la cantidad de tipos definidos en `RouteHandler::filter_by_type(...)`
+         * 
+         * @var int $quantity
+         */
+        $quantity = $route->get_quantity();
 
         foreach ($methods as $method) {
-
             if (!($method instanceof Methods)) {
-                /** @var string $value */
-                $value = \preg_replace("/\s+/", ' ', print_r($method, true));
-
-                /** @var string $type */
-                $type = \gettype($method);
-
-                throw new RouteException(
-                    "El método «{$value}» no está soportado. Además, se esperaba un ENUM, pero en su lugar, devolvió «{$type}»"
-                );
+                /** @var non-empty-string $fragment */
+                $fragment = print_r($method, true);
+                throw new RouteException("DLRoute::match: Se esperaba «DLRoute\Enums\Methods» como elemento de «\$methods». En su lugar se recibió «{$fragment}»");
             }
-            $routes = new RouteGenerator($uri);
 
-            $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type, $method) {
-                self::request($uri, $controller, $method, $data, $mime_type);
-            });
+            /** @var non-empty-string $method_name */
+            $method_name = \strtolower($method->value);
+
+            if ($quantity > 0) {
+                self::{$method_name}($route->uri, $route->controller, $route->data, $route->mime_type)
+                    ->filter_by_type($filters);
+                continue;
+            }
+
+            self::{$method_name}($route->uri, $route->controller, $route->data, $route->mime_type);
         }
+
+        return $route;
     }
 
     /**

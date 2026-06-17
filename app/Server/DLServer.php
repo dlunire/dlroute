@@ -29,10 +29,11 @@ declare(strict_types=1);
 namespace DLRoute\Server;
 
 use DLRoute\Config\DLRealPath;
+use DLRoute\Interfaces\Routing\RouteLexerInterface;
 use DLRoute\Interfaces\ServerInterface;
 use DLRoute\Routes\RouteDebugger;
 
-class DLServer implements ServerInterface {
+class DLServer implements ServerInterface, RouteLexerInterface {
     use Domain, IPAddress, PortCandidate;
 
     public static function get_uri(): string {
@@ -45,7 +46,9 @@ class DLServer implements ServerInterface {
 
         $uri = trim($uri, "/");
 
-        return "/{$uri}";
+        self::remove_duplicate_slash($uri);
+
+        return $uri;
     }
 
     public static function get_hostname(): string {
@@ -167,14 +170,78 @@ class DLServer implements ServerInterface {
         $uri_length = \strlen($uri);
 
         self::remove_querystring($uri);
-        
+
         /** @var int $offset */
         $offset = \strlen(self::get_script_dir()) - 1;
 
         /** @var non-empty-string $route */
         $route = \substr($uri, $offset, $uri_length);
 
+        self::remove_duplicate_slash($route);
+
         return "/" . trim($route, "/");
+    }
+
+    /**
+     * Elimina barras diagonales duplicadas y normaliza la estructura de la URI.
+     * * Este método actúa como un analizador léxico básico que fragmenta la entrada 
+     * mediante el delimitador SLASH. Durante el recorrido, filtra vacíos, 
+     * decodifica entidades URL y aplica un trim, reconstruyendo la cadena 
+     * final con un formato canónico (un solo separador entre tokens).
+     *
+     * @param string $input Referencia a la URI original; será sobrescrita con 
+     * la versión normalizada.
+     * @return void
+     */
+    public static function remove_duplicate_slash(string &$input): void {
+
+        /** @var int $length */
+        $length = \strlen($input);
+
+        /** @var non-empty-string[] $buffer Contenedor de tokens normalizados */
+        $buffer = [];
+
+        /** @var int $start_offset Puntero de inicio del lexema actual */
+        $start_offset = 0;
+
+        /** @var int $offset Puntero de lectura actual */
+        $offset = 0;
+
+        while ($offset < $length) {
+            $byte = $input[$offset];
+
+            /** @var boolean $end Indicador de fin de cadena */
+            $end = $offset === $length - 1;
+
+            if (self::SLASH === $byte || $end) {
+
+                /** @var int $lexeme_length Tamaño del segmento extraído */
+                $lexeme_length = $offset - $start_offset;
+
+                // Salto de seguridad: ignora segmentos vacíos consecutivos
+                if ($lexeme_length < 1) {
+                    $offset++;
+                    $start_offset = $offset;
+                    continue;
+                }
+
+                // Extracción, decodificación y limpieza del token
+                $lexeme = \substr($input, $start_offset, $end ? $lexeme_length + 1 : $lexeme_length);
+                $lexeme = urldecode($lexeme);
+                $lexeme = trim($lexeme);
+
+                // Solo almacena lexemas válidos
+                if ($lexeme !== '') {
+                    $buffer[] = $lexeme;
+                }
+                $start_offset = $offset + 1;
+            }
+
+            $offset++;
+        }
+
+        // Reconstrucción de la ruta normalizada
+        $input = "/" . implode("/", $buffer);
     }
 
     public static function get_script_name(): string {

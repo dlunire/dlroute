@@ -27,7 +27,7 @@ trait RouteParams {
      * @param string $route Ruta a ser procesada.
      * @return void
      */
-    protected static function process_params(string &$route) {
+    protected static function process_params(string &$route): void {
         /**
          * Ruta actual de la petición.
          * 
@@ -91,16 +91,16 @@ trait RouteParams {
          * 
          * @var int
          */
-        $current_route_count = count($current_route_parts);
+        $current_route_count = \count($current_route_parts);
 
         /**
          * Cantidad de partes de una ruta ruta seleccinada.
          * 
          * @var int
          */
-        $route_count = count($route_parts);
+        $route_count = \count($route_parts);
 
-        
+
         if ($current_route_count !== $route_count) {
             return false;
         }
@@ -129,7 +129,7 @@ trait RouteParams {
         if (!$found) {
             return false;
         }
-
+        // return false;
         foreach ($route_parts as $key => $part) {
             $value_part = $current_route_parts[$key];
             $value_part = trim($value_part);
@@ -202,9 +202,9 @@ trait RouteParams {
         }
 
         if (is_numeric($value)) {
-                
+
             $is_float = preg_match("/\./", $value);
-            
+
             if ($is_float) {
                 $value = (float) $value;
             }

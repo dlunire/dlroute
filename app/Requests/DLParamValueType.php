@@ -22,7 +22,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
      *
      * @var array
      */
-    private array $filters = [];
+    protected array $filters = [];
 
     /**
      * Ruta actual de registro.
@@ -32,9 +32,35 @@ abstract class DLParamValueType implements ParamTypeInterface {
     protected static string $route = "";
 
     /**
-     * Filtra el valor de los campos
+     * Registra filtros de tipo para los parámetros dinámicos de la ruta actual.
      *
-     * @param array $fields Campos a ser filtrado.
+     * Almacena cada filtro indexado por método HTTP y ruta, de forma que los
+     * filtros de una ruta no colisionen con los de otra aunque compartan el
+     * mismo nombre de parámetro.
+     *
+     * Cada valor de `$fields` puede ser un tipo predefinido o una expresión
+     * regular:
+     *
+     * Tipos predefinidos: `string`, `uuid`, `email`, `integer`, `float`,
+     * `numeric`, `boolean`
+     *
+     * ```php
+     * // Con tipo predefinido
+     * DLRoute::get('/productos/{uuid}', [ProductController::class, 'show'])
+     *     ->filter_by_type(['uuid' => 'uuid']);
+     *
+     * // Con expresión regular
+     * DLRoute::get('/token/{hash}', [TokenController::class, 'verify'])
+     *     ->filter_by_type(['hash' => '/^[a-f0-9]{64}$/']);
+     * ```
+     *
+     * Si alguna clave de `$fields` no es un string, responde con HTTP 500 y
+     * termina la ejecución — el formato del filtro es responsabilidad del
+     * desarrollador, no del cliente.
+     *
+     * @param array $fields Array asociativo donde la clave es el nombre del
+     *                      parámetro dinámico de la ruta y el valor es el tipo
+     *                      predefinido o expresión regular a aplicar.
      * @return void
      */
     public function filter_by_type(array $fields): void {

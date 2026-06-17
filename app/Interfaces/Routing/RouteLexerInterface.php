@@ -87,4 +87,17 @@ interface RouteLexerInterface {
      * @var string
      */
     public const QUERY_ASSIGN = "\x3d";
+
+    /**
+     * Carácter de guion bajo (underscore).
+     *
+     * Representa el valor hexadecimal "\x5f". Se utiliza durante la fase de
+     * normalización o análisis léxico para sustituir los espacios en blanco
+     * presentes en los nombres de las claves (keys). Esto garantiza que el
+     * analizador semántico reciba identificadores válidos, continuos y
+     * seguros para su posterior procesamiento o asignación.
+     *
+     * @var string
+     */
+    public const UNDERSCORE = "\x5f";
 }

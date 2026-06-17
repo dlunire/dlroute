@@ -176,21 +176,24 @@ abstract class QueryStringLexer implements RouteLexerInterface {
 
             if ($byte === self::QUERY_ASSIGN && $this->tokentype === QueryStringTokenType::QUERY_NAME) {
                 $this->tokentype = QueryStringTokenType::QUERY_VALUE;
-                $this->emit_token($start_offset);
+                $this->emit_token($start_offset, QueryStringTokenType::QUERY_NAME);
                 $start_offset = $this->offset;
                 continue;
             }
 
             if ($byte === self::QUERY_SEPARATOR) {
+                // $this->tokentype = QueryStringTokenType::QUERY_NAME;
                 $this->emit_token($start_offset, $this->tokentype);
+                $this->tokentype = QueryStringTokenType::QUERY_NAME;
+
                 $start_offset = $this->offset;
+
                 return;
             }
 
             $this->offset++;
         }
 
-        # EOF: emite el último token del bloque sin separador final.
         $this->emit_token($start_offset, $this->tokentype);
     }
 
@@ -231,10 +234,12 @@ abstract class QueryStringLexer implements RouteLexerInterface {
             $length--;
         }
 
-        if ($length < 1) return;
+        if ($length < 1) {
+            $length = 0;
+        }
 
         $this->tokens[] = new QueryParam(...[
-            "lexeme" => \substr(
+            "lexeme" => $length === 0 ? '' : \substr(
                 string: $this->query_string,
                 offset: $start_offset,
                 length: $length
