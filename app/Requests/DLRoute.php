@@ -155,19 +155,26 @@ class DLRoute extends Route implements RouteInterface {
     }
 
 
-    public static function match(array $methods, RouteHandler $route): RouteHandler {
+    /**
+     * Permite establecer varios métodos a la misma ruta de la petición.
+     *
+     * @param Methods[] $methods Métodos a ser registrados
+     * @param RouteHandler $route Ruta de la petición
+     * @return void
+     */
+    public static function match(array $methods, RouteHandler $route): void {
 
         if (\count($methods) < 1) {
             throw new RouteException("Debe definir, al menos, un método HTTP", 500);
         }
 
         /**
-         * Devuelve los filtros listos para ser utilizado para los métodos HTTP
+         * Filtros listos para ser utilizado para los métodos HTTP
          * que comparten la misma ruta.
          * 
          * @var array<string,string> $filters
          */
-        $filters = $route->get_filters();
+        $filters = $route->handler_filters;
 
         /**
          * Devuelve la cantidad de tipos definidos en `RouteHandler::filter_by_type(...)`
@@ -194,8 +201,6 @@ class DLRoute extends Route implements RouteInterface {
 
             self::{$method_name}($route->uri, $route->controller, $route->data, $route->mime_type);
         }
-
-        return $route;
     }
 
     /**

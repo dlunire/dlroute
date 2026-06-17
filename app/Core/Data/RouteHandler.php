@@ -21,7 +21,7 @@ use DLRoute\Requests\DLParamValueType;
  *
  * Uso básico:
  * ```php
- * DLRoute::get(new RouteHandler(
+ * DLRoute::match(new RouteHandler(
  *     uri:        '/productos/{uuid}',
  *     controller: [ProductController::class, 'show'],
  *     mime_type:  'application/json',
@@ -30,7 +30,7 @@ use DLRoute\Requests\DLParamValueType;
  *
  * Uso con filtros de tipo declarados en el constructor:
  * ```php
- * DLRoute::get(new RouteHandler(
+ * DLRoute::match(new RouteHandler(
  *     uri:             '/productos/{uuid}',
  *     controller:      [ProductController::class, 'show'],
  *     handler_filters: ['uuid' => 'uuid'],
