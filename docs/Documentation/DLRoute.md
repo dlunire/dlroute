@@ -37,7 +37,7 @@ DLRoute::put(string $uri, callable|array|string $controller, array|object $data 
 DLRoute::patch(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType
 DLRoute::delete(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType
 DLRoute::options(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType
-DLRoute::match(array $methods, RouteHandler $route): RouteHandler
+DLRoute::match(array $methods, RouteHandler $route): void
 DLRoute::execute(): void
 ```
 

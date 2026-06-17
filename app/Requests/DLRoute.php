@@ -156,11 +156,21 @@ class DLRoute extends Route implements RouteInterface {
 
 
     /**
-     * Permite establecer varios métodos a la misma ruta de la petición.
+     * Registra de forma masiva múltiples métodos HTTP para una misma ruta de petición.
      *
-     * @param Methods[] $methods Métodos a ser registrados
-     * @param RouteHandler $route Ruta de la petición
+     * Este método permite vincular una colección de verbos HTTP (definidos a través del enum Methods)
+     * a una única configuración de ruta (`RouteHandler`). Valida la integridad de los datos de entrada,
+     * resuelve dinámicamente el método de registro correspondiente de la clase e integra de manera fluida
+     * los filtros definidos si la ruta requiere validaciones por tipo de datos.
+     *
+     * @param Methods[]    $methods Lista de métodos HTTP (instancias de `DLRoute\Enums\Methods`) a registrar.
+     * @param RouteHandler $route   Objeto contenedor con la configuración de la URI, controlador, tipos MIME y filtros.
      * @return void
+     * 
+     * @throws RouteException Si el array `$methods` está vacío (Código 500).
+     * @throws RouteException Si alguno de los elementos del array `$methods` no es una instancia válida de `Methods`.
+     * @see \DLRoute\Enums\Methods
+     * @see \DLRoute\Core\Data\RouteHandler
      */
     public static function match(array $methods, RouteHandler $route): void {
 
