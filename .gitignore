@@ -17,6 +17,3 @@ vendor
 # Ignorar el directorio de almacenamiento:
 uploads
 storage
-
-# Directorio public
-public
