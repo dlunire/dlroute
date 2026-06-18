@@ -1,338 +1,312 @@
-# DLRoute – PHP Routing System
+# DLRoute
 
-## Documentación del Proyecto / Project Documentation
+**The only PHP router with a formal lexical engine, finite automaton querystring parser, and native telemetry.**
 
-Este repositorio contiene la documentación de los componentes principales del proyecto: manejo de peticiones HTTP, enrutamiento, telemetría y gestión de recursos.
-
----
-
-## Tabla de Contenidos / Table of Contents
-
-### Request
-| Idioma / Language | Documentación / Documentation              |
-| ----------------- | ------------------------------------------ |
-| English           | [Request-EN](docs/Request/Request-EN.md)   |
-| Spanish           | [Request-ES](docs/Request/Request-ES.md)   |
-
-### Router
-| Idioma / Language | Documentación / Documentation           |
-| ----------------- | --------------------------------------- |
-| English           | [Router-EN](docs/Router/Router-EN.md)   |
-| Spanish           | [Router-ES](docs/Router/Router-ES.md)   |
-
-### Resource Manager
-| Idioma / Language | Documentación / Documentation          |
-| ----------------- | -------------------------------------- |
-| English / Spanish | [ResourceManager](docs/ResourceManager.md) |
-
-> Cada documento ofrece explicaciones detalladas, ejemplos y buenas prácticas para usar las clases y métodos en tu aplicación PHP.  
-> Each document provides detailed explanations, examples, and best practices for using the respective classes and methods in your PHP application.
-
----
-
-## 🌐 Descripción en Español
-
-**DLRoute** es un sistema de enrutamiento diseñado para facilitar la gestión de rutas y URLs en aplicaciones web PHP, con bajo acoplamiento al entorno de ejecución.
-
-Permite filtrar parámetros por tipo o expresiones regulares, admite contenido JSON en el cuerpo de la petición y, desde la versión **v1.0.4**, proporciona información detallada y coherente del **host, esquema, puertos e IP**, incluso detrás de *reverse proxies*, túneles o en ejecución por CLI.
-
-Desde la versión **v1.0.9**, DLRoute incorpora un **analizador léxico propio** (`RouterLexer`) que valida la sintaxis de las rutas definidas por el desarrollador carácter a carácter, emitiendo diagnósticos precisos con posición exacta del error, el fragmento problemático y la corrección esperada. Ningún framework PHP conocido ofrece esto.
-
----
-
-## 💾 Instalación
+DLRoute is not "another PHP router". It is a routing pipeline built on formal language theory — the same foundations used in compilers — applied to HTTP request dispatching for the first time in PHP.
 
 ```bash
 composer require dlunire/dlroute
 ```
 
-Ubica tu archivo principal en una carpeta pública (`public/`, `html_public/`, etc.), define tus rutas y ejecuta:
+Requires **PHP 8.2+**. Works with any PHP project — with or without a framework.
+
+---
+
+## Why DLRoute is different
+
+Every other PHP router — FastRoute, Symfony Routing, Laravel Router — was built around one goal: map URLs to controllers as fast as possible. Matching was the problem. Everything else was secondary.
+
+DLRoute was built around a different premise: **routing is a formal processing pipeline, not a lookup table.**
+
+That premise produces an architecture that does not exist in any other PHP router.
+
+---
+
+## What no other PHP router does
+
+### 1. Finite automaton querystring parser
+
+Every other router uses `parse_str()` — a PHP function that has existed since PHP 4.
+
+DLRoute replaces it with a finite automaton that processes the querystring **byte by byte in a single pass**, with explicit states (`QUERY_NAME` → `QUERY_VALUE`), emitting immutable typed DTOs with the exact byte offset of each token in the original string.
 
 ```php
-DLRoute::execute();
+// GET /?campo=valor&activo
+$params = (new QueryParamComposer())->get_query_params();
+
+$params['campo']->value;         // "valor"
+$params['campo']->offset;        // 0   — byte position of the name
+$params['campo']->offset_value;  // 6   — byte position of the value
+$params['campo']->length;        // 5
+
+$params['activo']->value;        // null — parameter without value
 ```
 
-Compatible con **PHP 8.2+**. Instalable en cualquier proyecto PHP — con o sin framework.
+No other PHP router exposes byte-level position metadata for querystring parameters.
 
 ---
 
-## ✅ Características
+### 2. Route syntax lexer with exact-position diagnostics
 
-- Definición de rutas simples y complejas.
-- Métodos HTTP soportados: `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`.
-- Parámetros dinámicos con validación por tipo o expresión regular.
-- Parámetros opcionales con sintaxis `{param?}`.
-- Controladores o funciones anónimas (*callbacks*).
-- Integración con proyectos PHP nativos o con el framework **DLUnire**.
-- Detección automática de subdirectorio base — sin configuración adicional.
-- Exposición del contexto HTTP completo con telemetría integrada.
-- **Lexer propio con diagnóstico de errores de sintaxis por posición exacta** (v1.0.9).
-- **Análisis léxico del querystring** con tokens tipados como DTOs inmutables (v1.0.9).
-
----
-
-## 🆕 Novedades destacadas (v1.0.9)
-
-### Lexer con diagnóstico de errores por posición exacta
-
-Cuando el desarrollador define una ruta con sintaxis inválida, DLRoute no falla en silencio ni lanza un 404 genérico. El `RouterLexer` analiza la ruta byte a byte y emite un diagnóstico completo y accionable:
+When you define a route with invalid syntax, DLRoute does not throw a generic exception. The `RouterLexer` analyzes the route definition **character by character** and emits a fully actionable diagnostic:
 
 ```php
-// Ruta inválida
-DLRoute::get('/{ciencia?=ciencia}/usuarios', function() {
-    return TelemetryRequest::telemetry("Telemetría de la petición");
+// Invalid route
+DLRoute::get('/{ciencia?=algo}/users', fn() => []);
+```
+
+```
+RouteException: Expected closing brace (}) after «?» (position 9).
+Received instead: «?=algo}/users».
+Optional parameters must follow the format → «{param?}»
+Route defined: «/{ciencia?=algo}/users»
+```
+
+Compare this to what Laravel does with an invalid HTTP method:
+
+**Laravel** → silent `404 HTML page`
+
+**DLRoute** → structured JSON with exact error, file, line, and stack trace
+
+That is the difference between a system with formal contracts and one without.
+
+---
+
+### 3. Telemetry as a first-class citizen of the core
+
+`TelemetryRequest` lives in `DLRoute\Core\Telemetry` — not a middleware, not a plugin. It was designed from the start as part of the engine.
+
+```php
+DLRoute::get('/{resource?}', function() {
+    return TelemetryRequest::telemetry("My API");
 });
 ```
 
-```
-Fatal error: Uncaught DLRoute\Errors\RouteException:
-Se esperaba una llave de cierre (}) después del símbolo «?» (posición 9).
-En su lugar, se recibió «?=ciencia}/usuarios».
-Los parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.
-Ruta definida: «/{ciencia?=ciencia}/usuarios»
+```json
+{
+    "message":     "My API",
+    "route":       "/api/users",
+    "uri":         "/api/users?filter=active",
+    "base_url":    "https://my-domain.com",
+    "domain":      "my-domain.com",
+    "is_https":    true,
+    "port":        443,
+    "local_port":  80,
+    "timestamp":   "2026-06-18T01:20:47+00:00",
+    "cliente_ip":  "203.0.113.1",
+    "method":      "GET",
+    "proxy":       true,
+    "query_param": {
+        "filter": {
+            "name":         "filter",
+            "offset":       0,
+            "value":        "active",
+            "offset_value": 7,
+            "length":       6
+        }
+    }
+}
 ```
 
-El error indica: posición exacta del byte problemático, fragmento recibido, ruta completa y formato correcto esperado. Laravel, Symfony y Slim no ofrecen este nivel de diagnóstico.
+Single call. No configuration. Works correctly behind Cloudflare, Nginx reverse proxies, and tunnels — differentiating `port` (client-facing) from `local_port` (internal server port) automatically.
+
+To achieve equivalent output in Laravel you need: Telescope + trusted proxy configuration + an external logging package.
 
 ---
 
-### Detección automática de subdirectorio base
+### 4. Typed contracts in route registration
 
-DLRoute calcula la ruta real de la petición mediante aritmética de posición sobre bytes — sin `str_replace()`, sin `preg_replace()`:
+`Methods::GET` is an enum, not a string. The router validates the type **before registering the route**. If you pass something invalid, it fails immediately with a structured JSON error.
+
+```php
+// ❌ Wrong
+DLRoute::match(['david'], new RouteHandler(...));
+
+// ✅ Correct
+DLRoute::match([Methods::GET, Methods::POST], new RouteHandler(...));
+```
+
+```json
+{
+    "status": false,
+    "error": "DLRoute::match: Expected «DLRoute\\Enums\\Methods». Received «david» instead.",
+    "details": { "filename": "...", "line": 200 }
+}
+```
+
+Laravel silently responds with `404 HTML` for the same input.
+
+---
+
+### 5. Zero-configuration subdirectory detection
+
+DLRoute calculates the real request path via **byte-position arithmetic** — no `str_replace()`, no regular expressions:
 
 ```
 OFFSET = LENGTH(dir) - 1
 route  = substr(uri, OFFSET)
 ```
 
-Esto garantiza que la separación entre el directorio de instalación y la ruta definida sea **determinista y O(1)**, sin importar si el nombre del subdirectorio se repite en la URI.
+Deterministic and O(1), regardless of whether the subdirectory name appears repeated in the URI.
 
 ```json
 {
-    "route":    "/api/usuarios",
-    "uri":      "/subdir/subdir/api/usuarios?q=1",
+    "route":    "/api/products",
+    "uri":      "/subdir/subdir/api/products",
     "dir":      "/subdir/subdir",
-    "base_url": "http://localhost:4000/subdir/subdir"
+    "base_url": "https://example.com/subdir/subdir"
 }
 ```
 
 ---
 
-### Análisis léxico del querystring con DTOs inmutables
+## Feature comparison
 
-DLRoute v1.0.9 incorpora un `QueryStringLexer` propio que analiza el querystring de la petición en una sola pasada, produciendo tokens tipados con el enum `QueryStringTokenType`:
+| Capability | DLRoute | FastRoute | Symfony Router | Laravel Router |
+|---|---|---|---|---|
+| Finite automaton querystring parser | ✅ | ❌ | ❌ | ❌ |
+| Byte-level token position metadata | ✅ | ❌ | ❌ | ❌ |
+| Route syntax lexer with diagnostics | ✅ | ❌ | ❌ | ❌ |
+| Exact byte position on syntax errors | ✅ | ❌ | ❌ | ❌ |
+| Native telemetry in the core | ✅ | ❌ | ❌ | ❌ |
+| Structured JSON errors | ✅ | ❌ | ❌ | ❌ |
+| Typed HTTP method contracts (enum) | ✅ | ❌ | ❌ | ❌ |
+| Zero-config subdirectory detection | ✅ | ❌ | ❌ | ❌ |
+| Automatic JSON response from array | ✅ | ❌ | ❌ | ❌ |
+| Optional parameters natively | ✅ | ❌ | ❌ | workaround |
+| Explicit MIME type per route | ✅ | ❌ | ❌ | ❌ |
+| Zero external dependencies | ✅ | ✅ | ❌ | ❌ |
 
-- `QUERY_NAME` → nombre del parámetro
-- `QUERY_VALUE` → valor del parámetro
+---
 
-Los tokens se componen en pares `nombre → valor` mediante `QueryParamComposer`, entregando instancias inmutables de `QueryParamValue` con tipado estricto:
+## Quick start
+
+### 1. Project structure
+
+```
+my-project/
+├── public/
+│   └── index.php
+├── app/
+│   └── Controllers/
+│       └── ApiController.php
+└── vendor/
+```
+
+### 2. Entry point
 
 ```php
-// Querystring: ?campo=valor&activo
-[
-    QueryParamValue { name: "campo",  value: "valor", length: 5 },
-    QueryParamValue { name: "activo", value: null,    length: 0 },
-]
-```
+<?php
+declare(strict_types=1);
 
-Reglas del analizador:
-- Parámetros sin valor → `value: null`
-- Valores vacíos o en blanco → normalizados a `null`
-- Parámetros huérfanos (sin nombre) → descartados silenciosamente
-- Separadores consecutivos (`&&&&`) → descartados silenciosamente
-- Todo lo que viene después del primer `=` es valor (incluyendo `=` adicionales)
-
----
-
-### Telemetría integrada
-
-`TelemetryRequest::telemetry()` expone en tiempo real el contexto completo de la petición HTTP, incluyendo ahora los parámetros del querystring como DTOs tipados:
-
-```json
-{
-    "message":     "Telemetría de la petición",
-    "route":       "/api/usuarios",
-    "uri":         "/api/usuarios?campo=valor",
-    "dir":         "/",
-    "base_url":    "http://localhost:4000",
-    "domain":      "localhost",
-    "hostname":    "localhost:4000",
-    "is_https":    false,
-    "port":        4000,
-    "local_port":  4000,
-    "timestamp":   "2026-06-14T03:00:00+00:00",
-    "cliente_ip":  "127.0.0.1",
-    "method":      "GET",
-    "user_agent":  "Mozilla/5.0 ...",
-    "proxy":       false,
-    "query_param": [
-        { "name": "campo", "value": "valor", "length": 5 }
-    ]
-}
-```
-
----
-
-## 🧠 Contexto del servidor (v1.0.4+)
-
-DLRoute expone información consistente incluso en entornos mal configurados o no estándar:
-
-```json
-{
-    "dir":        "/subdir",
-    "route":      "/ruta/registrada",
-    "uri":        "/subdir/ruta/registrada",
-    "base_url":   "https://example.com/subdir",
-    "domain":     "example.com",
-    "hostname":   "example.com:443",
-    "is_https":   true,
-    "cliente_ip": "203.0.113.1",
-    "port":       443,
-    "local_port": 4000,
-    "method":     "GET",
-    "proxy":      true
-}
-```
-
----
-
-## 🌐 Control explícito del host externo
-
-Para escenarios específicos (tests, simulaciones, entornos incompletos):
-
-```php
-DLServer::set_external_host('example.test', false);
-```
-
-- `false` → el host impuesto se usa solo si no se detectó uno válido.
-- `true`  → el host impuesto es el único permitido.
-
----
-
-## ✏️ Sintaxis de rutas
-
-```php
-DLRoute::get(string $uri, callable|array|string $controller): DLParamValueType;
-DLRoute::head(string $uri, callable|array|string $controller): DLParamValueType;
-DLRoute::post(string $uri, callable|array|string $controller): DLParamValueType;
-DLRoute::put(string $uri, callable|array|string $controller): DLParamValueType;
-DLRoute::patch(string $uri, callable|array|string $controller): DLParamValueType;
-DLRoute::delete(string $uri, callable|array|string $controller): DLParamValueType;
-DLRoute::options(string $uri, callable|array|string $controller): DLParamValueType;
-```
-
----
-
-## 📌 Ejemplos de uso
-
-### Rutas básicas con controlador
-
-```php
 use DLRoute\Requests\DLRoute;
-use DLRoute\Test\TestController;
 
-DLRoute::get('/ruta', [TestController::class, 'method']);
-DLRoute::get('/ruta/{parametro}', [TestController::class, 'method']);
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+// Define routes here
+
+DLRoute::execute();
 ```
 
-### Definición del controlador
+### 3. Basic route
 
 ```php
-final class TestController extends Controller {
-    public function tu_metodo(object $params): object|string {
-        return $params;
-    }
-}
+DLRoute::get('/', fn() => ['status' => 'ok']);
 ```
 
-### Filtrado por tipo
+Arrays and objects are automatically serialized as JSON with the correct `Content-Type`.
+
+### 4. Route with typed parameter
 
 ```php
-DLRoute::get('/ruta/{id}', [TestController::class, 'method'])
-    ->filter_by_type(['id' => 'numeric']);
+DLRoute::get('/api/{id}', function(object $params) {
+    return ['id' => $params->id];
+})->filter_by_type(['id' => 'integer']);
 ```
 
-### Filtrado con expresión regular
+If `{id}` is not an integer, DLRoute automatically responds with `404`. No additional code needed.
+
+### 5. Optional parameter
 
 ```php
-DLRoute::get('/ruta/{token}', [TestController::class, 'method'])
-    ->filter_by_type(['token' => '/[a-f0-9]+/']);
+// Registers both /products and /products/{uuid}/detail simultaneously
+DLRoute::get('/products/{uuid?}/detail', [ProductController::class, 'show'])
+    ->filter_by_type(['uuid' => 'uuid']);
 ```
 
-### Tipos admitidos
-
-`string`, `uuid`, `email`, `integer`, `float`, `numeric`, `boolean`.  
-Los tipos no soportados se definen con expresiones regulares.
-
-### Parámetros opcionales
+### 6. Multiple HTTP methods
 
 ```php
-DLRoute::get('/products/{uuid?}/product-name', [ProductController::class, 'products']);
+use DLRoute\Core\Data\RouteHandler;
+use DLRoute\Enums\Methods;
+
+DLRoute::match(
+    [Methods::GET, Methods::POST],
+    new RouteHandler(
+        uri:             '/api/{uuid}',
+        controller:      [ApiController::class, 'handle'],
+        mime_type:       'application/json',
+        handler_filters: ['uuid' => 'uuid'],
+    )
+);
 ```
 
-La ruta `/{uuid?}/product-name` registra simultáneamente:
-- `/products`
-- `/products/{uuid}/product-name`
+### 7. Supported parameter types
 
-### Uso de callbacks
+| Type | Description |
+|---|---|
+| `string` | Any text string |
+| `uuid` | UUID format (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`) |
+| `email` | Valid email address |
+| `integer` | Integer number |
+| `float` | Decimal number |
+| `numeric` | Number with or without decimal |
+| `boolean` | Boolean value |
+| `password` | Min 8 chars, uppercase and special character |
+
+Custom regular expression:
 
 ```php
-DLRoute::get('/ruta/{parametro}', function (object $params) {
-    return $params;
-});
-```
-
-> Si el controlador o callback devuelve un array u objeto, DLRoute envía automáticamente una respuesta JSON con el Content-Type correspondiente.
-
----
-
-## 🌍 English Description
-
-**DLRoute** is a simple, flexible, and efficient PHP routing system for modern web applications. It provides advanced route syntax validation, typed querystring parsing, integrated telemetry, and automatic subdirectory detection — features not found together in any other PHP router.
-
-### Installation
-
-```bash
-composer require dlunire/dlroute
-```
-
-Requires **PHP 8.2+**. Works with any PHP project — framework or vanilla.
-
-### Key Features
-
-- Route definitions with `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`.
-- Dynamic parameters with type filtering or regular expressions.
-- Optional parameters via `{param?}` syntax.
-- **Lexer-based route syntax validation** with exact byte-position error diagnostics (v1.0.9).
-- **Typed querystring lexer** producing immutable DTOs (v1.0.9).
-- Automatic base subdirectory detection via mathematical offset — no regex, no `str_replace`.
-- Integrated telemetry exposing the full HTTP context.
-- Deterministic HTTP context even behind reverse proxies, tunnels, or in CLI.
-
-### Highlights (v1.0.9)
-
-- `RouterLexer` catches syntax errors in route definitions with exact position, fragment, and correction hint.
-- `QueryStringLexer` parses querystrings in a single pass, producing `QueryParamValue` DTOs with strict types.
-- `TelemetryRequest::telemetry()` now includes typed querystring parameters in its output.
-
-### Callback Example
-
-```php
-DLRoute::get(uri: '/info', controller: function () {
-    return ['status' => 'ok'];
-});
+->filter_by_type(['token' => '/^[a-f0-9]{64}$/'])
 ```
 
 ---
 
-## 👤 Autor / Author
+## Supported HTTP methods
 
-**David E Luna M**
+`GET` · `HEAD` · `POST` · `PUT` · `PATCH` · `DELETE` · `OPTIONS`
 
-Creador y desarrollador principal de [DLUnire](https://github.com/dlunire) — un ecosistema PHP para construir aplicaciones web orientadas a APIs de forma rápida y robusta.
+---
+
+## Part of the DLUnire ecosystem
+
+DLRoute is the routing engine of [DLUnire](https://github.com/dlunire) — a modern PHP framework for building API-oriented web applications rapidly and with formal rigor.
+
+---
+
+## Support this project
+
+DLRoute is MIT-licensed and free forever.
+
+If your company depends on PHP infrastructure and values formal correctness over convention magic, consider sponsoring:
+
+- **[GitHub Sponsors](https://github.com/sponsors/dlunire)** — recurring support for continued development
+- **[Open Collective](https://opencollective.com/dlunire)** — transparent community funding
+
+Corporate sponsorship tiers with logo placement, priority issue response, and architecture consulting are available. Contact: [dlunireframework@gmail.com](mailto:dlunireframework@gmail.com)
+
+---
+
+## Author
+
+**David E Luna M** — Creator and lead developer of DLUnire
 
 - GitHub: [@dlunire](https://github.com/dlunire)
-- Email: [dlunireframework@gmail.com](mailto:dlunireframework@gmail.com)
 - X: [@dlunire](https://x.com/dlunire)
-- Facebook: [DLUnire Framework](https://www.facebook.com/profile.php?id=61575156278078)
-- License: MIT
+- Email: [dlunireframework@gmail.com](mailto:dlunireframework@gmail.com)
+
+---
+
+## License
+
+[MIT](LICENSE)
