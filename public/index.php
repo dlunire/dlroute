@@ -3,6 +3,7 @@
 use DLRoute\Core\Data\RouteHandler;
 use DLRoute\Core\Data\Telemetry;
 use DLRoute\Core\Routing\Automaton\QueryParams\QueryParamComposer;
+use DLRoute\Core\Telemetry\TelemetryRequest;
 use DLRoute\Enums\Methods;
 
 /**
@@ -49,19 +50,19 @@ include dirname(__DIR__) . DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR 
 DLRoute::match([Methods::GET, Methods::POST], new RouteHandler(
     uri: "/{test?}",
 
-    // controller: fn (object $params) => [
-    //     "params" => $params,
-    //     "telemetry" => new Telemetry("Telemetría de la petición"),
-    // ],
-
-    controller: (new QueryParamComposer())->get_query_params(...),
-
+    controller: fn (object $params) => [
+        "params" => $params,
+        "telemetry" => TelemetryRequest::telemetry("Telemetría de la petición"),
+    ],
     handler_filters: [
         "test" => "uuid",
     ]
 ));
 
-# Lo puedes probar así:
-DLRoute::get("/", (new QueryParamComposer())->get_query_params(...));
+# Lo puedes probar así, incluso, colocanso puntos suspensivos (...):
+DLRoute::get(
+    uri: "/",
+    controller: (new QueryParamComposer())->get_query_params(...)
+);
 
 DLRoute::execute();
