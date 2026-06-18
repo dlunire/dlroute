@@ -3,15 +3,21 @@
 **Namespace:** `DLRoute\Requests`  
 **Tipo:** `class`  
 **Extiende:** `Route`  
-**Implementa:** `RouteInterface`
+**Implementa:** `RouteInterface`  
+**Versión actual:** `v1.0.11`
 
 ---
 
 ## Descripción
 
-`DLRoute` es el punto de entrada principal del sistema de enrutamiento. Permite registrar rutas para cada método HTTP, ejecutar el despachador y filtrar parámetros dinámicos por tipo o expresión regular.
+`DLRoute` es el punto de entrada principal del sistema de enrutamiento de DLUnire. Permite registrar rutas para cada método HTTP, ejecutar el despachador y filtrar parámetros dinámicos por tipo o expresión regular.
 
-Desde `v1.0.10`, incluye el método `match()` que permite registrar una misma ruta para múltiples métodos HTTP simultáneamente mediante un objeto `RouteHandler`.
+A diferencia de frameworks como Laravel o Symfony, DLRoute:
+
+- Detecta automáticamente el subdirectorio base sin configuración adicional.
+- Valida la sintaxis de las rutas con un lexer propio que indica la posición exacta del error.
+- Expone telemetría completa de la petición HTTP de forma nativa.
+- No requiere framework — funciona en cualquier proyecto PHP con `composer require`.
 
 ---
 
@@ -25,9 +31,7 @@ Requiere **PHP 8.2+**. Compatible con cualquier proyecto PHP — con o sin frame
 
 ---
 
-## Métodos de registro de rutas
-
-Todos los métodos de registro devuelven `DLParamValueType`, lo que permite encadenar `filter_by_type()` directamente:
+## Referencia de métodos
 
 ```php
 DLRoute::get(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType
@@ -39,61 +43,34 @@ DLRoute::delete(string $uri, callable|array|string $controller, array|object $da
 DLRoute::options(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType
 DLRoute::match(array $methods, RouteHandler $route): void
 DLRoute::execute(): void
+DLRoute::get_routes(): array
 ```
+
+Los métodos individuales (`get`, `post`, etc.) devuelven `DLParamValueType`, lo que permite encadenar `filter_by_type()` directamente. `match()` devuelve `void` — los filtros se declaran dentro del `RouteHandler`.
 
 ---
 
-## `DLRoute::match()`
-
-Registra una misma ruta para múltiples métodos HTTP simultáneamente.
-
-```php
-public static function match(array $methods, RouteHandler $route): void
-```
-
-### Parámetros
-
-| Parámetro  | Tipo           | Descripción                                                   |
-| ---------- | -------------- | ------------------------------------------------------------- |
-| `$methods` | `Methods[]`    | Array de casos del enum `Methods`. Mínimo uno.                |
-| `$route`   | `RouteHandler` | Objeto que encapsula URI, controlador, datos, MIME y filtros. |
-
-### Retorno
-
-Este método no devuelve ningún valor (`void`). Realiza de manera interna y dinámica el registro de cada método HTTP en la tabla de enrutamiento principal.
-
-### Comportamiento interno
-
-1. Valida que `$methods` no esté vacío — lanza `RouteException` si lo está.
-2. Valida que cada elemento sea una instancia de `Methods` — lanza `RouteException` con el valor recibido si no lo es.
-3. Por cada método, invoca dinámicamente `self::{$method_name}()` con los datos del `RouteHandler`.
-4. Si `$handler_filters` tiene al menos un filtro, encadena `filter_by_type()` automáticamente.
-
----
-
-## Tutorial de inicio rápido
+## Tutorial
 
 ### 1. Estructura del proyecto
 
 ```
 mi-proyecto/
 ├── public/
-│   └── index.php       ← punto de entrada
+│   └── index.php          ← punto de entrada
 ├── app/
 │   └── Controllers/
 │       └── ApiController.php
 └── vendor/
 ```
 
-### 2. Configurar el punto de entrada
+### 2. Punto de entrada
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-use DLRoute\Core\Data\RouteHandler;
-use DLRoute\Enums\Methods;
 use DLRoute\Requests\DLRoute;
 
 require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
@@ -103,21 +80,31 @@ require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR 
 DLRoute::execute();
 ```
 
-### 3. Ruta básica con callback
+`DLRoute::execute()` debe llamarse siempre al final — despacha la petición contra todas las rutas registradas.
+
+---
+
+### 3. Ruta básica
 
 ```php
 DLRoute::get('/', fn() => ['status' => 'ok']);
 ```
 
+Si el controlador o callback devuelve un array u objeto, DLRoute envía automáticamente una respuesta JSON con `Content-Type: application/json`.
+
+---
+
 ### 4. Ruta con parámetro dinámico
 
 ```php
 DLRoute::get('/api/{id}', function(object $params) {
-    return [
-        'id' => $params->id
-    ];
+    return ['id' => $params->id];
 });
 ```
+
+Los parámetros dinámicos se acceden como propiedades del objeto `$params`.
+
+---
 
 ### 5. Ruta con parámetro tipado
 
@@ -127,9 +114,30 @@ DLRoute::get('/api/{id}', function(object $params) {
 })->filter_by_type(['id' => 'integer']);
 ```
 
-Si `{id}` no es un entero, DLRoute responde automáticamente con 404.
+Si `{id}` no es un entero, DLRoute responde automáticamente con 404. Los tipos predefinidos son:
+
+| Tipo | Descripción |
+|---|---|
+| `string` | Cualquier cadena de texto |
+| `uuid` | UUID (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`) |
+| `email` | Dirección de correo electrónico válida |
+| `integer` | Número entero |
+| `float` | Número real |
+| `numeric` | Número con o sin decimal |
+| `boolean` | Valor booleano |
+| `password` | Mínimo 8 caracteres, mayúscula y carácter especial |
+
+Con expresión regular personalizada:
+
+```php
+->filter_by_type(['token' => '/^[a-f0-9]{64}$/'])
+```
+
+---
 
 ### 6. Ruta con parámetro opcional
+
+Un parámetro opcional se declara con `?` dentro de las llaves:
 
 ```php
 // Registra simultáneamente:
@@ -139,6 +147,10 @@ DLRoute::get('/api/{uuid?}/detalle', function(object $params) {
     return $params;
 })->filter_by_type(['uuid' => 'uuid']);
 ```
+
+Es equivalente al operador `?.` de los lenguajes modernos — si el parámetro no está presente, la ruta sigue siendo válida.
+
+---
 
 ### 7. Ruta con controlador
 
@@ -158,31 +170,30 @@ final class ApiController {
 }
 ```
 
-### 8. Múltiples métodos con `match()` — forma básica
+---
+
+### 8. Múltiples métodos HTTP con `match()`
+
+`match()` registra la misma ruta para varios métodos HTTP simultáneamente usando un objeto `RouteHandler`:
 
 ```php
 use DLRoute\Core\Data\RouteHandler;
 use DLRoute\Enums\Methods;
 
+// Sin filtros
 DLRoute::match([Methods::GET, Methods::POST], new RouteHandler(
     uri:        '/api/{id}',
     controller: fn(object $params) => $params,
 ));
-```
 
-### 9. Múltiples métodos con filtros
-
-```php
+// Con filtros de tipo
 DLRoute::match([Methods::GET, Methods::POST], new RouteHandler(
     uri:             '/api/{id}',
     controller:      fn(object $params) => $params,
     handler_filters: ['id' => 'integer'],
 ));
-```
 
-### 10. Múltiples métodos con controlador, MIME y filtros
-
-```php
+// Con controlador, MIME y filtros
 DLRoute::match(
     [Methods::GET, Methods::POST, Methods::PUT],
     new RouteHandler(
@@ -194,7 +205,34 @@ DLRoute::match(
 );
 ```
 
-### 11. Telemetría integrada
+Los métodos HTTP disponibles para `match()`:
+
+```php
+Methods::GET
+Methods::POST
+Methods::PUT
+Methods::PATCH
+Methods::DELETE
+Methods::HEAD
+Methods::OPTIONS
+```
+
+---
+
+### 9. Tipo MIME explícito
+
+Por defecto DLRoute determina el MIME automáticamente según el tipo devuelto. Para forzar uno específico:
+
+```php
+DLRoute::get('/reporte/{uuid}', [ReporteController::class, 'pdf'], mime_type: 'application/pdf')
+    ->filter_by_type(['uuid' => 'uuid']);
+```
+
+---
+
+### 10. Telemetría integrada
+
+`TelemetryRequest::telemetry()` expone en tiempo real el contexto completo de la petición, incluyendo los parámetros del querystring como DTOs tipados:
 
 ```php
 use DLRoute\Core\Telemetry\TelemetryRequest;
@@ -204,42 +242,63 @@ DLRoute::get('/{test?}', function() {
 });
 ```
 
-Respuesta:
+Respuesta en producción detrás de Cloudflare:
 
 ```json
 {
     "message": "Mi aplicación",
-    "route": "/",
-    "uri": "/",
+    "route": "/api/recursos",
+    "uri": "/api/recursos?filtro=activo",
     "dir": "/",
     "base_url": "https://mi-dominio.com",
+    "domain": "mi-dominio.com",
+    "hostname": "mi-dominio.com",
     "is_https": true,
     "port": 443,
     "local_port": 80,
+    "timestamp": "2026-06-18T01:20:47+00:00",
+    "cliente_ip": "203.0.113.1",
+    "method": "GET",
     "proxy": true,
-    "query_param": []
+    "query_param": {
+        "filtro": {
+            "name": "filtro",
+            "offset": 0,
+            "value": "activo",
+            "offset_value": 7,
+            "length": 6
+        }
+    }
 }
 ```
 
+DLRoute diferencia automáticamente:
+
+- `port: 443` — puerto expuesto al cliente
+- `local_port: 80` — puerto interno del servidor
+- `cliente_ip` — IP real del cliente, no la del proxy
+- `proxy: true` — detección automática de proxy inverso
+
 ---
 
-## Tipos predefinidos para `filter_by_type()`
+### 11. Detección automática de subdirectorio
 
-| Tipo       | Descripción                                        |
-| ---------- | -------------------------------------------------- |
-| `string`   | Cualquier cadena de texto                          |
-| `uuid`     | UUID (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)      |
-| `email`    | Dirección de correo electrónico válida             |
-| `integer`  | Número entero                                      |
-| `float`    | Número real                                        |
-| `numeric`  | Número con o sin decimal                           |
-| `boolean`  | Valor booleano                                     |
-| `password` | Mínimo 8 caracteres, mayúscula y carácter especial |
+DLRoute calcula la ruta real mediante aritmética de posición sobre bytes — sin `str_replace()` ni expresiones regulares:
 
-Con expresión regular personalizada:
+```
+OFFSET = LENGTH(dir) - 1
+route  = substr(uri, OFFSET)
+```
 
-```php
-->filter_by_type(['token' => '/^[a-f0-9]{64}$/'])
+La aplicación funciona correctamente sin importar en qué subdirectorio esté instalada:
+
+```json
+{
+    "route":    "/api/productos",
+    "uri":      "/subdir/subdir/api/productos",
+    "dir":      "/subdir/subdir",
+    "base_url": "https://ejemplo.com/subdir/subdir"
+}
 ```
 
 ---
@@ -265,42 +324,42 @@ Ruta definida: «/{ciencia?=algo}/ruta»
 DLRoute::get('/{ciencia?}/ruta', fn() => []);
 ```
 
+El lexer indica: posición exacta del byte problemático, fragmento recibido, ruta completa y formato correcto esperado.
+
+---
+
 ### Método HTTP inválido en `match()`
 
 ```php
-// ❌ Incorrecto — strings en lugar de Methods::*
+// ❌ Incorrecto
 DLRoute::match(['GET', 'POST'], new RouteHandler(...));
 
 // ✅ Correcto
 DLRoute::match([Methods::GET, Methods::POST], new RouteHandler(...));
 ```
 
-### Array de métodos vacío
-
-```php
-// ❌ Incorrecto
-DLRoute::match([], new RouteHandler(...));
-// RouteException: Debe definir, al menos, un método HTTP
+```
+RouteException: DLRoute::match: Se esperaba «DLRoute\Enums\Methods» como elemento
+de «$methods». En su lugar se recibió «GET».
 ```
 
 ---
 
-## Detección automática de subdirectorio
+### Array de métodos vacío en `match()`
 
-DLRoute detecta automáticamente el directorio base de instalación mediante aritmética de posición sobre bytes — sin `str_replace()` ni expresiones regulares:
-
-```
-OFFSET = LENGTH(dir) - 1
-route  = substr(uri, OFFSET)
+```php
+// ❌ Incorrecto
+DLRoute::match([], new RouteHandler(...));
 ```
 
-Esto significa que la aplicación funciona correctamente sin importar en qué subdirectorio esté instalada, sin ninguna configuración adicional:
-
-```json
-{
-    "route":    "/api/productos",
-    "uri":      "/subdir/api/productos",
-    "dir":      "/subdir",
-    "base_url": "https://ejemplo.com/subdir"
-}
 ```
+RouteException: Debe definir, al menos, un método HTTP
+```
+
+---
+
+## Véase también
+
+- [`RouteHandler`](RouteHandler.md) — DTO para registro de rutas con múltiples métodos HTTP
+- [`QueryParamComposer`](QueryParamComposer.md) — analizador léxico del querystring
+- [`QueryParamValue`](QueryParamValue.md) — DTO de par nombre → valor del querystring
