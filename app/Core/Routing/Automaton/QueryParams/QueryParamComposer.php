@@ -126,7 +126,9 @@ final class QueryParamComposer extends QueryStringLexer {
 
         $this->query_params[] = new QueryParamValue(...[
             "name" => $lexeme,
+            "offset" => 0,
             "value" => $value,
+            "offset_value" => 0,
             "length" => $length,
         ]);
     }
@@ -141,10 +143,10 @@ final class QueryParamComposer extends QueryStringLexer {
      *
      * El proceso de normalización consta de dos fases:
      * 1. Saneamiento de bordes: Elimina espacios en blanco al inicio y al
-     * final utilizando «trim()».
+     * final utilizando «`trim()`».
      * 2. Sustitución interna: Realiza un recorrido secuencial (byte a byte)
      * sobre la cadena resultante, reemplazando cada coincidencia de
-     * «self::WHITE_SPACE» por el carácter seguro «self::UNDERSCORE».
+     * «`self::WHITE_SPACE`» por el carácter seguro «`self::UNDERSCORE`».
      *
      * @param string &$input Referencia a la cadena de texto de la clave a 
      * normalizar. La variable es mutada internamente.
