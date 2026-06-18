@@ -6,6 +6,46 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ---
 
+```markdown
+## [v1.0.11] - 2026-06-18
+
+### Added
+
+* **Nuevas propiedades de metadatos en `QueryParamValue`:**
+  * `$offset` — posición inicial en bytes del nombre del parámetro dentro
+    de la cadena del querystring. Permite localizar el nombre
+    programáticamente mediante `substr()` sin releer la cadena completa.
+  * `$offset_value` — posición inicial en bytes del valor del parámetro
+    dentro de la cadena del querystring. Vale `0` cuando `$value` es `null`.
+
+### Changed
+
+* **`QueryStringLexer` — exclusión del delimitador `?`:**
+  * El carácter `?` es excluido de la cadena del querystring antes de
+    entrar al autómata en `load_query_string()`.
+  * Los offsets ahora son relativos a la cadena limpia sin el `?` inicial,
+    eliminando la corrección matemática que era necesaria en `v1.0.10`.
+  * Antes: `?    vdfd` → `offset: 5` (incluía el `?`)
+  * Ahora: `    vdfd` → `offset: 4` (sin el `?`)
+
+* **`query_param` en telemetría — array indexado por nombre:**
+  * `query_param` pasó de array numérico a objeto asociativo indexado por
+    el nombre del parámetro, permitiendo acceso directo en O(1):
+  * Antes: `query_param[0].name === "ciencia"`
+  * Ahora: `query_param.ciencia.name === "ciencia"`
+  * Parámetros duplicados en el querystring conservan el último valor
+    registrado — comportamiento consistente con `$_GET` de PHP.
+
+### Notes
+
+* Los offsets en `v2.0.0` serán calculados por el autómata con memoria,
+  eliminando cualquier operación matemática externa. El offset apuntará
+  siempre al primer byte real del nombre independientemente de espacios
+  o caracteres previos.
+```
+
+---
+
 ## [1.0.10] - 2026-06-17
 
 ### Added

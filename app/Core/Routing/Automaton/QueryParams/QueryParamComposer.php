@@ -122,13 +122,19 @@ final class QueryParamComposer extends QueryStringLexer {
         /** @var non-empty-string $lexeme */
         $lexeme = $token->lexeme;
 
+        /** @var int $origina_lexeme_lenth Longitud original del lexema (incluye espacios en blanco) */
+        $original_lexeme_length = \strlen($lexeme);
+
         $this->normalize_key($lexeme);
 
-        $this->query_params[] = new QueryParamValue(...[
+        /** @var int $diff_lexeme_length */
+        $diff_lexeme_length = $original_lexeme_length    - \strlen($lexeme);
+
+        $this->query_params[$lexeme] = new QueryParamValue(...[
             "name" => $lexeme,
-            "offset" => 0,
+            "offset" => $token->offset + $diff_lexeme_length,
             "value" => $value,
-            "offset_value" => 0,
+            "offset_value" => $value !== null ? $next_token?->offset : 0,
             "length" => $length,
         ]);
     }
