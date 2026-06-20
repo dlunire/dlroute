@@ -5,6 +5,7 @@ use DLRoute\Core\Data\Telemetry;
 use DLRoute\Core\Routing\Automaton\QueryParams\QueryParamComposer;
 use DLRoute\Core\Telemetry\TelemetryRequest;
 use DLRoute\Enums\Methods;
+use DLRoute\Http\Request;
 
 /**
  * Copyright (c) 2026 David E Luna M
@@ -47,22 +48,21 @@ include dirname(__DIR__) . DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR 
  * Lo que sigue más abajo son rutas de ejemplos recién creadas.
  */
 
-DLRoute::match([Methods::GET, Methods::POST], new RouteHandler(
-    uri: "/{test?}",
+// DLRoute::match([Methods::GET, Methods::POST], new RouteHandler(
+//     uri: "/{test?}",
 
-    controller: fn (object $params) => [
-        "params" => $params,
-        "telemetry" => TelemetryRequest::telemetry("Telemetría de la petición"),
-    ],
-    handler_filters: [
-        "test" => "uuid",
-    ]
-));
+//     controller: fn (object $params) => [
+//         "params" => $params,
+//         "telemetry" => TelemetryRequest::telemetry("Telemetría de la petición"),
+//     ],
+//     handler_filters: [
+//         "test" => "uuid",
+//     ]
+// ));
 
 # Lo puedes probar así, incluso, colocanso puntos suspensivos (...):
 DLRoute::get(
     uri: "/",
-    controller: (new QueryParamComposer())->get_query_params(...)
+    controller: Request::is_cli(...)
 );
-
 DLRoute::execute();
