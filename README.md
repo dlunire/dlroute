@@ -2,7 +2,7 @@
 
 ## ✨ Sponsors
 
-Gracias a quienes apoyan el desarrollo de **DLRoute**:
+Gracias a las siguientes personas y empresas por apoyar el desarrollo de **DLRoute**:
 
 ### Patrocinadores Activos
 
@@ -11,7 +11,17 @@ Gracias a quienes apoyan el desarrollo de **DLRoute**:
 <!-- GITHUB SPONSORS LIST END -->
 <!-- sponsors -->
 
-**The only PHP router with a formal lexical engine, finite automaton querystring parser, and native telemetry.**
+---
+
+**¿Quieres apoyar el proyecto?**  
+[❤️ Patrocíname en GitHub Sponsors](https://github.com/sponsors/dlunire)
+
+**Apoyadores actuales recibirán:**
+- Reconocimiento en el README
+- Prioridad en soporte
+- Mención en releases
+
+---
 
 DLRoute is not "another PHP router". It is a routing pipeline built on formal language theory — the same foundations used in compilers — applied to HTTP request dispatching for the first time in PHP.
 
