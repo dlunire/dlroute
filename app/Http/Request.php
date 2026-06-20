@@ -176,4 +176,100 @@ final class Request {
             === 'XMLHttpRequest'
         );
     }
+
+    /**
+     * Determina si el método HTTP actual es considerado seguro (safe)
+     * según la semántica definida por HTTP. Los métodos seguros no
+     * están destinados a modificar el estado del recurso y pueden ser
+     * utilizados para operaciones de consulta o descubrimiento.
+     *
+     * Los métodos considerados seguros son:
+     * - GET
+     * - HEAD
+     * - OPTIONS
+     *
+     * @return bool
+     */
+    public static function is_safe(): bool {
+        return match (self::get_method()) {
+            Methods::GET,
+            Methods::HEAD,
+            Methods::OPTIONS => true,
+            default => false
+        };
+    }
+
+    /**
+     * Determina si el método HTTP actual es idempotente. Un método
+     * idempotente produce el mismo estado final en el recurso aunque
+     * la misma petición se ejecute varias veces consecutivas.
+     *
+     * Esta propiedad resulta útil para mecanismos de reintento,
+     * proxies intermedios y sistemas distribuidos.
+     *
+     * Los métodos considerados idempotentes son:
+     * - GET
+     * - HEAD
+     * - PUT
+     * - DELETE
+     * - OPTIONS
+     *
+     * El método PATCH no se considera idempotente de forma general,
+     * ya que su comportamiento depende de la operación aplicada sobre
+     * el recurso.
+     *
+     * @return bool
+     */
+    public static function is_idempotent(): bool {
+        return match (self::get_method()) {
+            Methods::GET,
+            Methods::HEAD,
+            Methods::PUT,
+            Methods::DELETE,
+            Methods::OPTIONS => true,
+            default => false
+        };
+    }
+
+    /**
+     * Determina si el método HTTP actual puede ser almacenado en caché
+     * de acuerdo con las reglas generales del protocolo HTTP. Esta
+     * propiedad permite a clientes y proxies reutilizar respuestas
+     * previamente obtenidas, reduciendo el tráfico y la carga sobre
+     * el servidor.
+     *
+     * En términos generales, los métodos GET y HEAD son cacheables.
+     * Otros métodos pueden serlo bajo condiciones específicas definidas
+     * explícitamente por las cabeceras de respuesta.
+     *
+     * @return bool
+     */
+    public static function is_cacheable(): bool {
+        return match (self::get_method()) {
+            Methods::GET,
+            Methods::HEAD => true,
+            default => false
+        };
+    }
+
+    /**
+     * Devuelve el nombre del método HTTP actual como cadena de texto.
+     *
+     * Equivale al valor del caso correspondiente del enum `Methods`,
+     * por ejemplo:
+     *
+     * - "GET"
+     * - "POST"
+     * - "PUT"
+     * - "PATCH"
+     *
+     * Resulta útil cuando se requiere interoperar con componentes o
+     * bibliotecas que esperan una representación textual del método
+     * HTTP en lugar del enum `Methods`.
+     *
+     * @return string
+     */
+    public static function get_method_name(): string {
+        return self::get_method()->value;
+    }
 }
