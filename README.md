@@ -13,14 +13,14 @@ Gracias a las siguientes personas y empresas por apoyar el desarrollo de **DLRou
 
 ---
 
-**¿Quieres apoyar el proyecto?**
+**¿Quieres apoyar el proyecto y acelerar el desarrollo de la v2.0.0?**
 
 [❤️ Patrocíname en GitHub Sponsors](https://github.com/sponsors/dlunire)
 
-**Beneficios según tu tier:**
-- **Apoyador ($5+)**: Reconocimiento en el README
-- **Sponsor ($10+)**: Nombre/logo destacado + mención en releases
-- **Premium Sponsor ($25+)**: Consultoría técnica + prioridad máxima
+**Beneficios según tu nivel:**
+- **Apoyador ($5+)** — Reconocimiento en el README
+- **Sponsor ($10+)** — Nombre/logo destacado + mención en releases
+- **Premium Sponsor ($25+)** — Consultoría técnica + prioridad máxima
 
 ---
 
