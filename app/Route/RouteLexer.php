@@ -62,8 +62,13 @@ class RouteLexer implements RouteLexerInterface {
             /** @var non-empty-string|null $pick */
             $pick = $this->uri[$this->offset + 1] ?? null;
 
-            if ($byte === self::WHITE_SPACE) {
+            if ($byte !== self::WHITE_SPACE) {
                 $this->request_emit_token();
+                continue;
+            }
+
+            if ($byte === self::WHITE_SPACE) {
+                $this->offset++;
                 continue;
             }
 
@@ -79,8 +84,7 @@ class RouteLexer implements RouteLexerInterface {
      */
     private function request_emit_token(): void {
 
-        /** @var int $start_offset */
-        $start_offset = $this->offset;
+        
 
 
     }
@@ -108,6 +112,8 @@ class RouteLexer implements RouteLexerInterface {
                 // reemplazado por subguiones.
                 $this->uri[$this->offset] = self::UNDESCORE;
             }
+
+
 
             $this->offset++;
         }
