@@ -8,20 +8,31 @@ use DLRoute\Core\Data\QueryParam;
 use DLRoute\Core\Data\QueryParamValue;
 
 /**
- * Compone los tokens léxicos del querystring en pares estructurados «nombre → valor».
+ * Compone los tokens léxicos del querystring en pares estructurados `nombre → valor`.
  *
- * Extiende QueryStringLexer para consumir los tokens QUERY_NAME y QUERY_VALUE
- * emitidos por el autómata y construir instancias de QueryParamValue listas
+ * Extiende `QueryStringLexer` para consumir los tokens `QUERY_NAME` y `QUERY_VALUE`
+ * emitidos por el autómata y construir instancias de `QueryParamValue` listas
  * para ser consumidas por el desarrollador o por la telemetría del sistema.
  *
+ * Los pares compuestos se indexan por nombre normalizado en `$query_params`,
+ * garantizando acceso directo en O(1). Cuando el mismo nombre aparece más de
+ * una vez en el querystring, gana el último valor — last-write-wins.
+ *
+ * ---
+ *
  * Reglas de composición:
- *  - QUERY_NAME seguido de QUERY_VALUE → par completo con nombre y valor
- *  - QUERY_NAME seguido de QUERY_NAME  → par con valor null (parámetro sin «=»)
- *  - QUERY_VALUE en posición 0         → valor huérfano, descartado
- *  - Valor vacío o en blanco           → normalizado a null
- * 
+ *
+ * | Situación                       | Resultado                                          |
+ * | ------------------------------- | -------------------------------------------------- |
+ * | `QUERY_NAME` + `QUERY_VALUE`    | Par completo con nombre y valor                    |
+ * | `QUERY_NAME` + `QUERY_NAME`     | Par con `value: null` — parámetro sin `=`          |
+ * | `QUERY_NAME` al final           | Par con `value: null` — último token sin valor     |
+ * | `QUERY_VALUE` en posición 0     | Descartado — valor huérfano sin nombre             |
+ * | Nombre vacío o en blanco        | Descartado — `trim($token->lexeme) === ''`         |
+ * | Valor vacío o en blanco         | Normalizado a `null`                               |
+ *
  * @package DLRoute\Core\Routing\Automaton\QueryParams
- * 
+ *
  * @version v1.0.0 (release)
  * @author David E Luna M <dlunireframework@gmail.com>
  * @copyright (c) 2026 David E Luna M
@@ -30,9 +41,12 @@ use DLRoute\Core\Data\QueryParamValue;
  */
 final class QueryParamComposer extends QueryStringLexer {
 
-
     /**
-     * Pares «nombre → valor» compuestos a partir de los tokens del autómata.
+     * Pares `nombre → valor` compuestos a partir de los tokens del autómata.
+     *
+     * Indexados por nombre normalizado para acceso directo en O(1).
+     * Cuando el mismo nombre aparece más de una vez en el querystring,
+     * la última ocurrencia sobreescribe a la anterior — last-write-wins.
      *
      * @var QueryParamValue[]
      */
@@ -40,7 +54,16 @@ final class QueryParamComposer extends QueryStringLexer {
 
     /**
      * Inicializa el compositor invocando el analizador léxico base
-     * y construyendo los pares «nombre → valor» desde los tokens capturados.
+     * y construyendo los pares `nombre → valor` desde los tokens capturados.
+     *
+     * El parámetro `$uri` se pasa directamente al constructor de
+     * `QueryStringLexer`. Si es `null`, el lexer lee `$_SERVER['QUERY_STRING']`
+     * automáticamente. Si es una cadena, el lexer la analiza directamente —
+     * útil para delegación desde el `RouteLexer` o para uso autónomo fuera
+     * del ciclo de vida HTTP.
+     *
+     * @param string|null $uri Cadena de querystring a analizar, o `null` para
+     *                         leer `$_SERVER['QUERY_STRING']` automáticamente.
      */
     public function __construct(?string $uri = null) {
         parent::__construct($uri);
@@ -48,12 +71,16 @@ final class QueryParamComposer extends QueryStringLexer {
     }
 
     /**
-     * Recorre los tokens capturados y compone los pares «nombre → valor».
+     * Recorre los tokens capturados y compone los pares `nombre → valor`.
      *
-     * Itera sobre «$this->tokens» en una sola pasada. Para cada token
-     * QUERY_NAME determina si el siguiente token es QUERY_VALUE para
-     * emitir un par completo, o QUERY_NAME para emitir un par con valor null.
-     * Los tokens QUERY_VALUE en la posición 0 se descartan por ser huérfanos.
+     * Itera sobre `$this->tokens` en una sola pasada. Para cada token
+     * `QUERY_NAME` determina si el siguiente token es `QUERY_VALUE` para
+     * emitir un par completo, o `QUERY_NAME` (o ausente) para emitir un par
+     * con `value: null`. Los tokens `QUERY_VALUE` en la posición `0` se
+     * descartan por ser huérfanos — no tienen un `QUERY_NAME` precedente.
+     *
+     * Avanza el índice `$index` en uno extra cuando consume un `QUERY_VALUE`,
+     * evitando que el siguiente ciclo lo procese como si fuera un `QUERY_NAME`.
      *
      * @return void
      */
@@ -87,14 +114,21 @@ final class QueryParamComposer extends QueryStringLexer {
     }
 
     /**
-     * Construye una instancia de `QueryParamValue` y la agrega a «`$this->query_params`».
+     * Construye una instancia de `QueryParamValue` y la agrega a `$this->query_params`.
      *
-     * Normaliza el valor a «`null`» cuando «`$next_token`» es nulo, está ausente,
-     * o su lexema es una cadena vacía o en blanco, garantizando consistencia
+     * Normaliza el valor a `null` cuando `$next_token` es `null`, está ausente,
+     * o su lexema es una cadena vacía o en blanco — garantizando consistencia
      * semántica entre parámetros sin valor y parámetros con valor vacío.
      *
-     * @param QueryParam $token      Token `QUERY_NAME` que aporta el nombre del parámetro.
-     * @param QueryParam|null $next_token Token `QUERY_VALUE` que aporta el valor, o «`null`»
+     * Descarta silenciosamente el token si el lexema del nombre queda vacío
+     * tras aplicar `trim()` — evita indexar claves vacías en `$query_params`.
+     *
+     * El `$offset` del par resultante se ajusta con `$diff_lexeme_length` para
+     * reflejar la posición del primer byte real del nombre en el querystring
+     * original, descontando los espacios iniciales eliminados por `trim()`.
+     *
+     * @param QueryParam      $token      Token `QUERY_NAME` que aporta el nombre del parámetro.
+     * @param QueryParam|null $next_token Token `QUERY_VALUE` que aporta el valor, o `null`
      *                                    si el parámetro no tiene valor asignado.
      * @return void
      */
@@ -122,40 +156,41 @@ final class QueryParamComposer extends QueryStringLexer {
         /** @var non-empty-string $lexeme */
         $lexeme = $token->lexeme;
 
-        /** @var int $origina_lexeme_lenth Longitud original del lexema (incluye espacios en blanco) */
+        /** @var int $original_lexeme_length Longitud original del lexema (incluye espacios en blanco) */
         $original_lexeme_length = \strlen($lexeme);
 
         $this->normalize_key($lexeme);
 
-        /** @var int $diff_lexeme_length */
-        $diff_lexeme_length = $original_lexeme_length    - \strlen($lexeme);
+        /** @var int $diff_lexeme_length Bytes eliminados por trim() al inicio del nombre */
+        $diff_lexeme_length = $original_lexeme_length - \strlen($lexeme);
 
         $this->query_params[$lexeme] = new QueryParamValue(...[
-            "name" => $lexeme,
-            "offset" => $token->offset + $diff_lexeme_length,
-            "value" => $value,
+            "name"         => $lexeme,
+            "offset"       => $token->offset + $diff_lexeme_length,
+            "value"        => $value,
             "offset_value" => $value !== null ? $next_token?->offset : 0,
-            "length" => $length,
+            "length"       => $length,
         ]);
     }
 
     /**
-     * Normaliza el nombre de una clave (key) extraída del querystring.
+     * Normaliza el nombre de un parámetro extraído del querystring.
      *
-     * Este método purifica el identificador de la clave preparándolo para el
-     * análisis semántico. Opera directamente sobre el espacio de memoria de 
-     * la variable original mediante paso por referencia, evitando la creación 
-     * de copias intermedias de la cadena.
+     * Opera directamente sobre la variable original mediante paso por referencia,
+     * evitando la creación de copias intermedias de la cadena. El proceso
+     * consta de dos fases:
      *
-     * El proceso de normalización consta de dos fases:
-     * 1. Saneamiento de bordes: Elimina espacios en blanco al inicio y al
-     * final utilizando «`trim()`».
-     * 2. Sustitución interna: Realiza un recorrido secuencial (byte a byte)
-     * sobre la cadena resultante, reemplazando cada coincidencia de
-     * «`self::WHITE_SPACE`» por el carácter seguro «`self::UNDERSCORE`».
+     * 1. **Saneamiento de bordes** — `trim()` elimina espacios al inicio y al final.
+     * 2. **Sustitución interna** — recorrido byte a byte que reemplaza cada
+     *    ocurrencia de `self::WHITE_SPACE` por `self::UNDERSCORE`.
      *
-     * @param string &$input Referencia a la cadena de texto de la clave a 
-     * normalizar. La variable es mutada internamente.
+     * Ejemplo:
+     * ```
+     * " nombre con espacios " → "nombre_con_espacios"
+     * ```
+     *
+     * @param string &$input Referencia a la cadena del nombre a normalizar.
+     *                       La variable es mutada directamente.
      * @return void
      */
     private function normalize_key(string &$input): void {
@@ -175,11 +210,18 @@ final class QueryParamComposer extends QueryStringLexer {
     }
 
     /**
-     * Devuelve los parámetros del querystring compuestos como pares «nombre → valor».
+     * Devuelve los parámetros del querystring compuestos como pares `nombre → valor`.
      *
-     * Cada elemento es una instancia inmutable de QueryParamValue. El array
-     * está vacío cuando el querystring está ausente o todos sus parámetros
-     * fueron descartados por el autómata.
+     * Cada elemento es una instancia de `QueryParamValue` indexada por el nombre
+     * normalizado del parámetro. El array está vacío cuando el querystring está
+     * ausente o todos sus parámetros fueron descartados por el autómata.
+     *
+     * El acceso por nombre es directo en O(1):
+     *
+     * ```php
+     * $params = (new QueryParamComposer())->get_query_params();
+     * $value  = $params['campo']->value ?? null;
+     * ```
      *
      * @return QueryParamValue[]
      */
