@@ -42,8 +42,8 @@ final class QueryParamComposer extends QueryStringLexer {
      * Inicializa el compositor invocando el analizador léxico base
      * y construyendo los pares «nombre → valor» desde los tokens capturados.
      */
-    public function __construct() {
-        parent::__construct();
+    public function __construct(?string $uri = null) {
+        parent::__construct($uri);
         $this->build_tokens();
     }
 

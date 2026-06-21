@@ -45,4 +45,10 @@ interface RouteLexerInterface {
      * @var non-empty-string
      */ 
     public const UNDESCORE = "\x5f";
+
+    public const OPEN_PARAM = "\x7b";
+
+    public const CLOSE_PARAM = "\x7d";
+
+    public const COLON_PARAM = "\x3a";
 }

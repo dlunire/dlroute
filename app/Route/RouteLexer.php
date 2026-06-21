@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DLRoute\Route;
 
+use DLRoute\Core\Data\QueryParamValue;
+use DLRoute\Core\Routing\Automaton\QueryParams\QueryParamComposer;
 use DLRoute\Route\Contracts\RouteLexerInterface;
 
 class RouteLexer implements RouteLexerInterface {
@@ -36,7 +38,16 @@ class RouteLexer implements RouteLexerInterface {
      */
     private array $tokens = [];
 
+    /**
+     * Parámetros de la consulta
+     *
+     * @var QueryParamValue[] $query_param
+     */
+    private array $query_param = [];
 
+    /**
+     * @param string $uri URI a ser analizada
+     */
     public function __construct(string $uri) {
         $uri = \trim($uri, '\t\n\r\0\x0B/');
 
@@ -49,7 +60,10 @@ class RouteLexer implements RouteLexerInterface {
     }
 
     /**
-     * Escanea la URI registrada por el desarrollador para descomponerla en tokens
+     * Escanea la URI registrada por el desarrollador para descomponerla en tokens.
+     * 
+     * Analizar algo parecido a esto:
+     * `/api/{uuid?}/usuarios/{id}`
      *
      * @return void
      */
@@ -72,6 +86,16 @@ class RouteLexer implements RouteLexerInterface {
                 continue;
             }
 
+            if ($byte === self::QUERY_SEPARATOR) {
+                $this->offset++;
+
+                /** @ar QueryParamComposer $query_string */
+                $query_string = new QueryParamComposer();
+
+                $this->query_param = $query_string->get_query_params();
+                return;
+            }
+
             $this->offset++;
         }
     }
@@ -84,12 +108,18 @@ class RouteLexer implements RouteLexerInterface {
      */
     private function request_emit_token(): void {
 
-        
-
-
     }
 
+    /**
+     * Emite el token solicitado durante el análisis léxico.
+     *
+     * @return void
+     */
     private function emit_token(): void {
+
+        /** @var int $start_offset */
+        $start_offset = $this->offset;
+
 
     }
 
@@ -114,7 +144,7 @@ class RouteLexer implements RouteLexerInterface {
             }
 
 
-
+            
             $this->offset++;
         }
     }
