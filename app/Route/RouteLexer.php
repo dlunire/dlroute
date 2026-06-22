@@ -6,10 +6,10 @@ namespace DLRoute\Route;
 
 use DLRoute\Core\Data\QueryParamValue;
 use DLRoute\Core\Routing\Automaton\QueryParams\QueryParamComposer;
+use DLRoute\Enums\TokenType;
 use DLRoute\Route\Contracts\RouteLexerInterface;
 
 class RouteLexer implements RouteLexerInterface {
-
     /**
      * URI registrada por el desarrolador
      *
@@ -38,6 +38,8 @@ class RouteLexer implements RouteLexerInterface {
      */
     private array $tokens = [];
 
+    private TokenType $tokentype = TokenType::LITERAL;
+
     /**
      * Parámetros de la consulta
      *
@@ -51,7 +53,7 @@ class RouteLexer implements RouteLexerInterface {
     public function __construct(string $uri) {
         $uri = \trim($uri, '\t\n\r\0\x0B/');
 
-        if ($uri !== '' && $uri[0] === self::SEPARATOR) {
+        if ($uri !== "" && $uri[0] === self::SEPARATOR) {
             $uri = "/{$uri}";
         }
 
@@ -61,39 +63,20 @@ class RouteLexer implements RouteLexerInterface {
 
     /**
      * Escanea la URI registrada por el desarrollador para descomponerla en tokens.
-     * 
+     *
      * Analizar algo parecido a esto:
      * `/api/{uuid?}/usuarios/{id}`
      *
      * @return void
      */
     protected function scanner(): void {
-
-        while($this->offset < $this->size) {
+        while ($this->offset < $this->size) {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$this->offset];
-
-            /** @var non-empty-string|null $pick */
-            $pick = $this->uri[$this->offset + 1] ?? null;
 
             if ($byte !== self::WHITE_SPACE) {
                 $this->request_emit_token();
                 continue;
-            }
-
-            if ($byte === self::WHITE_SPACE) {
-                $this->offset++;
-                continue;
-            }
-
-            if ($byte === self::QUERY_SEPARATOR) {
-                $this->offset++;
-
-                /** @ar QueryParamComposer $query_string */
-                $query_string = new QueryParamComposer();
-
-                $this->query_param = $query_string->get_query_params();
-                return;
             }
 
             $this->offset++;
@@ -107,7 +90,6 @@ class RouteLexer implements RouteLexerInterface {
      * @return void
      */
     private function request_emit_token(): void {
-
     }
 
     /**
@@ -116,20 +98,16 @@ class RouteLexer implements RouteLexerInterface {
      * @return void
      */
     private function emit_token(): void {
-
         /** @var int $start_offset */
         $start_offset = $this->offset;
-
-
     }
 
     /**
      * Avanza el delimitador a la siguientes posición.
-     * 
+     *
      * @return void
      */
     private function next_delimiter(): void {
-
         /** @var int $start_offset */
         $start_offset = $this->offset;
 
@@ -143,8 +121,6 @@ class RouteLexer implements RouteLexerInterface {
                 $this->uri[$this->offset] = self::UNDESCORE;
             }
 
-
-            
             $this->offset++;
         }
     }

@@ -31,15 +31,16 @@ namespace DLRoute\Server;
 /**
  * Permite determinar un puerto candidato. No se puede garantizar que el puerto obtenido
  * sea el puerto real utilizado.
- * 
+ *
  * @package DLRoute\Server
- * 
+ *
  * @version v0.0.1 (release)
  * @author David E Luna M <dlunireframework@gmail.com>
  * @copyright (c) 2026 David E Luna M
  * @license MIT
  */
-trait PortCandidate {
+trait PortCandidate
+{
     use SchemeHTTP;
 
     /**
@@ -50,35 +51,32 @@ trait PortCandidate {
      *
      * @var string[]
      */
-    private const PORT_KEYS = [
-        'HTTP_X_FORWARDED_PORT',
-        'SERVER_PORT'
-    ];
+    private const PORT_KEYS = ["HTTP_X_FORWARDED_PORT", "SERVER_PORT"];
 
     /**
      * Devuelve un número de puerto probable utilizado durante la ejecución.
-     * Tome en cuenta que no siempre podría determinarse el puerto en entornos de 
+     * Tome en cuenta que no siempre podría determinarse el puerto en entornos de
      * ejecución mal configurados, que no informan del puerto o simplemente CLI.
-     * 
-     * Primero se intentará deducir por el esquema HTTP seleccionado el puerto. 
-     * 
+     *
+     * Primero se intentará deducir por el esquema HTTP seleccionado el puerto.
+     *
      * Con el objeto de permitir pruebas automatizadas, se devolverá el puerto número
-     * `80` como puerto predeterminado. 
-     * 
-     * El objetivo es permitir construir peticiones HTTPs simuladas cuando no se utilicen 
+     * `80` como puerto predeterminado.
+     *
+     * El objetivo es permitir construir peticiones HTTPs simuladas cuando no se utilicen
      * el protocolo HTTP
      *
      * @param boolean $local Opcional. Solo para obtener puertos locales de ejecución siempre que sea
      *                posible, de lo contrario, devolverá `80`.
      * @return int
      */
-    private static function get_likely_port(bool $local = false) {
-
+    private static function get_likely_port(bool $local = false): int
+    {
         /** @var int $port */
         $port = self::is_https() ? 443 : 80;
 
         /** @var mixed $local_port */
-        $local_port = $_SERVER['SERVER_PORT'] ?? $port;
+        $local_port = $_SERVER["SERVER_PORT"] ?? $port;
 
         if (
             \is_numeric($local_port) &&
@@ -96,12 +94,14 @@ trait PortCandidate {
             /** @var mixed $value */
             $value = $_SERVER[$key] ?? null;
 
-            if (!\is_numeric($value))
+            if (!\is_numeric($value)) {
                 continue;
+            }
             $value = \intval($value);
 
-            if (!self::is_valid_range($value))
+            if (!self::is_valid_range($value)) {
                 continue;
+            }
             return $value;
         }
 
@@ -114,7 +114,8 @@ trait PortCandidate {
      * @param int $value Valor a ser analizado
      * @return boolean
      */
-    private static function is_valid_range(int $value): bool {
+    private static function is_valid_range(int $value): bool
+    {
         return !($value < 0 || $value > 65535);
     }
 
@@ -124,7 +125,8 @@ trait PortCandidate {
      *
      * @return integer
      */
-    public static function get_port(): int {
+    public static function get_port(): int
+    {
         return self::get_likely_port();
     }
 
@@ -133,7 +135,8 @@ trait PortCandidate {
      *
      * @return integer
      */
-    public static function get_local_port(): int {
+    public static function get_local_port(): int
+    {
         return self::get_likely_port(local: true);
     }
 }
