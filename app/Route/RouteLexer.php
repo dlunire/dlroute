@@ -100,6 +100,8 @@ class RouteLexer implements RouteLexerInterface {
     private function emit_token(): void {
         /** @var int $start_offset */
         $start_offset = $this->offset;
+
+        $this->next_delimiter($start_offset);
     }
 
     /**
@@ -107,12 +109,12 @@ class RouteLexer implements RouteLexerInterface {
      *
      * @return void
      */
-    private function next_delimiter(): void {
+    private function next_delimiter(int $offset): void {
         /** @var int $start_offset */
         $start_offset = $this->offset;
 
         while ($this->offset < $this->size) {
-            /** @var non-empty-string $byte */
+            /** @var non-empty-string $byte Byte actual capturado durante el análisis léxico */
             $byte = $this->uri[$this->offset];
 
             if ($byte === self::WHITE_SPACE) {
