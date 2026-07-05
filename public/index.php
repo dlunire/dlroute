@@ -22,6 +22,7 @@
  * License along with this program. If not, see
  * <https://www.gnu.org/licenses/>.
  */
+
 use DLRoute\Http\Request;
 
 ini_set('display_errors', 1);
@@ -35,4 +36,8 @@ DLRoute::get(
     uri: "/",
     controller: Request::is_cli(...)
 );
+
+# Test de funcionamiento.
+DLRoute::get('/test', fn() => ["status" => "ok"]);
+
 DLRoute::execute();
