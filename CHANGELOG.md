@@ -6,6 +6,14 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ---
 
+## [2.0.0] - 2026-07-05
+
+### BREAKING CHANGES
+* **Licencia**: Se cambió la licencia del paquete de `MIT` a **`AGPL-3.0-or-later`**, como parte del modelo de licenciamiento dual del ecosistema DLUnire. Ver `LICENSE` y `LICENSING.md` en el repositorio principal (`dlunire/dlunire`) para el detalle completo. El campo `license` en `composer.json` fue actualizado en consecuencia.
+
+---
+
+
 ```markdown
 ## [v1.0.11] - 2026-06-18
 
