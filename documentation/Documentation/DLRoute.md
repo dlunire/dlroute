@@ -29,6 +29,8 @@ composer require dlunire/dlroute
 
 Requiere **PHP 8.2+**. Compatible con cualquier proyecto PHP — con o sin framework.
 
+> Tutorial progresivo (16 capítulos): [docs/tutorial/README.md](../../docs/tutorial/README.md)
+
 ---
 
 ## Referencia de métodos

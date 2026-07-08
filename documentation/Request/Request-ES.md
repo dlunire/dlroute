@@ -2,6 +2,10 @@
 
 Clases y métodos relacionados con la configuración y envío de solicitudes HTTP desde un controlador en una aplicación PHP.
 
+> Tutorial progresivo: [docs/tutorial/13-peticiones-salientes.md](../../docs/tutorial/13-peticiones-salientes.md)
+
+> **Subida de archivos al servidor:** ver [DLUpload-ES.md](DLUpload-ES.md) (incluye saneamiento de SVG en `image/svg+xml`).
+
 ## Clase `RequestInit`
 
 Esta clase se utiliza para configurar los detalles de una solicitud HTTP, como el cuerpo, el método y las cabeceras.

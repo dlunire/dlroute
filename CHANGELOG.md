@@ -6,6 +6,16 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ---
 
+## [v2.0.1]
+
+### Documentation / Documentación
+
+- Added a progressive **DLRoute usage tutorial** under `docs/tutorial/` (quick start, dispatch cycle, `DLServer` context, route registration, dynamic parameters, `filter_by_type`, `match`/`RouteHandler`, `DLOutput`, controllers and incoming requests, querystring automaton, `Router`/telemetry, file uploads, outgoing HTTP requests, errors and diagnostics, production deployment, DLCore integration).
+
+- Se añadió un **tutorial de uso de DLRoute** progresivo en `docs/tutorial/` (inicio rápido, ciclo de despacho, contexto `DLServer`, registro de controladores, parámetros dinámicos, `filter_by_type`, `match` y `RouteHandler`, respuestas con `DLOutput`, peticiones entrantes, autómata de querystring, telemetría, subida de archivos y SVG, peticiones salientes cURL, errores y diagnósticos, despliegue Apache/Nginx y integración con DLCore/DLUnire), con índice en `docs/README.md`.
+
+---
+
 ## [2.0.0] - 2026-07-05
 
 ### BREAKING CHANGES

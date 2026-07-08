@@ -4,7 +4,9 @@
 **Clase final:** `Router`
 **Versión:** v0.0.1 (release)
 **Autor:** David E Luna M
-**Licencia:** MIT
+**Licencia:** AGPL-3.0-or-later
+
+> Tutorial progresivo: [docs/tutorial/11-router-telemetria.md](../../docs/tutorial/11-router-telemetria.md)
 
 ---
 

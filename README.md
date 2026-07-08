@@ -312,6 +312,33 @@ Expresión regular personalizada:
 
 ---
 
+## Tutorial de uso
+
+Guía progresiva en español (16 capítulos): [`docs/tutorial/README.md`](docs/tutorial/README.md)
+
+| # | Tema |
+|---|------|
+| 1 | [Inicio rápido](docs/tutorial/01-inicio-rapido.md) |
+| 2 | [Ciclo de despacho](docs/tutorial/02-ciclo-despacho.md) |
+| 3 | [`DLServer` y contexto](docs/tutorial/03-dlserver-contexto.md) |
+| 4 | [Registro de rutas y controladores](docs/tutorial/04-registro-controladores.md) |
+| 5 | [Parámetros dinámicos](docs/tutorial/05-parametros-dinamicos.md) |
+| 6 | [`filter_by_type()`](docs/tutorial/06-filter-by-type.md) |
+| 7 | [`match()` y `RouteHandler`](docs/tutorial/07-match-routehandler.md) |
+| 8 | [`DLOutput` y respuestas](docs/tutorial/08-dloutput-respuestas.md) |
+| 9 | [Controladores y peticiones](docs/tutorial/09-controladores-peticiones.md) |
+| 10 | [Query string y autómata](docs/tutorial/10-querystring-automata.md) |
+| 11 | [`Router` y telemetría](docs/tutorial/11-router-telemetria.md) |
+| 12 | [Subida de archivos](docs/tutorial/12-subida-archivos.md) |
+| 13 | [Peticiones salientes](docs/tutorial/13-peticiones-salientes.md) |
+| 14 | [Errores y diagnósticos](docs/tutorial/14-errores-diagnosticos.md) |
+| 15 | [Despliegue en producción](docs/tutorial/15-despliegue-produccion.md) |
+| 16 | [Integración con DLCore](docs/tutorial/16-integracion-dlcore.md) |
+
+Referencia por módulo: [`docs/README.md`](docs/README.md). Kernel DLUnire: [tutorial DLCore](https://github.com/dlunire/dlcore/blob/master/docs/tutorial/README.md).
+
+---
+
 ## Parte del ecosistema DLUnire
 
 DLRoute es el motor de enrutamiento de [DLUnire](https://github.com/dlunire) —un framework moderno de PHP para construir aplicaciones web orientadas a APIs de forma rápida y con rigor formal—.
