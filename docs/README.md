@@ -46,5 +46,9 @@ Documentación técnica existente en `documentation/`:
 
 | Capa | Paquete | Tutorial |
 |------|---------|----------|
-| Infraestructura HTTP | `dlunire/dlroute` | Este tutorial |
+| Infraestructura HTTP (servidor) | `dlunire/dlroute` | Este tutorial |
+| UI en el navegador (cliente) | `@dlunire/front-dlroute` | [Mini-tutorial front](../../front/parsing/docs/TUTORIAL.md) · [índice](../../front/parsing/docs/README.md) |
 | Kernel | `dlunire/dlcore` | [DLCore tutorial](https://github.com/dlunire/dlcore/blob/master/docs/tutorial/README.md) |
+| Mapa del monorepo | — | [README raíz](../../../README.md) |
+
+> **front-dlroute** no sustituye este paquete: enruta **vistas/UI** en el cliente. HTTP, controladores PHP y SSR siguen aquí.
