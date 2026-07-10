@@ -6,6 +6,33 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ---
 
+## [Unreleased]
+
+<!-- Próximos cambios aún no publicados -->
+
+---
+
+## [2.0.2] - 2026-07-10
+
+### Fixed / Corregido
+
+- **Empaquetado / Composer en Windows:** se eliminó el enlace simbólico `public/subdirectorio`, que apuntaba a una ruta **absoluta de desarrollo** (`/srv/Aplicaciones/my-projects/Libraries/dlroute/public`).
+  - Ese symlink se había creado solo para **probar la lectura del entorno / document root** en local.
+  - Al versionarse en Git, el zip del paquete lo incluía. En Windows, 7-Zip (usado por Composer) lo rechaza con:
+    `ERROR: Dangerous link path was ignored : …\public\subdirectorio : /srv/Aplicaciones/...`
+  - **Solución:** el enlace ya no forma parte del repositorio; no afecta a la API de enrutamiento.
+
+### Changed / Cambiado
+
+- **`.gitignore`:** se añade `public/subdirectorio` para que un enlace de prueba local **no vuelva a commitearse** por error.
+
+### Notes / Notas
+
+- Quien haya fallado al `composer install`/`update` en Windows debe actualizar a un commit/tag **≥ 2.0.2** (o al commit que elimina el symlink) y, si hace falta, `composer clear-cache` antes de reinstalar `dlunire/dlroute`.
+- Si en local se necesita de nuevo un subdirectorio de prueba, créalo **sin** `git add` y, de ser posible, con destino **relativo**, nunca con una ruta absoluta del servidor de desarrollo.
+
+---
+
 ## [v2.0.1]
 
 ### Documentation / Documentación
