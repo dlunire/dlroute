@@ -6,7 +6,9 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ---
 
-## [Unreleased]
+## [2.0.2] - 2026-08-02
+
+Se incorpora la biblioteca `DLAuth` para autenticar al usuario o al cliente HTTP.
 
 <!-- Próximos cambios aún no publicados -->
 

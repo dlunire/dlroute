@@ -4,8 +4,48 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "95f3b5b1bdde57806e013b4e9445c596",
+    "content-hash": "558ba511d4a61cde082d1eb099555681",
     "packages": [
+        {
+            "name": "dlunire/dlauth",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dlunire/dlauth.git",
+                "reference": "caaba9b989f1abef9093b18629bce025699e7e25"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dlunire/dlauth/zipball/caaba9b989f1abef9093b18629bce025699e7e25",
+                "reference": "caaba9b989f1abef9093b18629bce025699e7e25",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "DLUnire\\DLAuth\\": "sources/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "David E. Luna M.",
+                    "email": "info@dlunire.dev",
+                    "homepage": "https://dlunire.dev",
+                    "role": "Founder & Software Developer"
+                }
+            ],
+            "description": "Biblioteca de autenticación para DLUnire.",
+            "homepage": "https://dlunire.dev",
+            "support": {
+                "issues": "https://github.com/dlunire/dlauth/issues",
+                "source": "https://github.com/dlunire/dlauth/tree/v1.0.0"
+            },
+            "time": "2026-08-02T10:26:24+00:00"
+        },
         {
             "name": "imagine/imagine",
             "version": "1.5.4",
