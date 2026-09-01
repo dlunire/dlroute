@@ -45,8 +45,4 @@ final class AuthApps extends DLAuth {
             $fn($session);
         }
     }
-
-    public function __get(string $field): string {
-        return "Valor: {$field}";
-    }
 }

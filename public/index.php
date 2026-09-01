@@ -77,3 +77,4 @@ $auth->logout();
 DLRoute::get(uri: '/science', controller: fn (): string => "Ciencias computacionales");
 
 // DLRoute::execute();
+
