@@ -6,6 +6,73 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ---
 
+## [2.1.0] - 2026-09-XX
+
+Esta versión incorpora cambios en la arquitectura de controladores y en la integración del sistema de autenticación, además de nuevas capacidades de documentación y uso del sistema de rutas.
+
+### BREAKING CHANGES
+
+* **Controlador base `DLRoute\Config\Controller`:**
+
+  * Se amplía el constructor del controlador para permitir habilitar explícitamente el sistema de autenticación mediante `parent::__construct(true)`.
+  * Se incorpora la posibilidad de especificar un campo personalizado para almacenar los datos de autenticación mediante `parent::__construct(auth: true, field: 'mi-campo')`.
+  * Los controladores que implementen un constructor propio deben invocar explícitamente al constructor de `Controller` para conservar la inicialización del sistema de peticiones y autenticación.
+  * La configuración del sistema de autenticación pasa a formar parte de la infraestructura proporcionada por el controlador base.
+
+### Added / Agregado
+
+* **Integración con `DLAuth`:**
+
+  * Se incorpora `AuthApps` como instancia encargada de gestionar el estado de autenticación de la aplicación dentro de `Controller`.
+  * Se agrega `Controller::get_auth()` para obtener la instancia configurada del sistema de autenticación.
+  * Se agrega `Controller::save_auth_data()` para crear y almacenar datos de sesión mediante `AuthApps`.
+  * Se incorporan validaciones explícitas para impedir la configuración de campos de sesión vacíos o compuestos únicamente por espacios en blanco.
+
+* **Controladores simplificados:**
+
+  * Un controlador que no declara su propio constructor hereda automáticamente la inicialización proporcionada por `Controller`.
+  * La autenticación puede habilitarse únicamente mediante:
+
+```php
+final class AuthController extends Controller {
+    public function __construct() {
+        parent::__construct(true);
+    }
+}
+```
+
+* También puede utilizarse un campo personalizado:
+
+```php
+final class AuthController extends Controller {
+    public function __construct() {
+        parent::__construct(auth: true, field: 'mi-campo-personalizado');
+    }
+}
+```
+
+### Changed / Cambiado
+
+* **`Controller`:**
+
+  * Se reorganiza la gestión interna de autenticación para mantener una única instancia de `AuthApps` asociada al controlador.
+  * La propiedad de autenticación utiliza un estado explícito `AuthApps|null`, permitiendo distinguir entre autenticación habilitada y no configurada.
+  * Los métodos relacionados con autenticación generan excepciones explícitas cuando se intenta utilizarlos sin haber habilitado previamente el sistema.
+
+### Documentation / Documentación
+
+* Se incorpora documentación específica para el uso de controladores dentro del sistema de rutas.
+
+* Se agrega el documento:
+
+  `documentation/Documentation/Controladores.md`
+
+* Se documenta el uso del constructor heredado, la habilitación de autenticación y la configuración de campos personalizados.
+
+* Se actualiza el índice de documentación para facilitar el acceso a la referencia de controladores.
+
+---
+
 ## [2.0.2] - 2026-08-02
 
 Se incorpora la biblioteca `DLAuth` para autenticar al usuario o al cliente HTTP.
@@ -18,20 +85,20 @@ Se incorpora la biblioteca `DLAuth` para autenticar al usuario o al cliente HTTP
 
 ### Fixed / Corregido
 
-- **Empaquetado / Composer en Windows:** se eliminó el enlace simbólico `public/subdirectorio`, que apuntaba a una ruta **absoluta de desarrollo** (`/srv/Aplicaciones/my-projects/Libraries/dlroute/public`).
-  - Ese symlink se había creado solo para **probar la lectura del entorno / document root** en local.
-  - Al versionarse en Git, el zip del paquete lo incluía. En Windows, 7-Zip (usado por Composer) lo rechaza con:
+* **Empaquetado / Composer en Windows:** se eliminó el enlace simbólico `public/subdirectorio`, que apuntaba a una ruta **absoluta de desarrollo** (`/srv/Aplicaciones/my-projects/Libraries/dlroute/public`).
+  * Ese symlink se había creado solo para **probar la lectura del entorno / document root** en local.
+  * Al versionarse en Git, el zip del paquete lo incluía. En Windows, 7-Zip (usado por Composer) lo rechaza con:
     `ERROR: Dangerous link path was ignored : …\public\subdirectorio : /srv/Aplicaciones/...`
-  - **Solución:** el enlace ya no forma parte del repositorio; no afecta a la API de enrutamiento.
+  * **Solución:** el enlace ya no forma parte del repositorio; no afecta a la API de enrutamiento.
 
 ### Changed / Cambiado
 
-- **`.gitignore`:** se añade `public/subdirectorio` para que un enlace de prueba local **no vuelva a commitearse** por error.
+* **`.gitignore`:** se añade `public/subdirectorio` para que un enlace de prueba local **no vuelva a commitearse** por error.
 
 ### Notes / Notas
 
-- Quien haya fallado al `composer install`/`update` en Windows debe actualizar a un commit/tag **≥ 2.0.2** (o al commit que elimina el symlink) y, si hace falta, `composer clear-cache` antes de reinstalar `dlunire/dlroute`.
-- Si en local se necesita de nuevo un subdirectorio de prueba, créalo **sin** `git add` y, de ser posible, con destino **relativo**, nunca con una ruta absoluta del servidor de desarrollo.
+* Quien haya fallado al `composer install`/`update` en Windows debe actualizar a un commit/tag **≥ 2.0.2** (o al commit que elimina el symlink) y, si hace falta, `composer clear-cache` antes de reinstalar `dlunire/dlroute`.
+* Si en local se necesita de nuevo un subdirectorio de prueba, créalo **sin** `git add` y, de ser posible, con destino **relativo**, nunca con una ruta absoluta del servidor de desarrollo.
 
 ---
 
@@ -39,19 +106,19 @@ Se incorpora la biblioteca `DLAuth` para autenticar al usuario o al cliente HTTP
 
 ### Documentation / Documentación
 
-- Added a progressive **DLRoute usage tutorial** under `docs/tutorial/` (quick start, dispatch cycle, `DLServer` context, route registration, dynamic parameters, `filter_by_type`, `match`/`RouteHandler`, `DLOutput`, controllers and incoming requests, querystring automaton, `Router`/telemetry, file uploads, outgoing HTTP requests, errors and diagnostics, production deployment, DLCore integration).
+* Added a progressive **DLRoute usage tutorial** under `docs/tutorial/` (quick start, dispatch cycle, `DLServer` context, route registration, dynamic parameters, `filter_by_type`, `match`/`RouteHandler`, `DLOutput`, controllers and incoming requests, querystring automaton, `Router`/telemetry, file uploads, outgoing HTTP requests, errors and diagnostics, production deployment, DLCore integration).
 
-- Se añadió un **tutorial de uso de DLRoute** progresivo en `docs/tutorial/` (inicio rápido, ciclo de despacho, contexto `DLServer`, registro de controladores, parámetros dinámicos, `filter_by_type`, `match` y `RouteHandler`, respuestas con `DLOutput`, peticiones entrantes, autómata de querystring, telemetría, subida de archivos y SVG, peticiones salientes cURL, errores y diagnósticos, despliegue Apache/Nginx y integración con DLCore/DLUnire), con índice en `docs/README.md`.
+* Se añadió un **tutorial de uso de DLRoute** progresivo en `docs/tutorial/` (inicio rápido, ciclo de despacho, contexto `DLServer`, registro de controladores, parámetros dinámicos, `filter_by_type`, `match` y `RouteHandler`, respuestas con `DLOutput`, peticiones entrantes, autómata de querystring, telemetría, subida de archivos y SVG, peticiones salientes cURL, errores y diagnósticos, despliegue Apache/Nginx y integración con DLCore/DLUnire), con índice en `docs/README.md`.
 
 ---
 
 ## [2.0.0] - 2026-07-05
 
 ### BREAKING CHANGES
+
 * **Licencia**: Se cambió la licencia del paquete de `MIT` a **`AGPL-3.0-or-later`**, como parte del modelo de licenciamiento dual del ecosistema DLUnire. Ver `LICENSE` y `LICENSING.md` en el repositorio principal (`dlunire/dlunire`) para el detalle completo. El campo `license` en `composer.json` fue actualizado en consecuencia.
 
 ---
-
 
 ```markdown
 ## [v1.0.11] - 2026-06-18
@@ -250,10 +317,10 @@ Se incorpora la biblioteca `DLAuth` para autenticar al usuario o al cliente HTTP
     })->filter_by_type(["id" => "integer"]);
 ```
 
-  * Todos los métodos HTTP (`get`, `head`, `post`, `put`, `patch`, `delete`, `options`, `match`) integran `RouteGenerator` internamente mediante `load_routes()`.
-  * Se agrega validación de sintaxis de rutas: el uso incorrecto del marcador `?` fuera de un parámetro lanza `RouteException` con la posición exacta del error.
-  * Nuevo enum `TokenType` (`DLRoute\Core\Routing\Automaton\TokenType`) con los casos `TEXT_PLAIN` y `PARAM`.
-  * Nueva interfaz `RouteLexerInterface` (`DLRoute\Interfaces\Routing\RouteLexerInterface`) con las constantes de tokens del autómata: `BRACKET_OPEN`, `BRACKET_CLOSE`, `OPTIONAL_PARAMETER`, `WHITE_SPACE` y `SLASH`.
+* Todos los métodos HTTP (`get`, `head`, `post`, `put`, `patch`, `delete`, `options`, `match`) integran `RouteGenerator` internamente mediante `load_routes()`.
+* Se agrega validación de sintaxis de rutas: el uso incorrecto del marcador `?` fuera de un parámetro lanza `RouteException` con la posición exacta del error.
+* Nuevo enum `TokenType` (`DLRoute\Core\Routing\Automaton\TokenType`) con los casos `TEXT_PLAIN` y `PARAM`.
+* Nueva interfaz `RouteLexerInterface` (`DLRoute\Interfaces\Routing\RouteLexerInterface`) con las constantes de tokens del autómata: `BRACKET_OPEN`, `BRACKET_CLOSE`, `OPTIONAL_PARAMETER`, `WHITE_SPACE` y `SLASH`.
 
 * **Nueva telemetría en `DLOutput`:**
 
