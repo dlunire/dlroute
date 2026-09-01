@@ -120,14 +120,27 @@ trait Request {
     private string $cookies;
 
     // Métodos HTTP
+    /** @var string  */
     public const GET    = 'GET';
+
+    /** @var string */
     public const POST   = 'POST';
+
+    /** @var string */
     public const PUT    = 'PUT';
+
+    /** @var string */
     public const PATCH  = 'PATCH';
+
+    /** @var string */
     public const DELETE = 'DELETE';
 
     // Verificación SSL
+
+    /** @var integer */
     public const VERIFY_HOST      = 2;
+
+    /** @var integer */
     public const NOT_VERIFY_HOST  = 0;
 
     /** @var string[] Métodos que envían cuerpo de datos */
@@ -226,7 +239,7 @@ trait Request {
      * @return void
      */
     public function set_user_agent(string $user_agent = ''): void {
-        $this->user_agent = trim($user_agent ?: $this->user_agent);
+        $this->user_agent = \trim($user_agent ?: $this->user_agent);
     }
 
     /**
@@ -276,7 +289,7 @@ trait Request {
      * @see set_verify_peer()
      */
     public function set_verify_host(int $verify_host = self::NOT_VERIFY_HOST): void {
-        if (!in_array($verify_host, [self::VERIFY_HOST, self::NOT_VERIFY_HOST], true)) {
+        if (!\in_array($verify_host, [self::VERIFY_HOST, self::NOT_VERIFY_HOST], true)) {
             throw new InvalidArgumentException(
                 "Los valores permitidos son 0: Request::NOT_VERIFY_HOST o 2: Request::VERIFY_HOST",
                 500
@@ -406,12 +419,12 @@ trait Request {
      * @see set_connect_timeout()
      */
     public function request(string $url, string $method = self::GET, ?HeadersInit $headers = null, array $data = []): string|bool {
-        if (empty($this->cookies)) {
+        if (\trim($this->cookies) === '') {
             $this->set_cookies();
         }
 
         // Asegura que el archivo de cookies exista
-        if (!file_exists($this->cookies)) {
+        if (!\file_exists($this->cookies)) {
             file_put_contents($this->cookies, "# Netscape HTTP Cookie File" . PHP_EOL);
         }
 
@@ -448,7 +461,7 @@ trait Request {
         ]);
 
         $current_method = strtoupper($method);
-        if (in_array($current_method, self::METHODS, true)) {
+        if (\in_array($current_method, self::METHODS, true)) {
             $is_json = false;
             $is_multipart = false;
 
@@ -692,6 +705,6 @@ trait Request {
      */
     public function delete_cookies(): bool {
         $path = $this->get_cookies_path();
-        return is_string($path) && file_exists($path) ? @unlink($path) : false;
+        return \is_string($path) && file_exists($path) ? @unlink($path) : false;
     }
 }

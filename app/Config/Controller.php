@@ -25,12 +25,14 @@
 
 namespace DLRoute\Config;
 
+use DLRoute\Core\Auth\AuthApps;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Requests\DLRequest;
 use DLRoute\Requests\DLUpload;
 use DLRoute\Server\DLServer;
 use DLRoute\Traits\Request;
 use DLRoute\Validates\DLValidates;
+use RuntimeException;
 
 /**
  * Controlador base
@@ -45,6 +47,13 @@ use DLRoute\Validates\DLValidates;
 abstract class Controller {
 
     use DLValidates, DLUpload, Request;
+
+    /**
+     * Nombre del campo de lo datos de la sesión
+     *
+     * @var string|null $field
+     */
+    private ?string $field = null;
 
     /**
      * Procesa las peticiones del usuario.
@@ -81,11 +90,58 @@ abstract class Controller {
      *
      * Esta función toma un objeto o array y lo convierte en una cadena de texto en formato JSON.
      *
-     * @param object|array $content El contenido que se va a parsear.
+     * @param object|array $data El contenido que se va a parsear.
      * @param bool $pretty Indica si la salida en formato JSON debe tener formato legible o no.
      * @return string La cadena de texto en formato JSON resultante.
      */
     protected function get_json(array|object $data, bool $pretty = false): string {
         return DLOutput::get_json($data, $pretty);
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param string|null $field
+     * @return self
+     * 
+     * @throws RuntimeException
+     */
+    protected function set_auth_key(?string $field = null): self {
+        if (\is_string($field) && \trim($field) === '') {
+            throw new RuntimeException("set_auth_key(...): El campo «\$field» es requerido", 500);
+        }
+
+        $this->field = \is_string($field) ? \trim($field) : null;
+        return $this;
+    }
+
+    /**
+     * Crea la sesión del usuario.
+     *
+     * @param array $data
+     * @return AuthApps
+     * 
+     * @throws RuntimeException
+     * 
+     * // TODO: Observación: luego se creará el error semántico para este caso.
+     */
+    protected function auth(array $data = []): AuthApps {
+        if (!DLServer::is_post()) {
+            throw new RuntimeException("auth(...): Debe utilizar el verbo HTTP POST para crear datos de sesión", 400);
+        }
+
+        /** @var AuthApps $auth */
+        $auth = ($this->field !== null)
+            ? new AuthApps($this->field)
+            : new AuthApps();
+
+        /** @var boolean $created_session */
+        $created_session = $auth->create_session_data($data);
+
+        if (!$created_session) {
+            throw new RuntimeException("auth(...): Error desconocido al crear los datos de la sesión. Revise que tenga permiso de escritura.", 500);
+        }
+
+        return $auth;
     }
 }

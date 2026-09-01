@@ -25,6 +25,8 @@
 
 namespace DLRoute\Requests;
 
+use DLRoute\Core\Auth\AuthApps;
+use DLRoute\Core\Data\Auth\RoutesAuth;
 use DLRoute\Enums\Methods;
 use DLRoute\Interfaces\RouteInterface;
 use DLRoute\Interfaces\Routing\RouteLexerInterface;
@@ -67,6 +69,13 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      * @return void
      */
     protected static function request(string $uri, callable|array|string $controller, Methods $method, array|object $vars, ?string $mime_type = null): void {
+        $session = new AuthApps();
+        $session_data = $session->get_session_data();
+
+        if ($session_data->is_valid_session) {
+            self::$routes_auth["{$method->value}-{$uri}"] = new RoutesAuth($method->value, $uri);
+        }
+
         self::register_routes($method->value, $uri, $controller);
         self::$vars[$method->value][$uri] = $vars;
         self::$mime_types[$uri] = $mime_type;
@@ -249,7 +258,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
          */
         $content = $callback($params, $data);
 
-        if (is_string($content)) {
+        if (\is_string($content)) {
             $content = trim($content);
         }
 

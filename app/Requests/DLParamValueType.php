@@ -25,6 +25,7 @@
 
 namespace DLRoute\Requests;
 
+use DLRoute\Core\Data\Auth\RoutesAuth;
 use DLRoute\Interfaces\ParamTypeInterface;
 use DLRoute\Server\DLServer;
 
@@ -39,6 +40,13 @@ use DLRoute\Server\DLServer;
  * @license AGPL-3.0 license
  */
 abstract class DLParamValueType implements ParamTypeInterface {
+
+    /**
+     * Rutas autenticadas que quedarán registradas 
+     *
+     * @var array<string, RoutesAuth> $routes_auth
+     */
+    protected static array $routes_auth = [];
 
     /**
      * Filtro de búsqueda.

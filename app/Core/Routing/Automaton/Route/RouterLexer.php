@@ -201,10 +201,7 @@ abstract class RouterLexer implements RouteLexerInterface {
                 $fragment = \substr($this->uri, $offset, $this->size - $offset);
 
                 throw new RouteException(\sprintf(
-                    "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). " .
-                        "En su lugar, se recibió «%s».\n" .
-                        "Los parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.\n" .
-                        "Ruta definida: «%s»",
+                    "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). En su lugar, se recibió «%s».\nLos parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.\nRuta definida: «%s»",
                     $offset,
                     $fragment,
                     $this->uri

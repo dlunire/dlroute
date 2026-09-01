@@ -1,0 +1,26 @@
+/**
+ * Nombre de la aplicación y entorno de ejecución.
+ */
+APP_NAME: string = "DLUnire Core"
+APP_ENV: string = 'production'
+
+/**
+ * Configuración del pool de conexiones a base de datos.
+ */
+BASE_CONNECTIONS: integer = 50
+MAX_CONNECTIONS: integer = BASE_CONNECTIONS * 2
+
+/**
+ * Verificación de umbral evaluada estáticamente.
+ */
+HEALTH_CHECK_OK: boolean = BASE_CONNECTIONS < MAX_CONNECTIONS
+
+/**
+ * Identificador de instancia y correo de soporte.
+ */
+INSTANCE_UUID: uuid = 7b4e3f12-98ab-4cd2-b0ef-56789abcdef0
+CONTACT_EMAIL: email = support@dlunire.dev
+
+/** 
+ * Esta es una prueba que estoy realizando con este lenguaje que he creado.
+ */

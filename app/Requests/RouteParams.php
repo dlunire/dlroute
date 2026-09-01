@@ -232,7 +232,7 @@ trait RouteParams {
                 $value = (float) $value;
             }
 
-            if (!is_float($value)) {
+            if (!\is_float($value)) {
                 $value = (int) $value;
             }
 

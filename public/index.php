@@ -23,21 +23,57 @@
  * <https://www.gnu.org/licenses/>.
  */
 
+session_start();
+
+use DLAuth\Data\SessionData;
+use DLRoute\Core\Auth\AuthApps;
 use DLRoute\Http\Request;
 
 ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
+use DLRoute\Server\DLServer;
 
 include dirname(__DIR__) . DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . "autoload.php";
 
-# Lo puedes probar así, incluso, colocanso puntos suspensivos (...):
+# Lo puedes probar así, incluso, colocando puntos suspensivos (...):
 DLRoute::get(
     uri: "/",
     controller: Request::is_cli(...)
 );
 
 # Test de funcionamiento.
-DLRoute::get('/test', fn() => ["status" => "ok"]);
+DLRoute::get('/test', fn(): array => ["status" => "ok"]);
 
-DLRoute::execute();
+DLRoute::post('/test', fn(): string => "Esta es una prueba");
+
+$auth = new AuthApps();
+$auth->set_ip(DLServer::get_ipaddress());
+/**
+ * En `data` se colocan los datos del usuarios o los consutados por la base de datos.
+*/
+$auth->create_session_data([
+    "name" => "David E Luna M"
+    ]);
+
+
+$auth->authenticated(function (SessionData $data): void {
+});
+
+$auth->authorized(function (SessionData $data) {
+    print_r($data);
+});
+
+// Esta es una prueba que estoy realizando con esto
+
+DLRoute::get('/algo', function (): void {
+})->filter_by_type(fields: []);
+
+$routes = DLRoute::get_routes();
+print_r($routes);
+
+$auth->logout();
+
+DLRoute::get(uri: '/science', controller: fn (): string => "Ciencias computacionales");
+
+// DLRoute::execute();

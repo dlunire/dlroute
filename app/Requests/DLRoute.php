@@ -114,6 +114,7 @@ class DLRoute extends Route implements RouteInterface {
 
             self::request($uri, $controller, Methods::OPTIONS, $data, $mime_type);
         });
+
         return self::get_instance();
     }
 

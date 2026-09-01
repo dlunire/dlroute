@@ -102,8 +102,8 @@ class DLRequest implements RequestInterface {
      * @return boolean
      */
     private function is_field_equal(array $arrayA, array $arrayB): bool {
-        $lengthA = count($arrayA);
-        $lengthB = count($arrayB);
+        $lengthA = \count($arrayA);
+        $lengthB = \count($arrayB);
 
         if ($lengthA !== $lengthB) {
             return false;
@@ -111,7 +111,7 @@ class DLRequest implements RequestInterface {
 
         foreach ($arrayA as $key => $value) {
 
-            if (!array_key_exists($key, $arrayB)) {
+            if (!\array_key_exists($key, $arrayB)) {
                 return false;
             }
         }
@@ -259,7 +259,7 @@ class DLRequest implements RequestInterface {
             $data = $controller($request);
         }
 
-        if (is_array($controller) && count($controller) < 1) {
+        if (\is_array($controller) && \count($controller) < 1) {
             http_response_code(500);
 
             echo DLOutput::get_json([
@@ -270,7 +270,7 @@ class DLRequest implements RequestInterface {
             exit;
         }
 
-        if (is_array($controller)) {
+        if (\is_array($controller)) {
             /**
              * Nombre del controlador.
              * 

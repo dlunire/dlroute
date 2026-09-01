@@ -4,26 +4,26 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "558ba511d4a61cde082d1eb099555681",
+    "content-hash": "69126e672224479fb50a7bc6f4e6d2e7",
     "packages": [
         {
             "name": "dlunire/dlauth",
-            "version": "v1.0.0",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dlunire/dlauth.git",
-                "reference": "caaba9b989f1abef9093b18629bce025699e7e25"
+                "reference": "ffb6cb1120e7a6294592299a88846e2f345fed66"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dlunire/dlauth/zipball/caaba9b989f1abef9093b18629bce025699e7e25",
-                "reference": "caaba9b989f1abef9093b18629bce025699e7e25",
+                "url": "https://api.github.com/repos/dlunire/dlauth/zipball/ffb6cb1120e7a6294592299a88846e2f345fed66",
+                "reference": "ffb6cb1120e7a6294592299a88846e2f345fed66",
                 "shasum": ""
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "DLUnire\\DLAuth\\": "sources/"
+                    "DLAuth\\": "sources/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -42,9 +42,9 @@
             "homepage": "https://dlunire.dev",
             "support": {
                 "issues": "https://github.com/dlunire/dlauth/issues",
-                "source": "https://github.com/dlunire/dlauth/tree/v1.0.0"
+                "source": "https://github.com/dlunire/dlauth/tree/v2.0.0"
             },
-            "time": "2026-08-02T10:26:24+00:00"
+            "time": "2026-08-31T12:59:49+00:00"
         },
         {
             "name": "imagine/imagine",
