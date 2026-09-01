@@ -25,6 +25,7 @@
 
 namespace DLRoute\Config;
 
+use DLAuth\Auth\Auth;
 use DLRoute\Core\Auth\AuthApps;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Requests\DLRequest;
@@ -123,6 +124,31 @@ abstract class Controller {
     }
 
     /**
+
+     * Devuelve la instancia del sistema de autenticación.
+     *
+     * Requiere que el sistema de autenticación haya sido habilitado previamente mediante el constructor.
+     * Si la autenticación no fue configurada, el método no realiza ninguna inicialización implícita.
+     *
+     * @return AuthApps Instancia configurada del sistema de autenticación.
+     *
+     * @throws RuntimeException Si el sistema de autenticación no está configurado en el controlador.
+     */
+    protected function get_auth(): AuthApps {
+
+        if (!($this->auth instanceof AuthApps)) {
+            throw new RuntimeException(
+                "Controller::get_auth(...): El sistema de autenticación no está configurado. "
+                    . "Habilítelo en el constructor del controlador.",
+                500
+            );
+        }
+
+        return $this->auth;
+    }
+
+
+    /**
      * Devuelve una dirección IP candidata del cliente HTTP
      *
      * @return string
@@ -155,32 +181,38 @@ abstract class Controller {
     }
 
     /**
-     * Crea la sesión del usuario.
+     * Carga los datos de autenticación de la sesión.
      *
-     * @param array $data
-     * @return AuthApps
-     * 
-     * @throws RuntimeException
-     * 
-     * // TODO: Observación: luego se creará el error semántico para este caso.
+     * Requiere que el sistema de autenticación haya sido habilitado previamente mediante el constructor. Los
+     * datos proporcionados se cargan en la sesión mediante la instancia configurada de {@see AuthApps}.
+     *
+     * @param array $data Datos que serán cargados en la sesión de autenticación.
+     *
+     * @return AuthApps Instancia del autenticador con los datos de sesión cargados.
+     *
+     * @throws RuntimeException Si el sistema de autenticación no fue configurado o si los datos
+     *                          de la sesión no pudieron ser cargados.
      */
-    protected function auth(array $data = []): AuthApps {
-        if (!DLServer::is_post()) {
-            throw new RuntimeException("auth(...): Debe utilizar el verbo HTTP POST para crear datos de sesión", 400);
+    protected function save_auth_data(array $data = []): AuthApps {
+        if (!($this->auth instanceof AuthApps)) {
+            throw new RuntimeException(
+                "load_auth_data(...): El sistema de autenticación no está configurado. "
+                    . "Habilítelo en el constructor del controlador.",
+                500
+            );
         }
 
-        /** @var AuthApps $auth */
-        $auth = ($this->field !== null)
-            ? new AuthApps($this->field)
-            : new AuthApps();
+        /** @var bool $created */
+        $created = $this->auth->create_session_data($data);
 
-        /** @var boolean $created_session */
-        $created_session = $auth->create_session_data($data);
-
-        if (!$created_session) {
-            throw new RuntimeException("auth(...): Error desconocido al crear los datos de la sesión. Revise que tenga permiso de escritura.", 500);
+        if (!$created) {
+            throw new RuntimeException(
+                "load_auth_data(...): No fue posible cargar los datos de la sesión. "
+                    . "Verifique la configuración y los permisos de almacenamiento de la sesión.",
+                500
+            );
         }
 
-        return $auth;
+        return $this->auth;
     }
 }
