@@ -56,18 +56,74 @@ abstract class Controller {
     private ?string $field = null;
 
     /**
+     * Instancia del autenticador de aplicaciones.
+     *
+     * Contiene la instancia de {@see AuthApps} utilizada para gestionar
+     * el estado de autenticación de la aplicación, o `null` cuando la
+     * autenticación no se encuentra habilitada.
+     *
+     * @var AuthApps|null
+     */
+    private readonly ?AuthApps $auth;
+
+    /**
      * Procesa las peticiones del usuario.
      *
      * @var DLRequest
      */
     protected DLRequest $request;
 
-    public function __construct() {
+    /**
+     * Crea una instancia del autenticador.
+     *
+     * Inicializa la instancia de {@see DLRequest} asociada a la solicitud actual
+     * y configura opcionalmente el sistema de autenticación de la aplicación.
+     *
+     * @param bool $auth Indica si debe habilitarse la autenticación de la aplicación.
+     * @param string|null $field Campo o clave donde se almacenarán los datos de la sesión.
+     *
+     * @throws RuntimeException Si {@see $field} es una cadena vacía o contiene únicamente
+     *                          espacios en blanco.
+     */
+    public function __construct(bool $auth = false, ?string $field = null) {
         $this->request = DLRequest::get_instance();
+        $this->set_auth($auth, $field);
     }
 
     /**
-     * Devuelve una dirección IP
+     * Configura el sistema de autenticación de la aplicación.
+     *
+     * Valida el campo de sesión proporcionado y, cuando la autenticación está habilitada, inicializa una
+     * instancia de {@see AuthApps}. Si la autenticación no está habilitada, la propiedad {@see $auth} se
+     * establece en `null`.
+     *
+     * Cuando no se especifica un campo, {@see AuthApps} utilizará su configuración predeterminada.
+     *
+     * @param bool $auth Indica si debe habilitarse la autenticación de la aplicación.
+     * @param string|null $field Campo o clave donde se almacenarán los datos de la sesión.
+     *
+     * @return void
+     *
+     * @throws RuntimeException Si {@see $field} es una cadena vacía o contiene únicamente
+     *                          espacios en blanco.
+     */
+    private function set_auth(bool $auth = false, ?string $field = null): void {
+        if (\is_string($field) && \trim($field) === '') {
+            throw new RuntimeException("__construct(...): el campo '\$field' no debe estar vacío. Puede optar por dejarlo nulo", 500);
+        }
+
+        if (!$auth) {
+            $this->auth = null;
+            return;
+        }
+
+        $this->auth = \is_string($field)
+            ? new AuthApps($field)
+            : new AuthApps();
+    }
+
+    /**
+     * Devuelve una dirección IP candidata del cliente HTTP
      *
      * @return string
      */
@@ -81,7 +137,7 @@ abstract class Controller {
      *
      * @return string
      */
-    protected function get_http_host(): string {
+    protected function get_host(): string {
         return DLServer::get_http_host();
     }
 
@@ -96,23 +152,6 @@ abstract class Controller {
      */
     protected function get_json(array|object $data, bool $pretty = false): string {
         return DLOutput::get_json($data, $pretty);
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param string|null $field
-     * @return self
-     * 
-     * @throws RuntimeException
-     */
-    protected function set_auth_key(?string $field = null): self {
-        if (\is_string($field) && \trim($field) === '') {
-            throw new RuntimeException("set_auth_key(...): El campo «\$field» es requerido", 500);
-        }
-
-        $this->field = \is_string($field) ? \trim($field) : null;
-        return $this;
     }
 
     /**
