@@ -7,7 +7,7 @@ Guía progresiva en español: [tutorial/README.md](tutorial/README.md)
 DLRoute es la **capa de infraestructura HTTP** del ecosistema DLUnire: enrutamiento, peticiones entrantes y salientes, telemetría y subida de archivos. Funciona con o sin DLCore.
 
 | Capítulo | Tema |
-|----------|------|
+| ---------- | ------ |
 | 1 | [Inicio rápido](tutorial/01-inicio-rapido.md) |
 | 2 | [Ciclo de despacho](tutorial/02-ciclo-despacho.md) |
 | 3 | [`DLServer` y contexto de ejecución](tutorial/03-dlserver-contexto.md) |
@@ -31,21 +31,22 @@ DLRoute es la **capa de infraestructura HTTP** del ecosistema DLUnire: enrutamie
 
 Documentación técnica existente en `documentation/`:
 
-| Tema | Archivo |
-|------|---------|
-| Clase `DLRoute` | [Documentation/DLRoute.md](../documentation/Documentation/DLRoute.md) |
-| Router (ES) | [Router/Router-ES.md](../documentation/Router/Router-ES.md) |
-| Peticiones HTTP (ES) | [Request/Request-ES.md](../documentation/Request/Request-ES.md) |
-| Subida de archivos | [Request/DLUpload-ES.md](../documentation/Request/DLUpload-ES.md) |
-| `RouteHandler` | [Documentation/RouteHandler.md](../documentation/Documentation/RouteHandler.md) |
+| Tema                 | Archivo                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| Clase `DLRoute`      | [Documentation/DLRoute.md](../documentation/Documentation/DLRoute.md)                       |
+| Controladores        | [Documentation/Controladores.md](../documentation/Documentation/Controladores.md)           |
+| Router (ES)          | [Router/Router-ES.md](../documentation/Router/Router-ES.md)                                 |
+| Peticiones HTTP (ES) | [Request/Request-ES.md](../documentation/Request/Request-ES.md)                             |
+| Subida de archivos   | [Request/DLUpload-ES.md](../documentation/Request/DLUpload-ES.md)                           |
+| `RouteHandler`       | [Documentation/RouteHandler.md](../documentation/Documentation/RouteHandler.md)             |
 | `QueryParamComposer` | [Documentation/QueryParamComposer.md](../documentation/Documentation/QueryParamComposer.md) |
-| `ResourceManager` | [ResourceManager.md](../documentation/ResourceManager.md) |
-| HTTP Request (v2) | [v2/HTTP/Request.md](../documentation/v2/HTTP/Request.md) |
+| `ResourceManager`    | [ResourceManager.md](../documentation/ResourceManager.md)                                   |
+| HTTP Request (v2)    | [v2/HTTP/Request.md](../documentation/v2/HTTP/Request.md)                                   |
 
 ## Ecosistema DLUnire
 
 | Capa | Paquete | Tutorial |
-|------|---------|----------|
+| ------ | --------- | ---------- |
 | Infraestructura HTTP (servidor) | `dlunire/dlroute` | Este tutorial |
 | UI en el navegador (cliente) | `@dlunire/front-dlroute` | [Mini-tutorial front](../../front/parsing/docs/TUTORIAL.md) · [índice](../../front/parsing/docs/README.md) |
 | Kernel | `dlunire/dlcore` | [DLCore tutorial](https://github.com/dlunire/dlcore/blob/master/docs/tutorial/README.md) |
