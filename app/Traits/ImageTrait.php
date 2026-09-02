@@ -219,7 +219,7 @@ trait ImageTrait {
         if (!((bool) $size)) {
             header("content-type: application/json; charset=utf-8", 400);
 
-            DLOutput::get_json([
+            DLOutput::to_json([
                 "status" => false,
                 "error" => "formato de imagen inválido"
             ]);
@@ -285,7 +285,7 @@ trait ImageTrait {
         if (!file_exists($output)) {
             header("content-type: application/json; charset=utf-8", 404);
 
-            echo DLOutput::get_json([
+            echo DLOutput::to_json([
                 "status" => false,
                 "error" => "El archivo no existe {$output}"
             ]);

@@ -262,7 +262,7 @@ class DLRequest implements RequestInterface {
         if (\is_array($controller) && \count($controller) < 1) {
             http_response_code(500);
 
-            echo DLOutput::get_json([
+            echo DLOutput::to_json([
                 "status" => false,
                 "error" => "El controlador no está definido"
             ], true);
@@ -291,7 +291,7 @@ class DLRequest implements RequestInterface {
             if (empty($controller_name)) {
                 http_response_code(500);
     
-                echo DLOutput::get_json([
+                echo DLOutput::to_json([
                     "status" => false,
                     "error" => "El controlador no está definido"
                 ], true);
@@ -302,7 +302,7 @@ class DLRequest implements RequestInterface {
             if (empty($method_name)) {
                 http_response_code(500);
     
-                echo DLOutput::get_json([
+                echo DLOutput::to_json([
                     "status" => false,
                     "error" => "Debe definir un método a ejecutar para el controlador '{$controller_name}'"
                 ]);
@@ -313,7 +313,7 @@ class DLRequest implements RequestInterface {
             if (!class_exists($controller_name)) {
                 http_response_code(500);
     
-                echo DLOutput::get_json([
+                echo DLOutput::to_json([
                     "status" => false,
                     "error" => "El controlador '{$controller_name}' debe crearse"
                 ]);
@@ -324,7 +324,7 @@ class DLRequest implements RequestInterface {
             if (!method_exists($controller_name, $method_name)) {
                 http_response_code(500);
     
-                echo DLOutput::get_json([
+                echo DLOutput::to_json([
                     "status" => false,
                     "error" => "Debe crear el método '{$method_name}' a ejecutar para el controlador '{$controller_name}'"
                 ]);

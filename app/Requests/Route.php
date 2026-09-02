@@ -293,7 +293,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         if (!\is_string($controller_name)) {
             self::response_code(500);
 
-            $error = DLOutput::get_json([
+            $error = DLOutput::to_json([
                 "status" => false,
                 "error" => 'Controlador inválido'
             ]);
@@ -310,7 +310,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         if (!\is_string($controller_method)) {
             self::response_code(500);
 
-            $error = DLOutput::get_json([
+            $error = DLOutput::to_json([
                 "status" => false,
                 "error" => "Método del controlador inválido"
             ]);
@@ -329,7 +329,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         if (!class_exists($controller_name)) {
             self::response_code(404);
 
-            $error = DLOutput::get_json([
+            $error = DLOutput::to_json([
                 "status" => false,
                 "error" => "El controlador «{$controller_name}» no está definido."
             ], true);
@@ -348,7 +348,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         if (!method_exists($controller_name, $controller_method)) {
             self::response_code(404);
 
-            $error = DLOutput::get_json([
+            $error = DLOutput::to_json([
                 "status" => false,
                 "error" => "El método «{$controller_method}» del controlador «{$controller_name}» no está definido"
             ], true);
@@ -417,7 +417,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         if ($quantity !== 1) {
             self::response_code(500);
 
-            $error = DLOutput::get_json([
+            $error = DLOutput::to_json([
                 "status" => false,
                 "error" => 'Fomato de nombre de controlador inválido'
             ], true);
@@ -508,7 +508,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         if (!(preg_match($classname_pattern, $controller_name))) {
             self::response_code(500);
 
-            $error = DLOutput::get_json([
+            $error = DLOutput::to_json([
                 "status" => false,
                 "error" => "Caracteres Inválidos"
             ], true);
@@ -516,7 +516,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
             if (self::is_production()) {
                 $_SESSION['error'] = $error;
 
-                $error = DLOutput::get_json([
+                $error = DLOutput::to_json([
                     "error" => "Error del sistema"
                 ]);
             }
@@ -528,7 +528,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         if (!(preg_match($pascal_case_pattern, $controller_name))) {
             self::response_code(500);
 
-            $error = DLOutput::get_json([
+            $error = DLOutput::to_json([
                 "status" => false,
                 "error" => "El nombre de clase debe tener el formato PascalCase"
             ]);
@@ -562,7 +562,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         if (!$found) {
             self::response_code(500);
 
-            $error = DLOutput::get_json([
+            $error = DLOutput::to_json([
                 "status" => false,
                 "error" => "El nombre del método «{$method_name}» es inválido"
             ]);
@@ -606,7 +606,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      * @return string
      */
     private static function get_generic_error(): string {
-        return DLOutput::get_json([
+        return DLOutput::to_json([
             "status" => false,
             "error" => "Error del sistema"
         ]);

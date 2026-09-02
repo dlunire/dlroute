@@ -411,7 +411,7 @@ trait Request {
      *
      * @throws RuntimeException Si ocurre un error durante la ejecución de cURL o si el archivo de cookies no es accesible.
      *
-     * @see DLOutput::get_json()
+     * @see DLOutput::to_json()
      * @see CURLFile
      * @see HeadersInit
      * @see set_cookies()
@@ -485,7 +485,7 @@ trait Request {
             }
 
             if ($is_json) {
-                $payload = DLOutput::get_json(content: $data, pretty: true);
+                $payload = DLOutput::to_json(content: $data, pretty: true);
             } elseif ($is_multipart) {
                 // multipart: cURL lo maneja automáticamente si pasas un array con CURLFile
                 $payload = $data;

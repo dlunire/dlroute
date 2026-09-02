@@ -362,14 +362,14 @@ abstract class DLParamValueType implements ParamTypeInterface {
         $error = "";
 
         if (!$type) {
-            $error = DLOutput::get_json([
+            $error = DLOutput::to_json([
                 "status" => false,
                 "error" => "El formato de la cadena «{$value}» es inválido"
             ], true);
         }
 
         if ($type) {
-            $error = DLOutput::get_json([
+            $error = DLOutput::to_json([
                 "status" => false,
                 "error" => "Tipo «{$type}» no admitido"
             ], true);
@@ -390,7 +390,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
     private function message(string $message, int $code = 200): void {
         header("Content-Type: application/json; charset=utf-8", true, $code);
 
-        $message = DLOutput::get_json([
+        $message = DLOutput::to_json([
             "status" => false,
             "error" => trim($message)
         ], true);

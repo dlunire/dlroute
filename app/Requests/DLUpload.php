@@ -203,7 +203,7 @@ trait DLUpload {
         if (!array_key_exists($field_name, $_FILES)) {
             header("Content-Type: application/json; charset=utf-8", true, 400);
 
-            echo DLOutput::get_json([
+            echo DLOutput::to_json([
                 "status" => false,
                 "error" => "Revise el nombre de campo del formulario de archivo o tamaño de archivo"
             ], true);
@@ -575,7 +575,7 @@ trait DLUpload {
         if (is_null($filename) || empty($filename)) {
             header("Content-Type: application/json; charset=utf-8", true, 500);
 
-            echo DLOutput::get_json([
+            echo DLOutput::to_json([
                 "status" => false,
                 "error" => "Posiblemente, deba configurar el servidor para aceptar archivos más grandes"
             ], true);
@@ -788,7 +788,7 @@ trait DLUpload {
     private function error(string $message): void {
         header("Content-Type: application/json; charset=utf-9", true, 500);
 
-        echo DLOutput::get_json([
+        echo DLOutput::to_json([
             "status" => false,
             "error" => trim($message)
         ], true);
@@ -1208,7 +1208,7 @@ trait DLUpload {
 
         if (!class_exists('GdImage')) {
             http_response_code(500);
-            echo DLOutput::get_json([
+            echo DLOutput::to_json([
                 "status" => false,
                 "error" => "Instale la extensión GdImage"
             ]);

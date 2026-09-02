@@ -92,7 +92,7 @@ class DLOutput implements OutputInterface {
 
         if ($this->is_array() || $this->is_object()) {
             $mime = "application/json";
-            $this->content = self::get_json($this->content, true);
+            $this->content = self::to_json($this->content, true);
         }
 
         if ($mime_type !== null) {
@@ -107,24 +107,28 @@ class DLOutput implements OutputInterface {
         $this->content =  \is_string($content) ? trim($content) : $content;
     }
 
-    public static function get_json(object|array $content, bool $pretty = false): string {
-        $stringData = $pretty
+    public static function to_json(mixed $content, bool $pretty = false): string {
+        /** @var string|false */
+        $string_data = $pretty
             ? json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK)
             : json_encode($content, JSON_NUMERIC_CHECK);
 
+        if (!\is_string($string_data) || \trim($string_data) === '') {
+            $string_data = "{}";
+        }
 
-        return trim($stringData);
+        return \trim($string_data);
     }
 
     public static function not_found(): void {
         header("Content-Type: application/json; charset=utf-8", true, 404);
 
         if (self::$personalize) {
-            echo self::get_json(self::$error_404, true);
+            echo self::to_json(self::$error_404, true);
             exit;
         }
 
-        echo self::get_json([
+        echo self::to_json([
             "code" => 404,
             "method" => DLServer::get_method(),
             "message" => "La ruta solicitada no existe",

@@ -25,7 +25,6 @@
 
 namespace DLRoute\Config;
 
-use DLAuth\Auth\Auth;
 use DLRoute\Core\Auth\AuthApps;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Requests\DLRequest;
@@ -65,7 +64,7 @@ abstract class Controller {
      *
      * @var AuthApps|null
      */
-    private readonly ?AuthApps $auth;
+    private readonly ?AuthApps $auth_info;
 
     /**
      * Procesa las peticiones del usuario.
@@ -88,7 +87,7 @@ abstract class Controller {
      */
     public function __construct(bool $auth = false, ?string $field = null) {
         $this->request = DLRequest::get_instance();
-        $this->set_auth($auth, $field);
+        $this->set_auth(auth: $auth, field: $field);
     }
 
     /**
@@ -114,11 +113,11 @@ abstract class Controller {
         }
 
         if (!$auth) {
-            $this->auth = null;
+            $this->auth_info = null;
             return;
         }
 
-        $this->auth = \is_string($field)
+        $this->auth_info = \is_string($field)
             ? new AuthApps($field)
             : new AuthApps();
     }
@@ -136,7 +135,7 @@ abstract class Controller {
      */
     protected function get_auth(): AuthApps {
 
-        if (!($this->auth instanceof AuthApps)) {
+        if (!($this->auth_info instanceof AuthApps)) {
             throw new RuntimeException(
                 "Controller::get_auth(...): El sistema de autenticación no está configurado. "
                     . "Habilítelo en el constructor del controlador.",
@@ -144,7 +143,7 @@ abstract class Controller {
             );
         }
 
-        return $this->auth;
+        return $this->auth_info;
     }
 
 
@@ -168,51 +167,40 @@ abstract class Controller {
     }
 
     /**
-     * Convierte un objeto o un array en una cadena de texto en formato JSON y la devuelve.
+     * Convierte cualquier valor soportado en una cadena de texto en formato JSON y la devuelve.
      *
-     * Esta función toma un objeto o array y lo convierte en una cadena de texto en formato JSON.
+     * Delega la conversión en {@see DLOutput::to_json()}. Si el contenido no puede ser
+     * serializado por `json_encode()`, se devuelve la representación de un objeto vacío
+     * (`{}`) en lugar de `null` o `false`.
      *
-     * @param object|array $data El contenido que se va a parsear.
+     * @param mixed $data El contenido que se va a parsear.
      * @param bool $pretty Indica si la salida en formato JSON debe tener formato legible o no.
-     * @return string La cadena de texto en formato JSON resultante.
+     * @return string La cadena de texto en formato JSON resultante, o `"{}"` si el
+     *                contenido no pudo ser serializado.
      */
-    protected function get_json(array|object $data, bool $pretty = false): string {
-        return DLOutput::get_json($data, $pretty);
+    protected function to_json(mixed $data, bool $pretty = false): string {
+        return DLOutput::to_json($data, $pretty);
     }
 
     /**
-     * Carga los datos de autenticación de la sesión.
+     * Cierra la sesión del usuario.
      *
-     * Requiere que el sistema de autenticación haya sido habilitado previamente mediante el constructor. Los
-     * datos proporcionados se cargan en la sesión mediante la instancia configurada de {@see AuthApps}.
+     * Requiere que el sistema de autenticación haya sido habilitado previamente
+     * mediante el constructor. Delega el cierre de sesión en la instancia
+     * configurada de {@see AuthApps}, obtenida a través de {@see Controller::get_auth()},
+     * y devuelve el resultado de la operación.
      *
-     * @param array $data Datos que serán cargados en la sesión de autenticación.
+     * @return array{status: boolean} Indica si la sesión fue cerrada correctamente.
      *
-     * @return AuthApps Instancia del autenticador con los datos de sesión cargados.
-     *
-     * @throws RuntimeException Si el sistema de autenticación no fue configurado o si los datos
-     *                          de la sesión no pudieron ser cargados.
+     * @throws RuntimeException Si el sistema de autenticación no está configurado
+     *                          en el controlador.
      */
-    protected function save_auth_data(array $data = []): AuthApps {
-        if (!($this->auth instanceof AuthApps)) {
-            throw new RuntimeException(
-                "load_auth_data(...): El sistema de autenticación no está configurado. "
-                    . "Habilítelo en el constructor del controlador.",
-                500
-            );
-        }
+    public function logout(): array {
+        /** @var AuthApps $auth */
+        $auth = $this->get_auth();
 
-        /** @var bool $created */
-        $created = $this->auth->create_session_data($data);
-
-        if (!$created) {
-            throw new RuntimeException(
-                "load_auth_data(...): No fue posible cargar los datos de la sesión. "
-                    . "Verifique la configuración y los permisos de almacenamiento de la sesión.",
-                500
-            );
-        }
-
-        return $this->auth;
+        return [
+            "status" => $auth->logout()
+        ];
     }
 }

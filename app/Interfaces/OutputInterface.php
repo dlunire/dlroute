@@ -50,15 +50,21 @@ interface OutputInterface {
     public function set_content(mixed $content): void;
 
     /**
-     * Convierte un objeto o un array en una cadena de texto en formato JSON y la devuelve.
+     * Convierte cualquier valor soportado en una cadena de texto en formato JSON y la devuelve.
      *
-     * Esta función toma un objeto o array y lo convierte en una cadena de texto en formato JSON.
+     * Esta función toma el contenido proporcionado y lo convierte en una cadena de texto
+     * en formato JSON. Si el contenido no puede ser serializado por `json_encode()`
+     * (por ejemplo, por contener referencias circulares o tipos no soportados),
+     * se devuelve la representación de un objeto vacío (`{}`) en lugar de `null` o `false`,
+     * evitando que el consumidor de la respuesta reciba un valor inesperado o tenga
+     * que validar el resultado de la serialización.
      *
-     * @param object|array $content El contenido que se va a parsear.
+     * @param mixed $content El contenido que se va a parsear.
      * @param bool $pretty Indica si la salida en formato JSON debe tener formato legible o no.
-     * @return string La cadena de texto en formato JSON resultante.
+     * @return string La cadena de texto en formato JSON resultante, o `"{}"` si el
+     *                contenido no pudo ser serializado.
      */
-    public static function get_json(object|array $content, bool $pretty = false): string;
+    public static function to_json(mixed $content, bool $pretty = false): string;
 
     /**
      * Envía una respuesta HTTP 404 "Not Found" al cliente.
@@ -102,5 +108,4 @@ interface OutputInterface {
      * @return void
      */
     public static function not_found(): void;
-
 }
