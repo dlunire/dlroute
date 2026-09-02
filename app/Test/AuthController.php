@@ -4,6 +4,7 @@ namespace DLRoute\Test;
 
 use DLRoute\Config\Controller;
 use DLRoute\Core\Auth\AuthApps;
+use DLRoute\Server\DLServer;
 
 final class AuthController extends Controller {
 
@@ -33,9 +34,13 @@ final class AuthController extends Controller {
     }
 
     public function check(): array {
+        /** @var mixed $value */
+        $value = DLServer::class;
+
         return [
             "status" => $this->get_auth()->get_session_data(),
-            "test" => $this->to_json(555)
+            "A" => \json_decode($this->to_json($value)),
+            "B" => $this->to_json($value),
         ];
     }
 }

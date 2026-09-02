@@ -120,23 +120,28 @@ class DLOutput implements OutputInterface {
 
 
     /**
-     * Valida superficialmente la salida de serialización JSON comprobando que sea una cadena y comience
-     * con `{` o `[`.
+     * Valida superficialmente la salida de serialización JSON y garantiza que el resultado
+     * final represente siempre un objeto o array JSON.
      *
-     * La entrada se recorta con `trim()` antes de comprobar su primer carácter, sin validar la estructura
-     * interna del JSON.
+     * Comprueba que `$input` sea una cadena y que, tras recortarla con `trim()`, comience con
+     * `{` o `[` — sin validar la estructura interna del JSON. Si ambas condiciones se cumplen,
+     * la cadena se devuelve normalizada (recortada) tal cual.
      *
-     * Si la entrada no es una cadena o no comienza con `{` o `[`, devuelve un objeto JSON vacío (`{}`)
-     * como valor predeterminado.
+     * Si `$input` no es una cadena (por ejemplo, `false` cuando `json_encode()` falla) o no
+     * comienza con `{` ni `[` (por ejemplo, la serialización válida de un escalar como `null`,
+     * un booleano, un número o una cadena), se envuelve en un objeto JSON con la forma
+     * `{"value": <valor>}`, usando {@see self::to_json_literal()} para obtener la representación
+     * literal de `$input` a insertar dentro del objeto.
      *
-     * @param mixed $input Salida generada por el proceso de serialización que será sometida a esta 
+     * @param mixed $input Salida generada por el proceso de serialización que será sometida a esta
      *                     validación superficial.
-     * @return string Cadena normalizada si comienza con `{` o `[`, o `{}` cuando no cumple las
-     *                condiciones mínimas.
+     * @return string Cadena JSON normalizada si comienza con `{` o `[`, o `{"value": <valor>}`
+     *                cuando no cumple las condiciones mínimas.
      */
     private static function validate_json_structure(mixed $input): string {
+
         /** @var non-empty-string $default */
-        $default = "{}";
+        $default = "\x7b\"value\": " .  self::to_json_literal($input) . "\x7d";
 
         if (!\is_string($input)) {
             return $default;
@@ -150,7 +155,37 @@ class DLOutput implements OutputInterface {
 
         return $char === "\x7b" || $char === "\x5b"
             ? $value
-            : "{}";
+            : $default;
+    }
+
+    /**
+     * Convierte un valor escalar en su representación literal para insertarse como valor
+     * dentro de un fragmento JSON.
+     *
+     * Normaliza los tipos que `print_r()` no representa de forma compatible con JSON:
+     * `bool` se convierte en las cadenas literales `"true"`/`"false"`, y `null` en la cadena
+     * literal `"null"`. Cualquier otro tipo —incluida una cadena que ya sea JSON válido, como
+     * la salida previa de `json_encode()`— se devuelve mediante `print_r()` sin modificación
+     * adicional.
+     *
+     * @param mixed $value Valor a convertir en su representación literal.
+     * @return string Representación literal de `$value`, lista para insertarse directamente
+     *                dentro de un fragmento JSON.
+     */
+    private static function to_json_literal(mixed $value): string {
+        /** @var non-empty-string $type */
+        $type = \gettype($value);
+
+        if ($type === "boolean") {
+            $value = $value === false
+                ? "false" : "true";
+        }
+
+        if ($type === "NULL") {
+            $value = "null";
+        }
+
+        return print_r($value, true);
     }
 
     public static function not_found(): void {

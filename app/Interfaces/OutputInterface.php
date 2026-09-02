@@ -52,17 +52,17 @@ interface OutputInterface {
     /**
      * Convierte cualquier valor soportado en una cadena de texto en formato JSON y la devuelve.
      *
-     * Esta función toma el contenido proporcionado y lo convierte en una cadena de texto
-     * en formato JSON. Si el contenido no puede ser serializado por `json_encode()`
-     * (por ejemplo, por contener referencias circulares o tipos no soportados),
-     * se devuelve la representación de un objeto vacío (`{}`) en lugar de `null` o `false`,
-     * evitando que el consumidor de la respuesta reciba un valor inesperado o tenga
-     * que validar el resultado de la serialización.
+     * Serializa `$content` con `json_encode()` y delega en {@see self::validate_json_structure()}
+     * la validación superficial del resultado. Si la serialización falla, o si el resultado no
+     * corresponde a un objeto o array JSON (es decir, no inicia con `{` o `[`), el valor original
+     * se envuelve automáticamente en un objeto con la forma `{"value": <valor>}`, garantizando que
+     * la cadena devuelta sea siempre un objeto JSON, nunca un escalar suelto ni una cadena vacía.
      *
      * @param mixed $content El contenido que se va a parsear.
      * @param bool $pretty Indica si la salida en formato JSON debe tener formato legible o no.
-     * @return string La cadena de texto en formato JSON resultante, o `"{}"` si el
-     *                contenido no pudo ser serializado.
+     * @return string La cadena de texto en formato JSON resultante. Si `$content` serializa a un
+     *                objeto o array, se devuelve tal cual; en cualquier otro caso, se devuelve
+     *                envuelta como `{"value": <valor>}`.
      */
     public static function to_json(mixed $content, bool $pretty = false): string;
 
