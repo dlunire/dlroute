@@ -101,8 +101,8 @@ class DLOutput implements OutputInterface {
             $mime = $mime_type;
         }
 
-        header("Content-Type: {$mime}; charset=utf-8");
-        print_r($this->content);
+        \header("Content-Type: {$mime}; charset=utf-8");
+        \print_r($this->content);
     }
 
     public function set_content(mixed $content): void {
@@ -112,8 +112,8 @@ class DLOutput implements OutputInterface {
     public static function to_json(mixed $content, bool $pretty = false): string {
         /** @var string|false */
         $string_data = $pretty
-            ? json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK)
-            : json_encode($content, JSON_NUMERIC_CHECK);
+            ? \json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK)
+            : \json_encode($content, JSON_NUMERIC_CHECK);
 
         return self::validate_json_structure($string_data);
     }
@@ -139,23 +139,21 @@ class DLOutput implements OutputInterface {
      *                cuando no cumple las condiciones mínimas.
      */
     private static function validate_json_structure(mixed $input): string {
-
-        /** @var non-empty-string $default */
-        $default = "\x7b\"value\": " .  self::to_json_literal($input) . "\x7d";
-
-        if (!\is_string($input)) {
-            return $default;
-        }
-
         /** @var string $value */
-        $value = \trim($input);
+        $value = "";
+
+        if (\is_string($input)) {
+            $value = \trim($input);
+        }
 
         /** @var string $char */
         $char = $value[0] ?? '';
 
-        return $char === "\x7b" || $char === "\x5b"
-            ? $value
-            : $default;
+        if ($char === "\x7b" || $char === "\x5b") {
+            return $value;
+        }
+
+        return "\x7b\"value\": " .  self::to_json_literal($input) . "\x7d";
     }
 
     /**
@@ -251,7 +249,7 @@ class DLOutput implements OutputInterface {
      * @return boolean
      */
     private function is_numeric(): bool {
-        return is_numeric($this->content);
+        return \is_numeric($this->content);
     }
 
     /**

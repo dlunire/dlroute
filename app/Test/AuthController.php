@@ -35,7 +35,7 @@ final class AuthController extends Controller {
 
     public function check(): array {
         /** @var mixed $value */
-        $value = DLServer::class;
+        $value = null;
 
         return [
             "status" => $this->get_auth()->get_session_data(),
