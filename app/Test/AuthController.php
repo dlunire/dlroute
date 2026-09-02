@@ -31,4 +31,11 @@ final class AuthController extends Controller {
             // "auth" => $auth
         ];
     }
+
+    public function check(): array {
+        return [
+            "status" => $this->get_auth()->get_session_data(),
+            "test" => $this->to_json(555)
+        ];
+    }
 }

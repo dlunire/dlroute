@@ -39,6 +39,8 @@ DLRoute::get(
     mime_type: "application/json"
 );
 
+DLRoute::get('/check', [AuthController::class, 'check']);
+
 DLRoute::get('/logout', [AuthController::class, 'logout']);
 
 DLRoute::execute();

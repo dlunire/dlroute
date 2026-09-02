@@ -23,6 +23,8 @@
  * <https://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 namespace DLRoute\Requests;
 
 use DLRoute\Errors\OutputException;
@@ -113,11 +115,42 @@ class DLOutput implements OutputInterface {
             ? json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK)
             : json_encode($content, JSON_NUMERIC_CHECK);
 
-        if (!\is_string($string_data) || \trim($string_data) === '') {
-            $string_data = "{}";
+        return self::validate_json_structure($string_data);
+    }
+
+
+    /**
+     * Valida superficialmente la salida de serialización JSON comprobando que sea una cadena y comience
+     * con `{` o `[`.
+     *
+     * La entrada se recorta con `trim()` antes de comprobar su primer carácter, sin validar la estructura
+     * interna del JSON.
+     *
+     * Si la entrada no es una cadena o no comienza con `{` o `[`, devuelve un objeto JSON vacío (`{}`)
+     * como valor predeterminado.
+     *
+     * @param mixed $input Salida generada por el proceso de serialización que será sometida a esta 
+     *                     validación superficial.
+     * @return string Cadena normalizada si comienza con `{` o `[`, o `{}` cuando no cumple las
+     *                condiciones mínimas.
+     */
+    private static function validate_json_structure(mixed $input): string {
+        /** @var non-empty-string $default */
+        $default = "{}";
+
+        if (!\is_string($input)) {
+            return $default;
         }
 
-        return \trim($string_data);
+        /** @var string $value */
+        $value = \trim($input);
+
+        /** @var string $char */
+        $char = $value[0] ?? '';
+
+        return $char === "\x7b" || $char === "\x5b"
+            ? $value
+            : "{}";
     }
 
     public static function not_found(): void {
