@@ -25,8 +25,10 @@
 
 namespace DLRoute\Requests;
 
+use DLAuth\Data\SessionData;
 use DLRoute\Core\Auth\AuthApps;
 use DLRoute\Core\Data\Auth\RoutesAuth;
+use DLRoute\Core\Routing\Automaton\Route\RouteType;
 use DLRoute\Enums\Methods;
 use DLRoute\Interfaces\RouteInterface;
 use DLRoute\Interfaces\Routing\RouteLexerInterface;
@@ -35,6 +37,20 @@ use DLRoute\Server\DLServer;
 
 abstract class Route extends DLParamValueType implements RouteInterface, RouteLexerInterface {
     use RouteParams;
+
+    /**
+     * Indica si las rutas a registrar deben marcarse como autenticadas.
+     *
+     * @var boolean
+     */
+    private static bool $mark_routes_authenticated = false;
+
+    /**
+     * Indica si la sesión actual es válida.
+     *
+     * @var boolean
+     */
+    protected static bool $is_session_valid = false;
 
     /**
      * Almacenamiento de rutas
@@ -57,28 +73,45 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      */
     protected static array|object $vars = [];
 
-    protected static array $mime_types = [];
     /**
-     * Procesa la solicitud del usuario
+     * Almacena los tipos MIME asociados a las rutas registradas.
      *
-     * @param string $uri Ruta a registrar.
-     * @param callable|array|string $controller
-     * @param Methods $method Método de envío HTTP.
-     * @param array|object $vars Datos que pueden ser usados como parámetros del método del controlador.
-     * @param non-empty-string|null $mime_type Opcional. Permite establecer el tipo MIME de respueta al cliente.
+     * Las claves corresponden a la identidad interna de cada ruta y los valores
+     * representan el tipo MIME que debe utilizarse al generar la respuesta.
+     *
+     * @var array<string, string|null>
+     */
+    protected static array $mime_types = [];
+
+    /**
+     * Registra una ruta y sus metadatos asociados en el autómata de enrutamiento.
+     *
+     * Cuando el contexto de registro requiere autenticación, la identidad interna de la ruta se construye
+     * anteponiendo el identificador definido por {@see RouteType::AUTH}. Este identificador permite distinguir
+     * una ruta autenticada de una ruta pública con la misma URI.
+     *
+     * La identidad generada es exclusivamente interna y no modifica la URI expuesta al cliente.
+     *
+     * @param string $uri URI de la ruta a registrar.
+     * @param callable|array|string $controller Controlador asociado a la ruta.
+     * @param Methods $method Método HTTP asociado a la ruta.
+     * @param array|object $vars Datos disponibles como parámetros del controlador.
+     * @param non-empty-string|null $mime_type Tipo MIME de la respuesta,
+     * opcionalmente especificado para la ruta.
+     *
      * @return void
      */
     protected static function request(string $uri, callable|array|string $controller, Methods $method, array|object $vars, ?string $mime_type = null): void {
-        $session = new AuthApps();
-        $session_data = $session->get_session_data();
+        /** @var RouteType $route_type */
+        $route_type = RouteType::AUTH;
 
-        if ($session_data->is_valid_session) {
-            self::$routes_auth["{$method->value}-{$uri}"] = new RoutesAuth($method->value, $uri);
-        }
+        $route = self::$mark_routes_authenticated
+            ? "{$route_type->value}{$uri}"
+            : $uri;
 
-        self::register_routes($method->value, $uri, $controller);
-        self::$vars[$method->value][$uri] = $vars;
-        self::$mime_types[$uri] = $mime_type;
+        self::register_routes($method->value, $route, $controller);
+        self::$vars[$method->value][$route] = $vars;
+        self::$mime_types[$route] = $mime_type;
     }
 
     /**
@@ -111,6 +144,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
          */
         $data = null;
 
+        // TODO: Rutas autenticasas, establecer las claves correspondientes.
         /**
          * Ruta de la petición.
          * 
@@ -158,6 +192,19 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
     }
 
     /**
+     * Establece el contexto de autenticación de la ruta.
+     *
+     * @param SessionData $session Estado de la sesión actual
+     * @param boolean $requires_authentication Define si la ruta requiere autenticación
+     *
+     * @return void
+     */
+    public static function set_authentication_context(SessionData $session, bool $requires_authentication): void {
+        static::$is_session_valid = $session->is_valid_session;
+        static::$mark_routes_authenticated = $requires_authentication;
+    }
+
+    /**
      * Registra nuevas rutas
      *
      * @param string $route
@@ -165,7 +212,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      */
     protected static function register_routes(string $method, string $route, callable|array|string $controller): void {
         if (isset(self::$routes[$method][$route])) return;
-        
+
         self::process_params($route);
         self::$routes[$method][$route] = $controller;
     }

@@ -1,5 +1,7 @@
 <?php
 
+use DLRoute\Core\Auth\AuthApps;
+
 /**
  * DLUnire
  * Copyright (C) 2026 David E Luna M
@@ -42,5 +44,30 @@ DLRoute::get(
 DLRoute::get('/check', [AuthController::class, 'check']);
 
 DLRoute::get('/logout', [AuthController::class, 'logout']);
+
+$auth = new AuthApps();
+
+$auth->authenticated(function () {
+    DLRoute::get('/testing', fn() => ["status" => "Autenticado"]);
+});
+
+$auth->require_auth(function () {
+    DLRoute::get('auth', fn() => [
+        "status" => true,
+        "success" => "Si ves esto, estás autenticado"
+    ]);
+});
+
+DLRoute::get('/profile', function () {
+    return 'PUBLIC';
+});
+
+$auth->require_auth(function () {
+    DLRoute::get('/profile', function () {
+        return 'AUTHENTICATED';
+    });
+});
+
+print_r(DLRoute::get_routes());
 
 DLRoute::execute();

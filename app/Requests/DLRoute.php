@@ -268,6 +268,7 @@ class DLRoute extends Route implements RouteInterface {
          */
         $method = DLServer::get_method();
 
+        // TODO: Atacar las rutas para el parámetro autenticado
         /**
          * Ruta HTTP actual de ejecución.
          * 
