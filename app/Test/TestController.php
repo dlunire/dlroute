@@ -40,6 +40,5 @@ use DLRoute\Config\Controller;
  * @license AGPL-3.0 license
  */
 final class TestController extends Controller {
-
-   # Esta clase tiene el propósito de ser utilizada para pruebs
+   # Esta clase tiene el propósito de ser utilizada para pruebas
 }
