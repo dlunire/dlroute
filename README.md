@@ -12,6 +12,122 @@ Requiere **PHP 8.2+** y puede utilizarse en proyectos PHP existentes, con o sin 
 
 ---
 
+## Inicio rápido
+
+DLRoute está diseñado para que una aplicación pueda comenzar a utilizar el sistema de enrutamiento sin necesidad de configurar previamente Apache, Nginx u otro servidor web.
+
+Para desarrollo puede utilizarse directamente el servidor HTTP integrado de PHP.
+
+### 1. Instalar DLRoute
+
+```bash
+composer require dlunire/dlroute
+```
+
+### 2. Crear el punto de entrada
+
+Se recomienda utilizar una estructura similar a:
+
+```text
+project/
+├── public/
+│   └── index.php
+├── vendor/
+└── composer.json
+```
+
+El archivo `public/index.php` puede contener:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use DLRoute\Requests\DLRoute;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+DLRoute::get('/', fn() => [
+    'status' => 'ok'
+]);
+
+DLRoute::execute();
+```
+
+### 3. Iniciar el servidor de desarrollo
+
+Desde la raíz del proyecto:
+
+```bash
+php -S localhost:<port> -t public/
+```
+
+Por ejemplo:
+
+```bash
+php -S localhost:8000 -t public/
+```
+
+La aplicación estará disponible en:
+
+```text
+http://localhost:8000
+```
+
+El parámetro:
+
+```text
+-t public/
+```
+
+indica a PHP que `public/` será el directorio raíz desde el cual se servirán los recursos de la aplicación.
+
+No es necesario crear un `.htaccess` ni configurar Apache para comenzar a desarrollar con DLRoute.
+
+### 4. Crear una ruta
+
+Una vez iniciado el servidor, las rutas pueden declararse directamente:
+
+```php
+DLRoute::get('/api/{id}', function (object $params) {
+    return [
+        'id' => $params->id
+    ];
+});
+```
+
+Por ejemplo:
+
+```text
+GET /api/123
+```
+
+será procesado por DLRoute y el parámetro estará disponible mediante:
+
+```php
+$params->id
+```
+
+### 5. Agregar validación
+
+Las rutas pueden incorporar validación de parámetros:
+
+```php
+DLRoute::get('/api/{id}', function (object $params) {
+    return [
+        'id' => $params->id
+    ];
+})->filter_by_type([
+    'id' => 'integer'
+]);
+```
+
+De esta manera, el desarrollador puede comenzar a trabajar con el sistema de rutas inmediatamente, sin introducir configuración adicional del servidor web durante la etapa de desarrollo.
+
+> **Nota:** el servidor integrado de PHP está destinado principalmente a desarrollo y pruebas. Para un despliegue de producción se recomienda utilizar un servidor web o infraestructura de producción apropiada.
+
+---
+
 ## Por qué DLRoute es diferente
 
 La arquitectura de DLRoute parte de una premisa:
@@ -545,53 +661,194 @@ Sino:
 
 ---
 
-## Inicio rápido
+## Despliegue en producción
 
-### 1. Instalar
+La configuración anterior con:
 
 ```bash
-composer require dlunire/dlroute
+php -S localhost:<port> -t public/
 ```
 
-### 2. Punto de entrada
+está orientada al desarrollo y las pruebas locales.
 
-```php
-<?php
+Para producción, DLRoute puede utilizarse detrás de un servidor web como Apache HTTP Server.
 
-declare(strict_types=1);
+El servidor debe entregar al Front Controller las solicitudes que no correspondan directamente a archivos o directorios existentes.
 
-use DLRoute\Requests\DLRoute;
+Por ejemplo:
 
-require dirname(__DIR__) . '/vendor/autoload.php';
-
-DLRoute::get('/', fn() => [
-    'status' => 'ok'
-]);
-
-DLRoute::execute();
+```text
+GET /users/123
+        │
+        ▼
+   Servidor web
+        │
+        ├── /css/app.css ──────► archivo existente
+        │
+        └── /users/123 ────────► public/index.php
+                                      │
+                                      ▼
+                                   DLRoute
 ```
 
-### 3. Crear una ruta
+DLRoute **no incluye un archivo `.htaccess` por defecto**. Esto permite utilizar la configuración nativa del servidor y evita imponer una configuración específica de Apache a todos los proyectos.
 
-```php
-DLRoute::get('/api/{id}', function (object $params) {
-    return [
-        'id' => $params->id
-    ];
-});
+### Apache — `FallbackResource`
+
+Para Apache HTTP Server puede utilizarse `FallbackResource`:
+
+```apache
+FallbackResource /index.php
 ```
 
-### 4. Agregar validación
+Por ejemplo:
 
-```php
-DLRoute::get('/api/{id}', function (object $params) {
-    return [
-        'id' => $params->id
-    ];
-})->filter_by_type([
-    'id' => 'integer'
-]);
+```apache
+<VirtualHost *:80>
+    ServerName example.com
+    DocumentRoot /var/www/example/public
+
+    <Directory /var/www/example/public>
+        AllowOverride None
+        Require all granted
+        FallbackResource /index.php
+    </Directory>
+</VirtualHost>
 ```
+
+Con esta configuración, una solicitud como:
+
+```text
+GET /users/123
+```
+
+que no corresponda a un archivo o directorio existente puede ser atendida por:
+
+```text
+/index.php
+```
+
+La URI original permanece disponible para la aplicación, permitiendo que DLRoute realice su propio análisis y resolución.
+
+Para un Front Controller sencillo, `FallbackResource` proporciona una configuración directa sin necesidad de introducir reglas de reescritura.
+
+### Ventajas de la configuración nativa
+
+Cuando se dispone de acceso administrativo al servidor, es preferible configurar Apache directamente mediante el `VirtualHost` o su configuración centralizada.
+
+Esto permite:
+
+* centralizar la configuración del servidor;
+* evitar depender de `AllowOverride`;
+* utilizar `AllowOverride None`;
+* evitar la búsqueda y procesamiento de archivos `.htaccess`;
+* mantener separada la configuración de infraestructura del código de la aplicación.
+
+Por esta razón, **DLRoute recomienda utilizar la configuración nativa del servidor en producción cuando sea posible**.
+
+---
+
+### Apache — `mod_rewrite`
+
+`mod_rewrite` también puede utilizarse cuando se necesitan reglas adicionales de transformación o reescritura.
+
+Por ejemplo:
+
+```apache
+<VirtualHost *:80>
+    ServerName example.com
+    DocumentRoot /var/www/example/public
+
+    <Directory /var/www/example/public>
+        AllowOverride None
+        Require all granted
+
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^ index.php [L,QSA]
+    </Directory>
+</VirtualHost>
+```
+
+Para un Front Controller sencillo, `FallbackResource` suele ser una alternativa más directa.
+
+`mod_rewrite` resulta apropiado cuando la infraestructura necesita realizar transformaciones adicionales antes de entregar la petición a DLRoute.
+
+---
+
+### Apache — `.htaccess`
+
+Cuando no se dispone de acceso a la configuración del servidor, por ejemplo en determinados servicios de hosting compartido, puede utilizarse `.htaccess`.
+
+En el directorio público de la aplicación:
+
+```apache
+FallbackResource /index.php
+```
+
+O mediante `mod_rewrite`:
+
+```apache
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L,QSA]
+```
+
+DLRoute no genera este archivo automáticamente porque `.htaccess` es una característica específica de Apache y su utilización depende de la infraestructura donde se despliegue la aplicación.
+
+### ¿Qué configuración debería utilizar?
+
+| Configuración                       |  Recomendación  | Uso                                             |
+| ----------------------------------- | :-------------: | ----------------------------------------------- |
+| `FallbackResource` en `VirtualHost` | **Recomendada** | Apache con acceso a configuración del servidor  |
+| `mod_rewrite` en `VirtualHost`      |   Recomendada   | Apache con reglas de reescritura adicionales    |
+| `FallbackResource` en `.htaccess`   |    Compatible   | Hosting donde no existe acceso al `VirtualHost` |
+| `mod_rewrite` en `.htaccess`        |    Compatible   | Hosting que requiere reglas de reescritura      |
+
+En producción, cuando se administra el servidor, se recomienda priorizar la **configuración centralizada del servidor** sobre `.htaccess`.
+
+En sistemas Linux donde Apache se haya instalado mediante paquetes del sistema, por ejemplo:
+
+```bash
+sudo apt install apache2
+```
+
+puede configurarse el `VirtualHost` para el directorio público de la aplicación.
+
+Por ejemplo:
+
+```apache
+<Directory /var/www/example/public>
+    Require all granted
+    FallbackResource /index.php
+</Directory>
+```
+
+Después de modificar la configuración, puede comprobarse y recargarse Apache:
+
+```bash
+sudo apache2ctl configtest
+sudo systemctl reload apache2
+```
+
+La ubicación exacta de la configuración depende de la distribución y de la forma en que Apache haya sido instalado.
+
+En una instalación convencional de Apache sobre Debian o Ubuntu, la configuración puede organizarse mediante los archivos disponibles en:
+
+```text
+/etc/apache2/
+```
+
+También puede utilizarse un archivo independiente dentro de:
+
+```text
+/etc/apache2/sites-available/
+```
+
+para definir el `VirtualHost` de la aplicación.
 
 ---
 
