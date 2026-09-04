@@ -4,8 +4,16 @@ namespace DLRoute\Test;
 
 use DLRoute\Config\Controller;
 use DLRoute\Core\Auth\AuthApps;
-use DLRoute\Server\DLServer;
 
+/**
+ * Esta es una zona de prueba que se utiliza para probar las capacidades del enrutador
+ * 
+ * @package DLRoute\Test
+ * 
+ * @author David E Luna M <info@dlunire.dev>
+ * @copyright 2026 DLUnire
+ * @license AGPL-3.0-or-later
+ */
 final class AuthController extends Controller {
 
     public function __construct() {
@@ -28,8 +36,7 @@ final class AuthController extends Controller {
 
         return [
             "status" => true,
-            "success" => "Sessión iniciada correctamente",
-            // "auth" => $auth
+            "success" => "Sessión iniciada correctamente"
         ];
     }
 
