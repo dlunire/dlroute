@@ -532,16 +532,16 @@ DLRoute puede compararse con otros routers PHP, pero su diferencia principal no 
 La comparación importante no es solamente:
 
 ```text
-¿qué características tiene?
+¿Qué características tiene?
 ```
 
-sino:
+Sino:
 
 ```text
-¿cómo modela internamente el procesamiento de una petición?
+¿Cómo modela internamente el procesamiento de una petición?
 ```
 
-DLRoute está diseñado alrededor de un pipeline explícito de análisis, transformación y resolución.
+`DLRoute` está diseñado alrededor de un pipeline explícito de análisis, transformación y resolución.
 
 ---
 
