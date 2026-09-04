@@ -46,7 +46,7 @@ final class AuthController extends Controller {
      *
      * @return array
      */
-    public function check(): array {
+    public function check(object $params): array {
         /** @var mixed $value */
         $value = null;
 
@@ -54,6 +54,7 @@ final class AuthController extends Controller {
             "status" => $this->get_auth()->get_session_data(),
             "A" => \json_decode($this->to_json($value)),
             "B" => $this->to_json($value),
+            "params" => $params
         ];
     }
 }
