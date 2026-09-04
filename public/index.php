@@ -66,14 +66,8 @@ DLRoute::get('/profile/{test?}', function (object $params) {
     ];
 });
 
-$auth->require_auth(function () use ($auth): void {
-    DLRoute::get('/profile', function (object $params) use ($auth): array {
-        return [
-            "scope" => "AUTHENTICATED",
-            "params" => $params,
-            "session" => $auth->get_session_data()
-        ];
-    });
+$auth->require_auth(function(): void {
+    DLRoute::get('/profile/{test?}', [AuthController::class, 'check']);
 });
 
 DLRoute::get('/telemetry', function() {

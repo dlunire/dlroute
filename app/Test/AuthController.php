@@ -40,6 +40,12 @@ final class AuthController extends Controller {
         ];
     }
 
+    /**
+     * Permite verificar la sessión para el desarrollo del sistema de autenticación
+     * para DLRoute.
+     *
+     * @return array
+     */
     public function check(): array {
         /** @var mixed $value */
         $value = null;
