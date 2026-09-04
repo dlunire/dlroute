@@ -1,272 +1,400 @@
 # DLRoute
 
-## ✨ Sponsors
+**DLRoute** es un motor de enrutamiento para PHP construido como un pipeline de análisis y resolución de peticiones, con componentes basados en conceptos de teoría de lenguajes formales.
 
-Gracias a las siguientes personas y empresas por apoyar el desarrollo de **DLRoute** y la futura **v2.0.0** (autómatas puros).
-
-### Patrocinadores Activos
-
-<!-- sponsors -->
-<!-- GITHUB SPONSORS LIST START -->
-<!-- GITHUB SPONSORS LIST END -->
-<!-- sponsors -->
-
----
-
-**¿Quieres formar parte de esto?**
-
-[❤️ Patrocíname en GitHub Sponsors](https://github.com/sponsors/dlunire)
-
----
-
-DLRoute no es "otro enrutador PHP más". Es un pipeline de enrutamiento construido sobre la teoría de lenguajes formales —los mismos fundamentos utilizados en los compiladores— aplicada por primera vez al despacho de peticiones HTTP en PHP.
+No se limita a asociar una URI con un controlador. El motor analiza rutas y parámetros, conserva información estructural durante el procesamiento y utiliza esa información para resolver, validar y ejecutar una petición.
 
 ```bash
 composer require dlunire/dlroute
-
 ```
 
-Requiere **PHP 8.2+**. Funciona con cualquier proyecto PHP —con o sin framework—.
+Requiere **PHP 8.2+** y puede utilizarse en proyectos PHP existentes, con o sin framework.
 
 ---
 
 ## Por qué DLRoute es diferente
 
-Cualquier otro enrutador de PHP —FastRoute, Symfony Routing, Laravel Router— fue construido en torno a un único objetivo: mapear URLs a controladores lo más rápido posible. El emparejamiento (*matching*) era el problema; todo lo demás era secundario.
+La arquitectura de DLRoute parte de una premisa:
 
-DLRoute se diseñó bajo una premisa distinta: **el enrutamiento es un pipeline de procesamiento formal, no una tabla de búsqueda.**
+> **El enrutamiento puede tratarse como un pipeline de procesamiento formal, no solamente como una tabla de búsqueda URI → controlador.**
 
-Esa premisa produce una arquitectura que no existe en ningún otro enrutador de PHP.
+La ruta de una petición atraviesa diferentes etapas de análisis y resolución:
 
----
-
-## Lo que ningún otro enrutador de PHP hace
-
-### 1. Parser de querystring mediante autómata finito
-
-Todos los demás enrutadores utilizan `parse_str()`, una función que existe desde PHP 4.
-
-DLRoute la reemplaza con un autómata finito que procesa la cadena de consulta **byte por byte en una sola pasada**, con estados explícitos (`QUERY_NAME` → `QUERY_VALUE`), emitiendo DTOs tipados e mutables con el desplazamiento exacto en bytes (*offset*) de cada token en la cadena original.
-
-```php
-// GET /?campo=valor&activo
-$params = (new QueryParamComposer())->get_query_params();
-
-$params['campo']->value;         // "valor"
-$params['campo']->offset;        // 0   — posición en bytes del nombre
-$params['campo']->offset_value;  // 6   — posición en bytes del valor
-$params['campo']->length;        // 5
-
-$params['activo']->value;        // null — parámetro sin valor
-
+```text
+Petición HTTP
+     ↓
+DLServer
+     ↓
+normalización del contexto
+     ↓
+análisis de la ruta
+     ↓
+resolución de parámetros
+     ↓
+validación
+     ↓
+resolución del controlador
+     ↓
+ejecución
+     ↓
+respuesta HTTP
 ```
 
-Ningún otro enrutador de PHP expone metadatos de posición a nivel de byte para los parámetros de la querystring.
+Esta arquitectura permite que información obtenida durante el análisis de la petición pueda utilizarse posteriormente por otras partes del motor.
 
 ---
 
-### 2. Lexer de sintaxis de rutas con diagnóstico de posición exacta
+## Características principales
 
-Cuando defines una ruta con una sintaxis inválida, DLRoute no lanza una excepción genérica. El `RouterLexer` analiza la definición de la ruta **carácter por carácter** y emite un diagnóstico completamente accionable:
+### 1. Parser de query string basado en autómata
+
+DLRoute implementa su propio procesamiento de parámetros de query string mediante un autómata que recorre la entrada byte por byte.
+
+El parser conserva información estructural de cada parámetro, incluyendo sus posiciones dentro de la cadena original.
+
+Por ejemplo:
+
+```text
+GET /?campo=valor&activo
+```
+
+puede producir información equivalente a:
 
 ```php
-// Ruta inválida
+$params['campo']->value;        // "valor"
+$params['campo']->offset;       // posición del nombre
+$params['campo']->offset_value; // posición del valor
+$params['campo']->length;       // longitud del valor
+
+$params['activo']->value;       // null
+```
+
+Esto permite que el procesamiento de parámetros no sea solamente una conversión de:
+
+```text
+string → array
+```
+
+sino un análisis estructurado de la entrada original.
+
+La información de posición también puede ser utilizada por otras capas del ecosistema DLUnire.
+
+---
+
+### 2. Lexer de rutas con diagnóstico estructural
+
+Las definiciones de rutas son analizadas mediante `RouterLexer`.
+
+El lexer procesa la sintaxis de la ruta y distingue elementos como:
+
+* texto literal;
+* parámetros;
+* parámetros opcionales;
+* delimitadores;
+* estructuras inválidas.
+
+Por ejemplo:
+
+```php
 DLRoute::get('/{ciencia?=algo}/users', fn() => []);
-
 ```
 
-```
-RouteException: Expected closing brace (}) after «?» (position 9).
-Received instead: «?=algo}/users».
-Optional parameters must follow the format → «{param?}»
-Route defined: «/{ciencia?=algo}/users»
+contiene una definición inválida de parámetro opcional.
 
-```
+En lugar de tratar la URI como una cadena opaca, el lexer puede identificar la posición en la que la estructura deja de cumplir la gramática esperada y producir un diagnóstico asociado a esa posición.
 
-Compara esto con lo que hace Laravel ante un método HTTP inválido:
-
-**Laravel** → Una página silenciosa `404 HTML`
-
-**DLRoute** → JSON estructurado con el error exacto, archivo, línea y traza de la pila (*stack trace*)
-
-Esa es la diferencia entre un sistema con contratos formales y uno sin ellos.
+El objetivo es que un error de definición sea **diagnosticable**, no simplemente detectable.
 
 ---
 
-### 3. Telemetría como ciudadano de primera clase en el núcleo
+### 3. Parámetros opcionales generados por el motor
 
-`TelemetryRequest` reside en `DLRoute\Core\Telemetry` —no es un middleware, no es un plugin—. Fue diseñado desde el inicio como parte del motor.
+Los parámetros opcionales forman parte de la gramática de DLRoute:
 
 ```php
-DLRoute::get('/{resource?}', function() {
-    return TelemetryRequest::telemetry("Mi API");
-});
-
+DLRoute::get(
+    '/products/{uuid?}/detail',
+    [ProductController::class, 'show']
+);
 ```
+
+El motor puede generar las variantes de ruta correspondientes durante el registro.
+
+La generación ocurre en la infraestructura de routing, no mediante lógica adicional dentro del controlador.
+
+Esto permite que una declaración pueda representar múltiples formas válidas de una ruta.
+
+---
+
+### 4. Contratos tipados para métodos HTTP
+
+DLRoute utiliza enums para representar métodos HTTP internamente:
+
+```php
+use DLRoute\Enums\Methods;
+
+DLRoute::match(
+    [Methods::GET, Methods::POST],
+    new RouteHandler(
+        uri: '/api/{uuid}',
+        controller: [ApiController::class, 'handle'],
+        mime_type: 'application/json',
+        handler_filters: [
+            'uuid' => 'uuid'
+        ]
+    )
+);
+```
+
+El método HTTP forma parte del contrato de registro de la ruta y no se representa internamente únicamente como una cadena arbitraria.
+
+Esto permite que PHP realice comprobaciones de tipo durante el registro.
+
+---
+
+### 5. Validación y tipado de parámetros
+
+Las rutas pueden declarar la semántica esperada de sus parámetros:
+
+```php
+DLRoute::get(
+    '/api/{id}',
+    function (object $params) {
+        return [
+            'id' => $params->id
+        ];
+    }
+)->filter_by_type([
+    'id' => 'integer'
+]);
+```
+
+DLRoute dispone de tipos predefinidos como:
+
+```text
+string
+uuid
+email
+integer
+float
+numeric
+boolean
+```
+
+También puede utilizarse una expresión regular personalizada:
+
+```php
+->filter_by_type([
+    'token' => '/^[a-f0-9]{64}$/'
+]);
+```
+
+La validación forma parte del pipeline de resolución de la ruta, de manera que el controlador no necesita implementar manualmente estas comprobaciones.
+
+---
+
+### 6. Contextos de registro
+
+DLRoute permite registrar grupos de rutas dentro de un contexto semántico.
+
+Por ejemplo:
+
+```php
+$auth->require_auth(function () {
+    DLRoute::get('/profile', fn() => [
+        'status' => true
+    ]);
+});
+```
+
+El contexto no ejecuta condicionalmente el callback según el estado de la sesión.
+
+Su función es modificar el **contexto de registro** mientras se declaran las rutas.
+
+Internamente, una ruta registrada dentro de este contexto adquiere una identidad diferenciada:
+
+```text
+/profile
+AUTH-/profile
+```
+
+Esto permite que una misma URI pueda tener simultáneamente una representación pública y otra que requiere autenticación.
+
+La selección entre ambas ocurre posteriormente durante la resolución de la petición.
+
+El contexto se restaura mediante `finally`, por lo que su estado no se propaga accidentalmente a las declaraciones posteriores.
+
+---
+
+### 7. Telemetría integrada
+
+DLRoute incluye infraestructura de telemetría dentro de su propio núcleo.
+
+Por ejemplo:
+
+```php
+DLRoute::get('/telemetry', function () {
+    return TelemetryRequest::telemetry('Mi API');
+});
+```
+
+La información disponible puede incluir:
 
 ```json
 {
-    "message":     "Mi API",
-    "route":       "/api/users",
-    "uri":         "/api/users?filter=active",
-    "base_url":    "[https://mi-dominio.com](https://mi-dominio.com)",
-    "domain":      "mi-dominio.com",
-    "is_https":    true,
-    "port":        443,
-    "local_port":  80,
-    "timestamp":   "2026-06-18T01:20:47+00:00",
-    "cliente_ip":  "203.0.113.1",
-    "method":      "GET",
-    "proxy":       true,
+    "message": "Mi API",
+    "route": "/api/users",
+    "uri": "/api/users?filter=active",
+    "base_url": "https://mi-dominio.com",
+    "domain": "mi-dominio.com",
+    "is_https": true,
+    "port": 443,
+    "local_port": 80,
+    "method": "GET",
+    "proxy": true,
     "query_param": {
         "filter": {
-            "name":         "filter",
-            "offset":       0,
-            "value":        "active",
+            "name": "filter",
+            "offset": 0,
+            "value": "active",
             "offset_value": 7,
-            "length":       6
+            "length": 6
         }
     }
 }
-
 ```
 
-Una sola llamada. Cero configuración. Funciona correctamente detrás de Cloudflare, proxies inversos de Nginx y túneles, diferenciando automáticamente el `port` (de cara al cliente) del `local_port` (puerto interno del servidor).
+La infraestructura distingue entre información correspondiente al origen público de la petición y el contexto local del servidor.
 
-Para lograr un resultado equivalente en Laravel necesitas: Telescope + configuración de proxies de confianza + un paquete de logging externo.
+Por ejemplo:
+
+```text
+port       → puerto expuesto al cliente
+local_port → puerto utilizado internamente por el servidor
+```
+
+Esto resulta particularmente útil cuando la aplicación se encuentra detrás de proxies inversos, balanceadores o servicios como Cloudflare.
 
 ---
 
-### 4. Contratos tipados en el registro de rutas
+### 8. Detección de subdirectorios
 
-`Methods::GET` es un enum, no una cadena de texto. El enrutador valida el tipo **antes de registrar la ruta**. Si pasas algo inválido, falla inmediatamente con un error JSON estructurado.
+DLRoute puede determinar la ruta lógica de una petición incluso cuando la aplicación se encuentra instalada en un subdirectorio.
 
-```php
-// ❌ Incorrecto
-DLRoute::match(['david'], new RouteHandler(...));
-
-// ✅ Correcto
-DLRoute::match([Methods::GET, Methods::POST], new RouteHandler(...));
-
-```
+Por ejemplo:
 
 ```json
 {
-    "status": false,
-    "error": "DLRoute::match: Expected «DLRoute\\Enums\\Methods». Received «david» instead.",
-    "details": { "filename": "...", "line": 200 }
+    "route": "/api/products",
+    "uri": "/subdir/subdir/api/products",
+    "dir": "/subdir/subdir",
+    "base_url": "https://example.com/subdir/subdir"
 }
-
 ```
 
-Laravel responde silenciosamente con un `404 HTML` ante la misma entrada.
+La resolución utiliza la información estructural disponible en el contexto de la petición, evitando depender de sustituciones globales de cadenas para determinar la ruta lógica.
 
----
+El objetivo es conservar una transformación determinista entre:
 
-### 5. Detección de subdirectorios sin configuración
-
-DLRoute calcula la ruta real de la petición mediante **aritmética de posición de bytes** —sin `str_replace()`, sin expresiones regulares—:
-
-```
-OFFSET = LENGTH(dir) - 1
-route  = substr(uri, OFFSET)
-
-```
-
-Determinista y O(1), independientemente de si el nombre del subdirectorio aparece repetido en la URI.
-
-```json
-{
-    "route":    "/api/products",
-    "uri":      "/subdir/subdir/api/products",
-    "dir":      "/subdir/subdir",
-    "base_url": "[https://example.com/subdir/subdir](https://example.com/subdir/subdir)"
-}
-
+```text
+URI recibida
+      ↓
+directorio de instalación
+      ↓
+ruta lógica
 ```
 
 ---
 
-## Comparativa de características
+### 9. Respuestas estructuradas
 
-| Capacidad                                       | DLRoute | FastRoute | Symfony Router | Laravel Router       |
-| ----------------------------------------------- | ------- | --------- | -------------- | -------------------- |
-| Parser de querystring por autómata finito       | ✅       | ❌         | ❌              | ❌                    |
-| Metadatos de posición de token a nivel de byte  | ✅       | ❌         | ❌              | ❌                    |
-| Lexer de sintaxis de rutas con diagnósticos     | ✅       | ❌         | ❌              | ❌                    |
-| Posición exacta en bytes en errores de sintaxis | ✅       | ❌         | ❌              | ❌                    |
-| Telemetría nativa en el núcleo                  | ✅       | ❌         | ❌              | ❌                    |
-| Errores JSON estructurados                      | ✅       | ❌         | ❌              | ❌                    |
-| Contratos de métodos HTTP tipados (enum)        | ✅       | ❌         | ❌              | ❌                    |
-| Detección de subdirectorios sin configuración   | ✅       | ❌         | ❌              | ❌                    |
-| Respuesta JSON automática desde un array        | ✅       | ❌         | ❌              | ❌                    |
-| Parámetros opcionales de forma nativa           | ✅       | ❌         | ❌              | solución alternativa |
-| Tipo MIME explícito por ruta                    | ✅       | ❌         | ❌              | ❌                    |
-| Cero dependencias externas                      | ✅       | ✅         | ❌              | ❌                    |
+Los controladores pueden devolver directamente arrays u objetos:
+
+```php
+DLRoute::get('/', fn() => [
+    'status' => 'ok'
+]);
+```
+
+DLRoute determina automáticamente una representación apropiada para tipos comunes de respuesta.
+
+Por ejemplo, arrays y objetos pueden serializarse como JSON:
+
+```http
+Content-Type: application/json; charset=utf-8
+```
+
+También puede establecerse explícitamente el tipo MIME:
+
+```php
+DLRoute::get(
+    '/data',
+    fn() => $data,
+    mime_type: 'application/json'
+);
+```
 
 ---
 
-## Inicio rápido
+## Ejemplos
 
-### 1. Estructura del proyecto
-
-```
-mi-proyecto/
-├── public/
-│   └── index.php
-├── app/
-│   └── Controllers/
-│       └── ApiController.php
-└── vendor/
-
-```
-
-### 2. Punto de entrada
+### Ruta básica
 
 ```php
-<?php
-declare(strict_types=1);
-
-use DLRoute\Requests\DLRoute;
-
-require dirname(__DIR__) . '/vendor/autoload.php';
-
-// Define las rutas aquí
-
-DLRoute::execute();
-
+DLRoute::get('/check', fn() => [
+    'status' => true
+]);
 ```
 
-### 3. Ruta básica
+### Controlador de clase
 
 ```php
-DLRoute::get('/', fn() => ['status' => 'ok']);
-
+DLRoute::get(
+    '/logout',
+    [AuthController::class, 'logout']
+);
 ```
 
-Los arrays y objetos se serializan automáticamente como JSON con el encabezado `Content-Type` correcto.
-
-### 4. Ruta con parámetro tipado
+### Parámetro dinámico
 
 ```php
-DLRoute::get('/api/{id}', function(object $params) {
-    return ['id' => $params->id];
-})->filter_by_type(['id' => 'integer']);
-
+DLRoute::get(
+    '/users/{id}',
+    function (object $params) {
+        return [
+            'id' => $params->id
+        ];
+    }
+);
 ```
 
-Si `{id}` no es un entero, DLRoute responde automáticamente con un `404`. No se requiere código adicional.
-
-### 5. Parámetro opcional
+### Parámetro tipado
 
 ```php
-// Registra tanto /products como /products/{uuid}/detail simultáneamente
-DLRoute::get('/products/{uuid?}/detail', [ProductController::class, 'show'])
-    ->filter_by_type(['uuid' => 'uuid']);
-
+DLRoute::get(
+    '/users/{id}',
+    function (object $params) {
+        return [
+            'id' => $params->id
+        ];
+    }
+)->filter_by_type([
+    'id' => 'integer'
+]);
 ```
 
-### 6. Múltiples métodos HTTP
+### Parámetro opcional
+
+```php
+DLRoute::get(
+    '/products/{uuid?}/detail',
+    [ProductController::class, 'show']
+)->filter_by_type([
+    'uuid' => 'uuid'
+]);
+```
+
+### Múltiples métodos
 
 ```php
 use DLRoute\Core\Data\RouteHandler;
@@ -275,99 +403,256 @@ use DLRoute\Enums\Methods;
 DLRoute::match(
     [Methods::GET, Methods::POST],
     new RouteHandler(
-        uri:             '/api/{uuid}',
-        controller:      [ApiController::class, 'handle'],
-        mime_type:       'application/json',
-        handler_filters: ['uuid' => 'uuid'],
+        uri: '/api/{uuid}',
+        controller: [ApiController::class, 'handle'],
+        mime_type: 'application/json',
+        handler_filters: [
+            'uuid' => 'uuid'
+        ]
     )
 );
-
 ```
 
-### 7. Tipos de parámetros soportados
-
-| Tipo       | Descripción                                           |
-| ---------- | ----------------------------------------------------- |
-| `string`   | Cualquier cadena de texto                             |
-| `uuid`     | Formato UUID (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`) |
-| `email`    | Dirección de correo electrónico válida                |
-| `integer`  | Número entero                                         |
-| `float`    | Número decimal                                        |
-| `numeric`  | Número con o sin decimales                            |
-| `boolean`  | Valor booleano                                        |
-
-
-Expresión regular personalizada:
+### Ruta pública y ruta autenticada
 
 ```php
-->filter_by_type(['token' => '/^[a-f0-9]{64}$/'])
+DLRoute::get('/profile', fn() => [
+    'scope' => 'PUBLIC'
+]);
 
+$auth->require_auth(function () {
+    DLRoute::get('/profile', fn() => [
+        'scope' => 'AUTHENTICATED'
+    ]);
+});
 ```
+
+Las dos declaraciones pueden coexistir porque internamente representan identidades diferentes:
+
+```text
+/profile
+AUTH-/profile
+```
+
+La resolución de la petición utiliza el estado de autenticación para determinar qué representación debe ejecutarse.
+
+---
+
+## Tipos de parámetros soportados
+
+| Tipo      | Descripción                     |
+| --------- | ------------------------------- |
+| `string`  | Cadena de texto                 |
+| `uuid`    | Identificador UUID              |
+| `email`   | Dirección de correo electrónico |
+| `integer` | Número entero                   |
+| `float`   | Número decimal                  |
+| `numeric` | Número entero o decimal         |
+| `boolean` | Valor booleano                  |
+
+También pueden definirse expresiones regulares personalizadas.
 
 ---
 
 ## Métodos HTTP soportados
 
-`GET` · `HEAD` · `POST` · `PUT` · `PATCH` · `DELETE` · `OPTIONS`
+```text
+GET
+HEAD
+POST
+PUT
+PATCH
+DELETE
+OPTIONS
+QUERY
+```
 
 ---
 
-## Tutorial de uso
+## Arquitectura
 
-Guía progresiva en español (16 capítulos): [`docs/tutorial/README.md`](docs/tutorial/README.md)
+DLRoute está organizado alrededor de varias responsabilidades especializadas.
 
-| # | Tema |
-|---|------|
-| 1 | [Inicio rápido](docs/tutorial/01-inicio-rapido.md) |
-| 2 | [Ciclo de despacho](docs/tutorial/02-ciclo-despacho.md) |
-| 3 | [`DLServer` y contexto](docs/tutorial/03-dlserver-contexto.md) |
-| 4 | [Registro de rutas y controladores](docs/tutorial/04-registro-controladores.md) |
-| 5 | [Parámetros dinámicos](docs/tutorial/05-parametros-dinamicos.md) |
-| 6 | [`filter_by_type()`](docs/tutorial/06-filter-by-type.md) |
-| 7 | [`match()` y `RouteHandler`](docs/tutorial/07-match-routehandler.md) |
-| 8 | [`DLOutput` y respuestas](docs/tutorial/08-dloutput-respuestas.md) |
-| 9 | [Controladores y peticiones](docs/tutorial/09-controladores-peticiones.md) |
-| 10 | [Query string y autómata](docs/tutorial/10-querystring-automata.md) |
-| 11 | [`Router` y telemetría](docs/tutorial/11-router-telemetria.md) |
-| 12 | [Subida de archivos](docs/tutorial/12-subida-archivos.md) |
-| 13 | [Peticiones salientes](docs/tutorial/13-peticiones-salientes.md) |
-| 14 | [Errores y diagnósticos](docs/tutorial/14-errores-diagnosticos.md) |
-| 15 | [Despliegue en producción](docs/tutorial/15-despliegue-produccion.md) |
-| 16 | [Integración con DLCore](docs/tutorial/16-integracion-dlcore.md) |
+```text
+                    HTTP Request
+                         │
+                         ▼
+                     DLServer
+                         │
+                         ▼
+                 Router / Lexer
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+          Route tokens          Query parser
+              │                     │
+              ▼                     ▼
+       Route generation        Query parameters
+              │                     │
+              └──────────┬──────────┘
+                         ▼
+                   Route metadata
+                         │
+                         ▼
+                  Parameter filters
+                         │
+                         ▼
+                 Route resolution
+                         │
+                         ▼
+                    Controller
+                         │
+                         ▼
+                      Output
+```
 
-Referencia por módulo: [`docs/README.md`](docs/README.md). Kernel DLUnire: [tutorial DLCore](https://github.com/dlunire/dlcore/blob/master/docs/tutorial/README.md).
+La intención es que cada etapa tenga una responsabilidad definida y que la información producida por una etapa pueda ser utilizada por las siguientes.
+
+---
+
+## Comparativa conceptual
+
+DLRoute puede compararse con otros routers PHP, pero su diferencia principal no está solamente en la cantidad de características.
+
+| Capacidad                                              | DLRoute |               Otros routers PHP               |
+| ------------------------------------------------------ | :-----: | :-------------------------------------------: |
+| Lexer propio para la sintaxis de rutas                 |    ✅    |          Depende de la implementación         |
+| Análisis estructurado de query strings                 |    ✅    |          Depende de la implementación         |
+| Metadatos de posición de parámetros                    |    ✅    |       No es una característica habitual       |
+| Diagnósticos asociados a posiciones de la entrada      |    ✅    |          Depende de la implementación         |
+| Parámetros opcionales integrados en el generador       |    ✅    |          Depende de la implementación         |
+| Tipado de parámetros en la definición de ruta          |    ✅    |          Depende de la implementación         |
+| Contextos semánticos de registro                       |    ✅    |    Depende del sistema de middleware/guards   |
+| Identidad interna diferenciada para rutas autenticadas |    ✅    |                Modelo diferente               |
+| Telemetría integrada en el núcleo                      |    ✅    | Generalmente mediante componentes adicionales |
+| Respuestas JSON automáticas                            |    ✅    |             Depende del framework             |
+| Tipo MIME explícito por ruta                           |    ✅    |          Depende de la implementación         |
+| Dependencias externas de runtime                       |  **0**  |          Depende del router/framework         |
+
+La comparación importante no es solamente:
+
+```text
+¿qué características tiene?
+```
+
+sino:
+
+```text
+¿cómo modela internamente el procesamiento de una petición?
+```
+
+DLRoute está diseñado alrededor de un pipeline explícito de análisis, transformación y resolución.
+
+---
+
+## Inicio rápido
+
+### 1. Instalar
+
+```bash
+composer require dlunire/dlroute
+```
+
+### 2. Punto de entrada
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use DLRoute\Requests\DLRoute;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+DLRoute::get('/', fn() => [
+    'status' => 'ok'
+]);
+
+DLRoute::execute();
+```
+
+### 3. Crear una ruta
+
+```php
+DLRoute::get('/api/{id}', function (object $params) {
+    return [
+        'id' => $params->id
+    ];
+});
+```
+
+### 4. Agregar validación
+
+```php
+DLRoute::get('/api/{id}', function (object $params) {
+    return [
+        'id' => $params->id
+    ];
+})->filter_by_type([
+    'id' => 'integer'
+]);
+```
+
+---
+
+## Documentación
+
+DLRoute dispone de una guía progresiva de 16 capítulos:
+
+| #  | Tema                              |
+| -- | --------------------------------- |
+| 1  | Inicio rápido                     |
+| 2  | Ciclo de despacho                 |
+| 3  | `DLServer` y contexto             |
+| 4  | Registro de rutas y controladores |
+| 5  | Parámetros dinámicos              |
+| 6  | `filter_by_type()`                |
+| 7  | `match()` y `RouteHandler`        |
+| 8  | `DLOutput` y respuestas           |
+| 9  | Controladores y peticiones        |
+| 10 | Query string y autómata           |
+| 11 | `Router` y telemetría             |
+| 12 | Subida de archivos                |
+| 13 | Peticiones salientes              |
+| 14 | Errores y diagnósticos            |
+| 15 | Despliegue en producción          |
+| 16 | Integración con DLCore            |
+
+Consulta la documentación completa en:
+
+```text
+docs/tutorial/README.md
+```
+
+Referencia por módulo:
+
+```text
+docs/README.md
+```
 
 ---
 
 ## Parte del ecosistema DLUnire
 
-DLRoute es el motor de enrutamiento de [DLUnire](https://github.com/dlunire) —un framework moderno de PHP para construir aplicaciones web orientadas a APIs de forma rápida y con rigor formal—.
+DLRoute es el motor de enrutamiento del ecosistema **DLUnire**.
 
----
+Está diseñado para trabajar junto con otros componentes de la infraestructura, incluyendo:
 
-## Apoya este proyecto
+* DLCore
+* DLStorage
+* DL Typed Environment
+* componentes de request/response
+* infraestructura de autenticación
+* futuras capas del ecosistema DLUnire
 
-DLRoute tiene licencia AGPL-3.0 y es gratuito para siempre.
-
-Si tu empresa depende de la infraestructura PHP y valora la corrección formal por encima de la magia de las convenciones, considera convertirte en patrocinador:
-
-* **[GitHub Sponsors](https://github.com/sponsors/dlunire)** — apoyo recurrente para el desarrollo continuo.
-* **[Open Collective](https://opencollective.com/dlunire)** — financiación comunitaria transparente.
-
-Disponemos de niveles de patrocinio corporativo con colocación de logotipo, respuesta prioritaria a incidencias y consultoría de arquitectura. Contacto: [dlunireframework@gmail.com](https://www.google.com/search?q=mailto%3Adlunireframework%40gmail.com)
-
----
-
-## Autor
-
-**David E Luna M** — Creador y desarrollador principal de DLUnire
-
-* GitHub: [@dlunire](https://github.com/dlunire)
-* X: [@dlunire](https://x.com/dlunire)
-* Correo electrónico: [dlunireframework@gmail.com](https://www.google.com/search?q=mailto%3Adlunireframework%40gmail.com)
+El objetivo del ecosistema no es únicamente proporcionar componentes independientes, sino construir una infraestructura coherente donde diferentes capas puedan compartir conceptos, tipos y representación semántica.
 
 ---
 
 ## Licencia
 
-[GNU Affero General Public License v3.0 (AGPL-3.0)](https://www.google.com/search?q=LICENSE)
+DLRoute se distribuye bajo la licencia:
+
+**GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)**.
+
+Consulta el archivo `LICENSE` incluido en el repositorio para conocer los términos completos de la licencia.

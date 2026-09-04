@@ -32,12 +32,10 @@ use DLRoute\Interfaces\Routing\RouteLexerInterface;
 use DLRoute\Interfaces\ServerInterface;
 use DLRoute\Routes\RouteDebugger;
 
-class DLServer implements ServerInterface, RouteLexerInterface
-{
+class DLServer implements ServerInterface, RouteLexerInterface {
     use Domain, IPAddress, PortCandidate;
 
-    public static function get_uri(): string
-    {
+    public static function get_uri(): string {
         /** @var string $uri */
         $uri = "";
 
@@ -52,24 +50,29 @@ class DLServer implements ServerInterface, RouteLexerInterface
         return $uri;
     }
 
-    public static function get_hostname(): string
-    {
+    public static function get_hostname(): string {
         return self::get_host();
     }
 
-    public static function get_method(): string
-    {
-        $method = "";
+    public static function get_method(): string {
+        /**
+         * Método del protocolo HTTP capturado durante la petición. Si devuelve
+         * `CLI`, significa que ha sido ejecutado probablemente, por la terminal.
+         * 
+         * @var non-empty-string $method
+         */
+        $method = "CLI";
 
         if (\array_key_exists("REQUEST_METHOD", $_SERVER)) {
             $method = $_SERVER["REQUEST_METHOD"];
         }
 
-        return trim($method);
+        return \trim(
+            string: \strtoupper($method)
+        );
     }
 
-    public static function get_script_filename(): string
-    {
+    public static function get_script_filename(): string {
         $script_filename = "";
 
         if (\array_key_exists("SCRIPT_FILENAME", $_SERVER)) {
@@ -79,13 +82,11 @@ class DLServer implements ServerInterface, RouteLexerInterface
         return trim($script_filename);
     }
 
-    public static function get_ipaddress(): string
-    {
+    public static function get_ipaddress(): string {
         return self::get_ip();
     }
 
-    public static function get_user_agent(): string
-    {
+    public static function get_user_agent(): string {
         $user_agent = "";
 
         if (\array_key_exists("HTTP_USER_AGENT", $_SERVER)) {
@@ -95,59 +96,44 @@ class DLServer implements ServerInterface, RouteLexerInterface
         return $user_agent;
     }
 
-    public static function get_document_root(): string
-    {
+    public static function get_document_root(): string {
         $realpath = DLRealPath::get_instance();
         return trim($realpath->get_document_root());
     }
 
-    public static function is_post(): bool
-    {
-        return self::get_method() === "POST";
+    public static function is_query(): bool {
+        return self::get_method() === 'QUERY';
     }
 
-    public static function is_get(): bool
-    {
+    public static function is_get(): bool {
         return self::get_method() === "GET";
     }
 
-    /**
-     * Determina si el método HTTP es HEAD.
-     *
-     * @return bool
-     */
-    public static function is_head(): bool
-    {
+    public static function is_post(): bool {
+        return self::get_method() === "POST";
+    }
+
+    public static function is_head(): bool {
         return self::get_method() === "HEAD";
     }
 
-    /**
-     * Determina si el método HTTP es OPTIONS.
-     *
-     * @return bool
-     */
-    public static function is_options(): bool
-    {
+    public static function is_options(): bool {
         return self::get_method() === "OPTIONS";
     }
 
-    public static function is_put(): bool
-    {
+    public static function is_put(): bool {
         return self::get_method() === "PUT";
     }
 
-    public static function is_patch(): bool
-    {
+    public static function is_patch(): bool {
         return self::get_method() === "PATCH";
     }
 
-    public static function is_delete(): bool
-    {
+    public static function is_delete(): bool {
         return self::get_method() === "DELETE";
     }
 
-    public static function get_http_host(): string
-    {
+    public static function get_http_host(): string {
         /** @var string $http_host */
         $http_host = self::get_host();
 
@@ -168,13 +154,11 @@ class DLServer implements ServerInterface, RouteLexerInterface
      *
      * @return string|null
      */
-    public static function get_server_software(): ?string
-    {
+    public static function get_server_software(): ?string {
         return $_SERVER["SERVER_SOFTWARE"] ?? null;
     }
 
-    public static function get_route(): string
-    {
+    public static function get_route(): string {
         /**
          * URI de la aplicación.
          *
@@ -210,8 +194,7 @@ class DLServer implements ServerInterface, RouteLexerInterface
      * la versión normalizada.
      * @return void
      */
-    public static function remove_duplicate_slash(string &$input): void
-    {
+    public static function remove_duplicate_slash(string &$input): void {
         /** @var int $length */
         $length = \strlen($input);
 
@@ -264,8 +247,7 @@ class DLServer implements ServerInterface, RouteLexerInterface
         $input = "/" . implode("/", $buffer);
     }
 
-    public static function get_script_name(): string
-    {
+    public static function get_script_name(): string {
         $script_name = $_SERVER["SCRIPT_NAME"] ?? "";
         return trim(urldecode($script_name));
     }
@@ -275,8 +257,7 @@ class DLServer implements ServerInterface, RouteLexerInterface
      *
      * @return string
      */
-    public static function get_script_dir(): string
-    {
+    public static function get_script_dir(): string {
         /**
          * Archivo principal de ejecución de la aplicación.
          *
@@ -301,8 +282,7 @@ class DLServer implements ServerInterface, RouteLexerInterface
      *
      * @return string
      */
-    public static function get_base_url(): string
-    {
+    public static function get_base_url(): string {
         /**
          * Ruta del host de ejecución de la aplicación.
          *
@@ -329,8 +309,7 @@ class DLServer implements ServerInterface, RouteLexerInterface
      * @param string $subdir Subdirectorio
      * @return string
      */
-    public static function get_subdir(string $subdir): string
-    {
+    public static function get_subdir(string $subdir): string {
         /**
          * URL base de la aplicación
          *
@@ -354,8 +333,7 @@ class DLServer implements ServerInterface, RouteLexerInterface
      * @param string $input Entrada a ser procesada
      * @return void
      */
-    private static function remove_querystring(string &$input): void
-    {
+    private static function remove_querystring(string &$input): void {
         $input = trim($input);
 
         /** @var int|false $offset */
@@ -374,8 +352,7 @@ class DLServer implements ServerInterface, RouteLexerInterface
      *
      * @return string
      */
-    public static function get_dir(): string
-    {
+    public static function get_dir(): string {
         return self::get_script_dir();
     }
 }

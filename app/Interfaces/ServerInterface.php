@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace DLRoute\Interfaces;
 
 /**
- * Procesa los datos de `$_SERVER`
+ * Procesa los datos capturados en la variable superglobal `$_SERVER`
  * 
  * @package DLRoute\Interfaces;
  * 
@@ -99,11 +99,27 @@ interface ServerInterface {
     public static function get_http_host(): string;
 
     /**
+     * Determina si el método del protocolo HTTP es `QUERY`. Este 
+     * método es relativamente nuevo.
+     *
+     * @return boolean
+     */
+    public static function is_query(): bool;
+
+    /**
      * Determina si el método de envío HTTP es GET.
      *
      * @return boolean
      */
     public static function is_get(): bool;
+
+    /**
+     * Valida si el método del protoolo HTTP es `HEAD`.
+     *
+     * @return boolean
+     */
+    public static function is_head(): bool;
+
     /**
      * Indica si el método HTTP es POST
      *
@@ -124,6 +140,13 @@ interface ServerInterface {
      * @return boolean
      */
     public static function is_patch(): bool;
+
+    /**
+     * Valida si el método del protocolo HTTP es `OPTIONS`.
+     *
+     * @return boolean
+     */
+    public static function is_options(): bool;
 
     /**
      * Determina si el método de envío HTTP es DELETE.

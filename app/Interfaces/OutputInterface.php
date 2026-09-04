@@ -28,7 +28,7 @@ namespace DLRoute\Interfaces;
 /**
  * Procesa la salida del controlador para determinar el tipo de contenido
  * 
- * @package Trading\Interfaces
+ * @package DLRoute\Interfaces
  * 
  * @author David E Luna M <info@dlunire.dev>
  * @copyright 2026 David E Luna M

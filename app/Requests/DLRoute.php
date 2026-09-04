@@ -27,6 +27,7 @@ namespace DLRoute\Requests;
 
 use DLRoute\Core\Data\RouteHandler;
 use DLRoute\Core\Routing\Automaton\Route\RouteGenerator;
+use DLRoute\Core\Routing\Automaton\Route\RouteType;
 use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\RouteInterface;
@@ -35,7 +36,7 @@ use DLRoute\Server\DLServer;
 /**
  * Define el sistema de enrutamiento del sistema.
  * 
- * @package DLRoute
+ * @package DLRoute\Requests
  * 
  * @version v1.0.1
  * @author David E Luna M <info@dlunire.dev>
@@ -268,7 +269,6 @@ class DLRoute extends Route implements RouteInterface {
          */
         $method = DLServer::get_method();
 
-        // TODO: Atacar las rutas para el parámetro autenticado
         /**
          * Ruta HTTP actual de ejecución.
          * 
@@ -276,12 +276,21 @@ class DLRoute extends Route implements RouteInterface {
          */
         $route = DLServer::get_route();
 
+        /** @var non-empty-string $route_with_required_authentication */
+        $route_with_required_authentication = RouteType::AUTH->value . $route;
+
         /**
-         * Ruta actual registrada.
+         * Ruta actualmente registrada con parámetros
          * 
-         * @var string
+         * @var string|null $registered_current_route
          */
-        $registered_current_route = self::$current_param[$route] ?? null;
+        $registered_current_route = self::$is_session_valid
+            ? self::$current_param[$route_with_required_authentication] ?? null
+            : self::$current_param[$route] ?? null;
+
+        if ($registered_current_route === null) {
+            $registered_current_route = self::$current_param[$route] ?? null;
+        }
 
         if (self::$params === null) {
             self::run();
@@ -307,7 +316,6 @@ class DLRoute extends Route implements RouteInterface {
         $current_filters = $filters[$method][$registered_current_route];
 
         $instance->filter_param($current_filters, self::$params);
-
         self::run();
     }
 

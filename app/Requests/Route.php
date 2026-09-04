@@ -26,8 +26,6 @@
 namespace DLRoute\Requests;
 
 use DLAuth\Data\SessionData;
-use DLRoute\Core\Auth\AuthApps;
-use DLRoute\Core\Data\Auth\RoutesAuth;
 use DLRoute\Core\Routing\Automaton\Route\RouteType;
 use DLRoute\Enums\Methods;
 use DLRoute\Interfaces\RouteInterface;
@@ -127,9 +125,11 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
     /**
      * Consulta las rutas y ejecuta el controlador en función de la ruta encontrada
      *
-     * @return void
+     * @return never
      */
-    public static function run(): void {
+    public static function run(): never {
+        // TODO: Preparar las rutas para identificar la autenticación o no.
+
         /**
          * Variables
          * 

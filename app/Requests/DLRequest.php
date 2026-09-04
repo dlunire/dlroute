@@ -31,7 +31,7 @@ use DLRoute\Server\DLServer;
 /**
  * Procesa las peticiones del usuario.
  * 
- * @package Trading\Requests
+ * @package DLRoute\Requests
  * 
  * @author David E Luna M <info@dlunire.dev>
  * @copyright 2026 David E Luna M
@@ -72,7 +72,7 @@ class DLRequest implements RequestInterface {
          */
         $request = $this->get_request();
 
-        if (is_string($request)) {
+        if (\is_string($request)) {
             return false;
         }
 
@@ -134,11 +134,11 @@ class DLRequest implements RequestInterface {
     private function validate_required_fields(array $request, array $params): bool {
 
         foreach ($request as $key => $value) {
-            $value = trim($value);
+            $value = \trim($value);
             $required = $params[$key];
 
-            if ($required && empty($value)) {
-                http_response_code(400);
+            if ($required && \trim($value) === '') {
+                \http_response_code(400);
                 return false;
             }
         }
@@ -178,10 +178,10 @@ class DLRequest implements RequestInterface {
             $request = json_decode($input, true);
         }
 
-        if (!is_null($request)) {
+        if ($request !== null) {
             foreach ($request as &$value) {
                 
-                if (!is_string($value)) {
+                if (!\is_string($value)) {
                     continue;
                 }
                 
@@ -189,39 +189,57 @@ class DLRequest implements RequestInterface {
             }
         }
 
-        return !is_null($request) ? $request : trim($input);
+        return $request !== null
+            ? $request
+            : \trim($input);
+    }
+
+    public function query(array $params): bool {
+        return !(DLServer::is_query())
+            ? false
+            : $this->validate($params);
     }
 
     public function get(array $params): bool {
-        if (!(DLServer::is_get())) {
-            return false;
-        }
+        return !(DLServer::is_get())
+            ? false
+            : $this->validate($params);
+    }
 
-        return $this->validate($params);
+    public function head(array $params): bool {
+        return !(DLServer::is_head())
+            ? false
+            : $this->validate($params);
     }
 
     public function post(array $params): bool {
-        if (!(DLServer::is_post())) {
-            return false;
-        }
-
-        return $this->validate($params);
+        return !(DLServer::is_post())
+            ? false
+            : $this->validate($params);
     }
 
     public function put(array $params): bool {
-        if (!(DLServer::is_put())) {
-            return false;
-        }
+        return !(DLServer::is_put())
+            ? false
+            : $this->validate($params);
+    }
 
-        return $this->validate($params);
+    public function patch(array $params): bool {
+        return !(DLServer::is_patch())
+            ? false
+            : $this->validate($params);
+    }
+
+    public function options(array $params): bool {
+        return !(DLServer::is_options())
+            ? false
+            : $this->validate($params);
     }
 
     public function delete(array $params): bool {
-        if (!(DLServer::is_delete())) {
-            return false;
-        }
-
-        return $this->validate($params);
+        return !(DLServer::is_delete())
+            ? false
+            : $this->validate($params);
     }
 
     /**
@@ -344,8 +362,24 @@ class DLRequest implements RequestInterface {
         $this->output->print_response_data($mime_type);
     }
 
+    public function execute_query_method(array $params, callable | array $controller, ?string $mime_type = null): void {
+        if (!$this->query($params)) {
+            return;
+        }
+
+        $this->execute_controller($controller, $mime_type);
+    }
+
     public function execute_get_method(array $params, callable | array $controller, ?string $mime_type = null): void {
         if (!$this->get($params)) {
+            return;
+        }
+
+        $this->execute_controller($controller, $mime_type);
+    }
+
+    public function execute_head_method(array $params, callable | array $controller, ?string $mime_type = null): void {
+        if (!$this->head($params)) {
             return;
         }
 
@@ -367,7 +401,23 @@ class DLRequest implements RequestInterface {
 
         $this->execute_controller($controller, $mime_type);
     }
+    
+    public function execute_patch_method(array $params, callable | array $controller, ?string $mime_type = null): void {
+        if (!$this->patch($params)) {
+            return;
+        }
 
+        $this->execute_controller($controller, $mime_type);
+    }
+
+    public function execute_options_method(array $params, callable | array $controller, ?string $mime_type = null): void {
+        if (!$this->options($params)) {
+            return;
+        }
+
+        $this->execute_controller($controller, $mime_type);
+    }
+ 
     public function execute_delete_method(array $params, callable | array $controller, ?string $mime_type = null): void {
         if (!$this->delete($params)) {
             return;

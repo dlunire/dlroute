@@ -1,6 +1,7 @@
 <?php
 
 use DLRoute\Core\Auth\AuthApps;
+use DLRoute\Core\Telemetry\TelemetryRequest;
 
 /**
  * DLUnire
@@ -58,16 +59,27 @@ $auth->require_auth(function () {
     ]);
 });
 
-DLRoute::get('/profile', function () {
-    return 'PUBLIC';
+DLRoute::get('/profile/{test?}', function (object $params) {
+    return [
+        "scope" => "PUBLIC",
+        "param" => $params
+    ];
 });
 
-$auth->require_auth(function () {
-    DLRoute::get('/profile', function () {
-        return 'AUTHENTICATED';
+$auth->require_auth(function () use ($auth): void {
+    DLRoute::get('/profile', function (object $params) use ($auth): array {
+        return [
+            "scope" => "AUTHENTICATED",
+            "params" => $params,
+            "session" => $auth->get_session_data()
+        ];
     });
 });
 
-print_r(DLRoute::get_routes());
+DLRoute::get('/telemetry', function() {
+    return TelemetryRequest::telemetry("Algo de Telemetría para ChatGPT");
+});
+
+// print_r(DLRoute::get_routes());
 
 DLRoute::execute();
