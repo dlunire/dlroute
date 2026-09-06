@@ -43,7 +43,7 @@ class DLServer implements ServerInterface, RouteLexerInterface {
             $uri = $_SERVER["REQUEST_URI"];
         }
 
-        $uri = trim($uri, "/");
+        $uri = \trim($uri, "/");
 
         self::remove_duplicate_slash($uri);
 
@@ -56,20 +56,27 @@ class DLServer implements ServerInterface, RouteLexerInterface {
 
     public static function get_method(): string {
         /**
-         * Método del protocolo HTTP capturado durante la petición. Si devuelve
-         * `CLI`, significa que ha sido ejecutado probablemente, por la terminal.
-         * 
+         * Método de solicitud capturado durante la ejecución.
+         *
+         * `CLI` es el valor predeterminado cuando no existe un método HTTP disponible en el
+         * entorno de ejecución.
+         *
          * @var non-empty-string $method
          */
         $method = "CLI";
 
-        if (\array_key_exists("REQUEST_METHOD", $_SERVER)) {
-            $method = $_SERVER["REQUEST_METHOD"];
+        /** @var non-empty-string|null $http_method */
+        $http_method = $_SERVER['REQUEST_METHOD'] ?? NULL;
+
+        if (\is_string($http_method)) {
+            $http_method = \trim($http_method);
+
+            if ($http_method !== '') {
+                return \strtoupper($http_method);
+            }
         }
 
-        return \trim(
-            string: \strtoupper($method)
-        );
+        return $method;
     }
 
     public static function get_script_filename(): string {

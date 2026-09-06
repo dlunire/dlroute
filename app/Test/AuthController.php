@@ -57,4 +57,8 @@ final class AuthController extends Controller {
             "params" => $params
         ];
     }
+
+    public function method_name(): array {
+        return ["status" => "Ok"];
+    }
 }

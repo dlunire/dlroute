@@ -123,4 +123,14 @@ interface RouteLexerInterface {
      * @var string
      */
     public const UNDERSCORE = "\x5f";
+
+    /**
+     * Representa el carácter de arroba ('@') expresado mediante su valor hexadecimal en Notación ASCII (0x40).
+     * 
+     * Se utiliza como un literal inmutable para operaciones de parseo, tokenización o concatenación,
+     * garantizando el uso explícito del byte correspondiente sin depender de representaciones de cadena variables.
+     *
+     * @var string
+     */
+    public const AT_SIGN = "\x40";
 }

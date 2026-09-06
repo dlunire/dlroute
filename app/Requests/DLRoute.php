@@ -27,7 +27,7 @@ namespace DLRoute\Requests;
 
 use DLRoute\Core\Data\RouteHandler;
 use DLRoute\Core\Routing\Automaton\Route\RouteGenerator;
-use DLRoute\Core\Routing\Automaton\Route\RouteType;
+use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\RouteInterface;
@@ -277,7 +277,7 @@ class DLRoute extends Route implements RouteInterface {
         $route = DLServer::get_route();
 
         /** @var non-empty-string $route_with_required_authentication */
-        $route_with_required_authentication = RouteType::AUTH->value . $route;
+        $route_with_required_authentication = RouteIdentity::AUTH->value . $route;
 
         /**
          * Ruta actualmente registrada con parámetros

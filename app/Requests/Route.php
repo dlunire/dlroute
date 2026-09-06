@@ -26,8 +26,11 @@
 namespace DLRoute\Requests;
 
 use DLAuth\Data\SessionData;
-use DLRoute\Core\Routing\Automaton\Route\RouteType;
+use DLRoute\Core\Data\RouteData\RouteContext;
+use DLRoute\Core\Data\RouteData\RouteMimeType;
+use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Enums\Methods;
+use DLRoute\Errors\UnauthorizedException;
 use DLRoute\Interfaces\RouteInterface;
 use DLRoute\Interfaces\Routing\RouteLexerInterface;
 use DLRoute\Requests\DLOutput;
@@ -51,9 +54,22 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
     protected static bool $is_session_valid = false;
 
     /**
+     * Define la identidad de la ruta.
+     *
+     * Determina la identidad bajo la cual se registra y procesa la ruta. Actualmente, `DLRoute` utiliza
+     * `RouteIdentity::AUTH` como identidad implementada para este contexto.
+     *
+     * La enumeración contempla otras identidades, como `PUBLIC`, que se mantienen como parte de la
+     * estructura prevista para futuras extensiones del sistema de enrutamiento.
+     *
+     * @var RouteIdentity
+     */
+    protected static RouteIdentity $route_identity = RouteIdentity::AUTH;
+
+    /**
      * Almacenamiento de rutas
      *
-     * @var array
+     * @var array $routes
      */
     protected static array $routes = [];
 
@@ -100,11 +116,11 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      * @return void
      */
     protected static function request(string $uri, callable|array|string $controller, Methods $method, array|object $vars, ?string $mime_type = null): void {
-        /** @var RouteType $route_type */
-        $route_type = RouteType::AUTH;
+        /** @var RouteIdentity $route_identity */
+        $route_identity = self::$route_identity;
 
         $route = self::$mark_routes_authenticated
-            ? "{$route_type->value}{$uri}"
+            ? "{$route_identity->value}{$uri}"
             : $uri;
 
         self::register_routes($method->value, $route, $controller);
@@ -113,13 +129,24 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
     }
 
     /**
-     * Devuelve el tipo `mime` personalizado.
+     * Devuelve los tipos MIME asociados a una ruta.
      *
-     * @param string $route
-     * @return string|null
+     * Obtiene de forma independiente el tipo MIME registrado para los contextos
+     * privado y público de la ruta, utilizando la identidad de ruta actualmente
+     * configurada para resolver el registro correspondiente.
+     *
+     * Cuando no existe un tipo MIME registrado para alguno de los contextos,
+     * se devuelve `null` en la propiedad correspondiente de `RouteMimeType`.
+     *
+     * @param string $route URI de la ruta cuyo tipo MIME se desea obtener.
+     * @return RouteMimeType Estructura con los tipos MIME asociados a los contextos
+     * público y privado de la ruta.
      */
-    protected static function get_mime_type(string $route): string | null {
-        return self::$mime_types[$route] ?? null;
+    protected static function get_mime_type(string $route): RouteMimeType {
+        return new RouteMimeType(
+            private_mimetype: self::$mime_types[self::$route_identity->value . $route] ?? null,
+            public_mimetype: self::$mime_types[$route] ?? null
+        );
     }
 
     /**
@@ -145,27 +172,36 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         $data = null;
 
         // TODO: Rutas autenticasas, establecer las claves correspondientes.
+
         /**
-         * Ruta de la petición.
+         * Ruta actual de la solicitud HTTP.
          * 
          * @var string
          */
         $route = DLServer::get_route();
 
         /**
-         * Tipo personalizado.
-         * 
-         * @var string|null
+         * Tipos MIME definidos explícitamente durante el registro de la ruta.
+         *
+         * Contiene los tipos MIME proporcionados mediante el parámetro `$mime_type` al registrar la ruta para
+         * sus respectivos contextos.
+         *
+         * La inferencia automática del tipo MIME cuando `$mime_type` no es definido corresponde al procesamiento
+         * interno del motor de enrutamiento y no a esta estructura.
+         *
+         * @var RouteMimeType $mime_type
          */
         $mime_type = self::get_mime_type($route);
 
         /**
          * Controlador asociado a la ruta y método de la petición.
          * 
-         * @var callable|array|string|null
+         * @var mixed
          */
-        $controller = self::get_controller($route);
-
+        $controller = self::get_validated_controller_context(
+            controller_context: self::get_controller($route),
+            route: $route
+        );
 
         if ($controller === null) {
             DLOutput::not_found();
@@ -185,10 +221,58 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
 
         $output = DLOutput::get_instance();
 
+
         $output->set_content($data);
-        $output->print_response_data($mime_type);
+        $output->print_response_data($mime_type->public_mimetype);
 
         exit;
+    }
+
+    /**
+     * Obtiene el controlador correspondiente al contexto de autenticación de la ruta, validando previamente
+     * las condiciones de acceso de la solicitud.
+     *
+     * Cuando la sesión es válida, devuelve el controlador privado asociado a la ruta. Cuando la sesión no es
+     * válida, devuelve el controlador público asociado a la ruta.
+     *
+     * Si la ruta solamente dispone de un controlador privado y la solicitud no cuenta con una sesión válida, se
+     * lanza una excepción de autorización.
+     *
+     * Si no existe un controlador correspondiente al contexto de autenticación actual, devuelve null.
+     *
+     * @param RouteContext $controller_context Contexto de controladores de la ruta.
+     * @param string $route Ruta actual de la solicitud.
+     * @return mixed Controlador correspondiente al contexto de autenticación actual o null si no existe.
+     *
+     * @throws UnauthorizedException Si la ruta requiere autenticación y no existe
+     * una sesión válida.
+     */
+    private static function get_validated_controller_context(RouteContext $controller_context, string $route): mixed {
+
+        /** @var mixed $public_controller */
+        $public_controller = $controller_context->public_controller;
+
+        /** @var mixed $private_controller */
+        $private_controller = $controller_context->private_controller;
+
+        /**
+         * Determina si la ruta solamente dispone de un controlador privado
+         * mientras la solicitud carece de una sesión válida.
+         *
+         * @var bool $context_auth
+         */
+        $context_auth = !self::$is_session_valid
+            && ($private_controller !== null && $public_controller === null);
+
+        if ($context_auth) {
+            throw new UnauthorizedException(
+                "Autenticación requerida en la ruta '{$route}'"
+            );
+        }
+
+        return self::$is_session_valid && $private_controller !== null
+            ? $private_controller
+            : $public_controller;
     }
 
     /**
@@ -250,37 +334,43 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
     }
 
     /**
-     * Devuelve el controlador a ejecutar en función de la ruta seleccionada por el usuario.
+     * Devuelve los controladores asociados a la ruta seleccionada.
      *
-     * @param string $route
-     * @return callable|array|string|null
+     * La resolución se realiza utilizando el método HTTP actual y la identidad de la ruta, permitiendo
+     * obtener de forma independiente los controladores correspondientes a los contextos privado y público.
+     *
+     * Si el método HTTP o la ruta no se encuentran registrados, devuelve un `RouteContext` sin
+     * controladores asociados.
+     *
+     * @param string $route Ruta seleccionada para la resolución.
+     * @return RouteContext Contexto con los controladores público y privado asociados a la ruta.
      */
-    protected static function get_controller(string $route): callable|array|string|null {
+    protected static function get_controller(string $route): RouteContext {
         /**
          * Método HTTP actual.
          * 
-         * @var string
+         * @var non-empty-string $method
          */
         $method = DLServer::get_method();
 
         /**
-         * Controlador que será devuelto.
+         * Rutas asociadas al método de la petición
          * 
-         * @var callable|array|string|null
+         * @var non-empty-array|null $routes
          */
-        $controller = null;
+        $routes = self::$routes[$method] ?? null;
 
-        if (!\array_key_exists($method, self::$routes)) {
-            return $controller;
+        if (!\is_array($routes)) {
+            return new RouteContext(
+                private_controller: null,
+                public_controller: null
+            );
         }
 
-        if (!\array_key_exists($route, self::$routes[$method])) {
-            return $controller;
-        }
-
-        $controller = self::$routes[$method][$route] ?? null;
-
-        return $controller;
+        return new RouteContext(
+            private_controller: $routes[self::$route_identity->value . $route] ?? null,
+            public_controller: $routes[$route] ?? null
+        );
     }
 
     /**
@@ -436,61 +526,128 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
     }
 
     /**
-     * Devuelve la salida del método del controlador al que se apunta.
+     * Analiza la cadena del controlador en formato 'Clase@metodo' y devuelve la salida del método
+     * al que apunta.
      *
-     * @param string $controller Controlador al que se apunta.
+     * Realiza un recorrido byte a byte sobre la cadena para localizar el separador '@', validando
+     * que exista exactamente uno. Si no se encuentra ningún separador, o se encuentra más de uno,
+     * responde con un error `500` detallando la causa (falta de separador o separador adicional,
+     * respectivamente) y termina la ejecución.
+     *
+     * @param string $controller Cadena del controlador en formato 'Clase@metodo'.
      * @param array|object $data Datos que serán usados como un parámetro en el controlador.
-     * @return mixed
+     * @return mixed Salida del método del controlador.
      */
     protected static function string_controller(string $controller, array|object $data): mixed {
-        $pattern = "/@/";
+        $controller = \trim($controller);
 
-        preg_match_all($pattern, $controller, $matches);
+        /** @var int $offset */
+        $offset = 0;
+
+        /** @var int $size */
+        $size = \strlen($controller);
 
         /**
          * Cantidad de arrobas (@) encontradas.
          * 
-         * @var int
+         * @var int $quantity
          */
-        $quantity = \count($matches[0]);
+        $quantity = 0;
+
+        /** @var int $offset_start */
+        $offset_start = 0;
+
+        /** @var integer $lexeme_length */
+        $lexeme_length = 0;
+
+        /** 
+         * Posición del segundo separador '@' encontrado, usada para reportar el fragmento 
+         * sobrante cuando hay más de un separador.
+         * 
+         * @var integer $error_offset_start
+         */
+        $error_offset_start = 0;
+
+        while ($offset < $size) {
+            /** @var non-empty-string $byte */
+            $byte = $controller[$offset];
+
+            if (self::AT_SIGN === $byte) {
+                $lexeme_length = $offset;
+                $quantity++;
+
+                if ($quantity === 2) {
+                    $error_offset_start = $offset;
+                }
+            }
+
+            $offset++;
+        }
+
+        /** @var string $controller_name */
+        $controller_name = \substr($controller, $offset_start, $lexeme_length);
+
+        /** @var string $method */
+        $method = \substr(
+            string: $controller,
+            offset: $lexeme_length + 1,
+            length: $size - $lexeme_length
+        );
+
+        /** 
+         * Fragmento del controlador a partir del segundo separador '@', usado únicamente en el
+         * mensaje de error cuando hay más de un separador.
+         * 
+         * @var string $string_error
+         */
+        $string_error = \substr(
+            string: $controller,
+            offset: $error_offset_start,
+            length: $size - $error_offset_start
+        );
+
+        /** @var non-empty-string $http_method */
+        $http_method = \strtolower(DLServer::get_method());
 
         /**
-         * Información de errores del sistema en formato JSON.
+         * Error capturado durante el análisis léxico
          * 
-         * @var string
+         * @var array{status: boolean, message: string} $error
          */
-        $error = "";
+        $error = [];
 
         if ($quantity !== 1) {
             self::response_code(500);
 
-            $error = DLOutput::to_json([
+            $error = ($quantity > 0) ? [
                 "status" => false,
-                "error" => 'Fomato de nombre de controlador inválido'
-            ], true);
+                "message" => "DLRoute::{$http_method}: El controlador '{$controller}' es inválido: se encontró un separador '@' adicional a partir de '{$string_error}' (posición '{$error_offset_start}'); solo se permite un '@' entre la clase y el método"
+            ] : [
+                "status" => false,
+                "message" => "DLRoute::{$http_method}: No se definió el método a invocar para el controlador '{$controller}': falta el separador '@' seguido del nombre del método; el formato esperado es 'Clase@metodo'"
+            ];
 
             if (self::is_production()) {
-                self::set_error($error);
-                $error = self::get_generic_error();
+                self::set_error(
+                    error: DLOutput::to_json($error, true)
+                );
+
+                /** Este error es genérico en producción. Revisar los archivos logs */
+                $error = self::get_generic_error("Error en el controlador.");
             }
+
+            echo DLOutput::to_json(
+                content: $error,
+                pretty: true
+            );
 
             exit;
         }
 
-        $parts_controller = explode('@', $controller);
-
-        /**
-         * Salida del controlador.
-         * 
-         * @var mixed
-         */
-        $content = null;
-
-        if (\is_array($parts_controller)) {
-            $content = self::array_controller($parts_controller, $data);
-        }
-
-        return $content;
+        return self::array_controller(
+            controller: [$controller_name, $method],
+            data: $data
+        );
     }
 
     /**
@@ -652,10 +809,10 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      *
      * @return string
      */
-    private static function get_generic_error(): string {
+    private static function get_generic_error(string $message = "Error del sistema"): string {
         return DLOutput::to_json([
             "status" => false,
-            "error" => "Error del sistema"
+            "message" => $message
         ]);
     }
 

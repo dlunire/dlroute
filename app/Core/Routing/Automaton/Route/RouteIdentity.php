@@ -12,7 +12,7 @@ namespace DLRoute\Core\Routing\Automaton\Route;
  * exclusivamente en la representación interna de las rutas y no forman
  * parte de la URI expuesta al cliente.
  */
-enum RouteType: string {
+enum RouteIdentity: string {
 
     /**
      * Identificador utilizado para representar una ruta que requiere

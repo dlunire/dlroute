@@ -55,9 +55,15 @@ interface ServerInterface {
     public static function get_hostname(): string;
 
     /**
-     * Devuelve el método HTTP.
+     * Devuelve el método de solicitud asociado a la ejecución actual.
      *
-     * @return string
+     * Cuando la aplicación se ejecuta mediante HTTP, obtiene el método registrado por el servidor
+     * en `$_SERVER["REQUEST_METHOD"]`. Si no existe este valor, asume el contexto de ejecución `CLI`.
+     *
+     * El resultado se devuelve en mayúsculas y sin espacios externos.
+     *
+     * @return string Nombre del método de solicitud o `CLI` cuando la ejecución no dispone
+     *                de un método HTTP.
      */
     public static function get_method(): string;
 
