@@ -40,21 +40,18 @@ final class AuthController extends Controller {
         ];
     }
 
-    /**
-     * Permite verificar la sessión para el desarrollo del sistema de autenticación
-     * para DLRoute.
-     *
-     * @return array
-     */
-    public function check(object $params): array {
-        /** @var mixed $value */
-        $value = null;
+    public function profile(object $params): array {
 
         return [
-            "status" => $this->get_auth()->get_session_data(),
-            "A" => \json_decode($this->to_json($value)),
-            "B" => $this->to_json($value),
-            "params" => $params
+            "params" => $params->test ?? null,
+            "info" => "Método público"
+        ];
+    }
+    
+    public function profile_with_auth(object $params): array {
+        return [
+            "params" => $params->test ?? null,
+            "info" => "Método autenticado",
         ];
     }
 

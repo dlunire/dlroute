@@ -46,6 +46,22 @@ use DLRoute\Server\DLServer;
 class DLRoute extends Route implements RouteInterface {
     private static ?self $instance = null;
 
+    public static function query(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
+        $routes = new RouteGenerator($uri);
+
+        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
+            self::$route = $uri;
+
+            if (!DLServer::is_query()) {
+                return self::get_instance();
+            }
+
+            self::request($uri, $controller, Methods::QUERY, $data, $mime_type);
+        });
+
+        return self::get_instance();
+    }
+
     public static function get(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
         $routes = new RouteGenerator($uri);
 
@@ -62,19 +78,6 @@ class DLRoute extends Route implements RouteInterface {
         return self::get_instance();
     }
 
-    /**
-     * Define una ruta para manejar solicitudes `HTTP HEAD`.
-     * 
-     * Permite definir una ruta para manejar solicitudes `HTTP HEAD`. El callback o controlador
-     * proporcionado se ejecutará cuando la URI definida sea accedida utilizando
-     * el método `HTTP HEAD`.
-     * 
-     * @param string $uri Patrón URI que se comparará con las solicitudes entrantes
-     * @param callable|array|string $controller `callback` o controlador encargado de manejar la solicitud
-     * @param array|object $data Permite implementar datos adicionales al controlador.
-     * @param mixed $mime_type Permite establecer el tipo MIME de respuesta al cliente.
-     * @return DLParamValueType
-     */
     public static function head(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
         $routes = new RouteGenerator($uri);
 
@@ -87,35 +90,6 @@ class DLRoute extends Route implements RouteInterface {
 
             self::request($uri, $controller, Methods::HEAD, $data, $mime_type);
         });
-        return self::get_instance();
-    }
-
-    /**
-     * Define una ruta para manejar solicitudes `HTTP OPTIONS`.
-     * 
-     * Permite definir una ruta para manejar solicitudes `HTTP OPTIONS`. El callback o controlador
-     * proporcionado se ejecutará cuando la URI definida sea accedida utilizando
-     * el método `HTTP OPTIONS`.
-     * 
-     * @param string $uri Patrón URI que se comparará con las solicitudes entrantes
-     * @param callable|array|string $controller `callback` o controlador encargado de manejar la solicitud
-     * @param array|object $data Permite implementar datos adicionales al controlador.
-     * @param mixed $mime_type Permite establecer el tipo MIME de respuesta al cliente.
-     * @return DLParamValueType
-     */
-    public static function options(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        $routes = new RouteGenerator($uri);
-
-        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
-            self::$route = $uri;
-
-            if (!DLServer::is_options()) {
-                return self::get_instance();
-            }
-
-            self::request($uri, $controller, Methods::OPTIONS, $data, $mime_type);
-        });
-
         return self::get_instance();
     }
 
@@ -176,6 +150,22 @@ class DLRoute extends Route implements RouteInterface {
 
             self::request($uri, $controller, Methods::DELETE, $data, $mime_type);
         });
+        return self::get_instance();
+    }
+
+    public static function options(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
+        $routes = new RouteGenerator($uri);
+
+        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
+            self::$route = $uri;
+
+            if (!DLServer::is_options()) {
+                return self::get_instance();
+            }
+
+            self::request($uri, $controller, Methods::OPTIONS, $data, $mime_type);
+        });
+
         return self::get_instance();
     }
 
@@ -284,7 +274,7 @@ class DLRoute extends Route implements RouteInterface {
          * 
          * @var string|null $registered_current_route
          */
-        $registered_current_route = self::$is_session_valid
+        $registered_current_route = self::$is_valid_session
             ? self::$current_param[$route_with_required_authentication] ?? null
             : self::$current_param[$route] ?? null;
 

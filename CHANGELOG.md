@@ -8,7 +8,7 @@ Este proyecto sigue el formato de [Keep a Changelog](https://keepachangelog.com/
 
 ## [2.1.0] - 2026-09-XX
 
-Esta versión incorpora cambios en la arquitectura de controladores y en la integración del sistema de autenticación, además de nuevas capacidades de documentación y uso del sistema de rutas.
+Esta versión incorpora cambios en la arquitectura de controladores y en la integración del sistema de autenticación, además de nuevas capacidades en el sistema de rutas: identidad de rutas por token, contrato formal para `query()`/`head()`/`options()`, y refactor en la resolución de tipo MIME por contexto de autenticación.
 
 ### BREAKING CHANGES
 
@@ -51,6 +51,13 @@ final class AuthController extends Controller {
 }
 ```
 
+* **Identidad de ruta por token (`RouteIdentity`):**
+  * Se agrega el caso `RouteIdentity::TOKEN` (`"TOKEN-TYPE-"`), para diferenciar rutas cuya validación de seguridad se efectúa mediante encabezado de autorización o firmas por token (e.g. Bearer Token), de forma independiente a las rutas autenticadas por sesión (`RouteIdentity::AUTH`).
+
+* **Contrato formal para `query()`, `head()` y `options()`:**
+  * `RouteInterface` declara ahora explícitamente `query()`, `head()` y `options()`, que ya existían implementados en `DLRoute` pero no formaban parte del contrato de la interfaz.
+  * Se implementa `DLRoute::query()`, despachando el método HTTP `QUERY` mediante `DLServer::is_query()`.
+
 ### Changed / Cambiado
 
 * **`Controller`:**
@@ -58,6 +65,21 @@ final class AuthController extends Controller {
   * Se reorganiza la gestión interna de autenticación para mantener una única instancia de `AuthApps` asociada al controlador.
   * La propiedad de autenticación utiliza un estado explícito `AuthApps|null`, permitiendo distinguir entre autenticación habilitada y no configurada.
   * Los métodos relacionados con autenticación generan excepciones explícitas cuando se intenta utilizarlos sin haber habilitado previamente el sistema.
+
+* **Resolución de tipo MIME por contexto de autenticación:**
+  * `Route::get_mime_type()` se renombra a `get_mimetype()`.
+  * Se extrae el nuevo método `get_mimetype_by_context()`, que resuelve el tipo MIME público o privado a devolver según la validez de la sesión actual, antes resuelto en línea dentro de `run()`.
+
+* **Consistencia en mensajes de error internos:**
+  * Los mensajes de error generados por `array_controller()` ahora incluyen el prefijo `DLRoute::{método}(...)`, igual que los ya generados por `string_controller()`.
+
+### Fixed / Corregido
+
+* **Referencia a propiedad obsoleta tras renombrado:**
+  * Se corrige una regresión en `DLRoute::run()`, que aún referenciaba `Route::$is_session_valid` después de que dicha propiedad fuera renombrada a `$is_valid_session`.
+
+* **`string_controller()` — método vacío tras `trim()`:**
+  * Si el nombre del método resuelto queda vacío después de aplicar `trim()`, ahora se pasa `null` en lugar de una cadena vacía a `array_controller()`.
 
 ### Documentation / Documentación
 
@@ -70,8 +92,6 @@ final class AuthController extends Controller {
 * Se documenta el uso del constructor heredado, la habilitación de autenticación y la configuración de campos personalizados.
 
 * Se actualiza el índice de documentación para facilitar el acceso a la referencia de controladores.
-
----
 
 ## [2.0.2] - 2026-08-02
 

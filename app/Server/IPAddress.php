@@ -27,8 +27,6 @@ declare(strict_types=1);
 
 namespace DLRoute\Server;
 
-use DLRoute\Errors\DomainException;
-
 /**
  * Permite obtener la dirección IP desde varias fuente o posibles fuentes. Si no 
  * es posible devolver una dirección IP, entonces, su método estático público

@@ -22,3 +22,13 @@ public/subdirectorio
 # Commit ignorado en este proyecto:
 commit.txt
 commit.md
+info.txt
+
+# Archivos para generar sistemas operativos
+dlunire-os.php
+dlunire-os.bin
+dlunire-os.iso
+dlunire.php
+build.sh
+iso-build
+read.php

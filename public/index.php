@@ -1,9 +1,6 @@
 <?php
 
 use DLRoute\Core\Auth\AuthApps;
-use DLRoute\Core\Data\RouteHandler;
-use DLRoute\Core\Telemetry\TelemetryRequest;
-use DLRoute\Enums\Methods;
 
 /**
  * DLUnire
@@ -35,65 +32,31 @@ ini_set('display_errors', 1);
 use DLRoute\Requests\DLRoute;
 use DLRoute\Test\AuthController;
 
-include dirname(__DIR__) . DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . "autoload.php";
-
-DLRoute::post(
-    uri: "/login",
-    controller: [AuthController::class, 'auth'],
-    data: [],
-    mime_type: "application/json"
-);
-
-DLRoute::get('/check', [AuthController::class, 'check']);
+include dirname(__DIR__)
+    . DIRECTORY_SEPARATOR
+    . "vendor"
+    . DIRECTORY_SEPARATOR
+    . "autoload.php";
 
 
+/** @var AuthApps $auth */
 $auth = new AuthApps();
 
-$auth->authenticated(function () {
-    DLRoute::get('/testing', fn() => ["status" => "Autenticado"]);
-});
+# Inicio de sesión de prueba:
+DLRoute::post('/login', [AuthController::class, 'auth']);
 
-DLRoute::get('/profile/{test?}', function (object $params) {
-    return [
-        "scope" => "PUBLIC",
-        "param" => $params
-    ];
-});
-
-
-DLRoute::delete('/logout', [AuthController::class, 'logout']);
-$auth->require_auth(function (): void {
-    DLRoute::delete('AUTH-', fn() => ["Status" => "Ok"]);
-    DLRoute::get('/profile/{test?}', [AuthController::class, 'check']);
-});
-
-DLRoute::get('/telemetry', function () {
-    return TelemetryRequest::telemetry("Algo de Telemetría para ChatGPT");
-});
-
-// print_r(DLRoute::get_routes());
+# Definición de rutas de pruebas para el controlador
+DLRoute::get('/profile/{test?}', [AuthController::class, 'profile'])->filter_by_type([
+    "test" => "integer"
+]);
 
 $auth->require_auth(function () {
-
-    DLRoute::match(
-        methods: [Methods::GET, Methods::POST],
-        route: new RouteHandler(
-            uri: "/products/{uuid?}",
-            controller: fn() => "Esta es una prueba",
-            data: [], // Esto es opcional.
-            mime_type: "text/plain", // Esto también es opcional,
-            handler_filters: [
-                "uuid" => "uuid"
-            ]
-        )
-    );
+    DLRoute::get('/profile/{test?}', [AuthController::class, 'profile_with_auth'])->filter_by_type([
+        "test" => "integer"
+    ]);
 });
 
-$test = AuthController::class;
-
-DLRoute::get(
-    uri: "/string",
-    controller: "{$test}@method_name"
-);
+# Cerrar una sesión de prueba:
+DLRoute::delete("/logout", [AuthController::class, 'logout']);
 
 DLRoute::execute();

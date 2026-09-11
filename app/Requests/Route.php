@@ -51,7 +51,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      *
      * @var boolean
      */
-    protected static bool $is_session_valid = false;
+    protected static bool $is_valid_session = false;
 
     /**
      * Define la identidad de la ruta.
@@ -142,7 +142,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      * @return RouteMimeType Estructura con los tipos MIME asociados a los contextos
      * público y privado de la ruta.
      */
-    protected static function get_mime_type(string $route): RouteMimeType {
+    protected static function get_mimetype(string $route): RouteMimeType {
         return new RouteMimeType(
             private_mimetype: self::$mime_types[self::$route_identity->value . $route] ?? null,
             public_mimetype: self::$mime_types[$route] ?? null
@@ -181,17 +181,17 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         $route = DLServer::get_route();
 
         /**
-         * Tipos MIME definidos explícitamente durante el registro de la ruta.
+         * Tipo MIME resuelto para la respuesta, según el contexto de autenticación de la ruta actual.
          *
-         * Contiene los tipos MIME proporcionados mediante el parámetro `$mime_type` al registrar la ruta para
-         * sus respectivos contextos.
+         * Se obtiene evaluando los tipos MIME público y privado registrados para la ruta (ver
+         * {@see Route::get_mimetype()}) contra el estado de la sesión actual, a través de
+         * {@see Route::get_mimetype_by_context()}.
          *
-         * La inferencia automática del tipo MIME cuando `$mime_type` no es definido corresponde al procesamiento
-         * interno del motor de enrutamiento y no a esta estructura.
-         *
-         * @var RouteMimeType $mime_type
+         * @var string|null $mimetype
          */
-        $mime_type = self::get_mime_type($route);
+        $mimetype = self::get_mimetype_by_context(
+            route_mimetype: self::get_mimetype($route)
+        );
 
         /**
          * Controlador asociado a la ruta y método de la petición.
@@ -223,9 +223,38 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
 
 
         $output->set_content($data);
-        $output->print_response_data($mime_type->public_mimetype);
+        $output->print_response_data($mimetype);
 
         exit;
+    }
+
+    /**
+     * Devuelve el mimetype de la cabecera en función del contexto de la ruta.
+     *
+     * @param RouteMimeType $route_mimetype Mimetype asociado al controlador o routa
+     * @return string|null
+     */
+    private static function get_mimetype_by_context(RouteMimeType $route_mimetype): ?string {
+
+        /**
+         * Mimetype asociado a las rutas no autenticadas
+         * 
+         * @var non-empty-string|null $public_mimetype
+         */
+        $public_mimetype = $route_mimetype->public_mimetype;
+
+        /**
+         * Mimetype asociada a las rutas autenticadas
+         * 
+         * @var non-empty-string|null $private_mimetype
+         */
+        $private_mimetype = $route_mimetype->private_mimetype;
+
+        if (self::$is_valid_session && $private_mimetype !== null) {
+            return $private_mimetype;
+        }
+
+        return $public_mimetype;
     }
 
     /**
@@ -261,7 +290,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
          *
          * @var bool $context_auth
          */
-        $context_auth = !self::$is_session_valid
+        $context_auth = !self::$is_valid_session
             && ($private_controller !== null && $public_controller === null);
 
         if ($context_auth) {
@@ -270,7 +299,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
             );
         }
 
-        return self::$is_session_valid && $private_controller !== null
+        return self::$is_valid_session && $private_controller !== null
             ? $private_controller
             : $public_controller;
     }
@@ -284,7 +313,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      * @return void
      */
     public static function set_authentication_context(SessionData $session, bool $requires_authentication): void {
-        static::$is_session_valid = $session->is_valid_session;
+        static::$is_valid_session = $session->is_valid_session;
         static::$mark_routes_authenticated = $requires_authentication;
     }
 
@@ -367,6 +396,8 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
             );
         }
 
+        print_r($routes);
+
         return new RouteContext(
             private_controller: $routes[self::$route_identity->value . $route] ?? null,
             public_controller: $routes[$route] ?? null
@@ -417,6 +448,13 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
          */
         $content = null;
 
+        /**
+         * Nombre del método HTTP
+         * 
+         * @var non-empty-string $http_method
+         */
+        $http_method = \strtolower(DLServer::get_method());
+
         $controller_name = $controller[0] ?? null;
         $controller_method = $controller[1] ?? null;
 
@@ -432,7 +470,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
 
             $error = DLOutput::to_json([
                 "status" => false,
-                "error" => 'Controlador inválido'
+                "error" => "DLRoute::{$http_method}(...): Controlador no definido"
             ]);
 
             if (self::is_production()) {
@@ -449,7 +487,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
 
             $error = DLOutput::to_json([
                 "status" => false,
-                "error" => "Método del controlador inválido"
+                "message" => "DLRoute::{$http_method}(...): Método del controlador '{$controller_name}' no se encuentra definido."
             ]);
 
             if (self::is_production()) {
@@ -621,10 +659,10 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
 
             $error = ($quantity > 0) ? [
                 "status" => false,
-                "message" => "DLRoute::{$http_method}: El controlador '{$controller}' es inválido: se encontró un separador '@' adicional a partir de '{$string_error}' (posición '{$error_offset_start}'); solo se permite un '@' entre la clase y el método"
+                "message" => "DLRoute::{$http_method}(...): El controlador '{$controller}' es inválido: se encontró un separador '@' adicional a partir de '{$string_error}' (posición '{$error_offset_start}'); solo se permite un '@' entre la clase y el método"
             ] : [
                 "status" => false,
-                "message" => "DLRoute::{$http_method}: No se definió el método a invocar para el controlador '{$controller}': falta el separador '@' seguido del nombre del método; el formato esperado es 'Clase@metodo'"
+                "message" => "DLRoute::{$http_method}(...): No se definió el método a invocar para el controlador '{$controller}': falta el separador '@' seguido del nombre del método; el formato esperado es 'Clase@metodo'"
             ];
 
             if (self::is_production()) {
@@ -645,7 +683,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         }
 
         return self::array_controller(
-            controller: [$controller_name, $method],
+            controller: [$controller_name, \trim($method) === '' ? null : $method],
             data: $data
         );
     }

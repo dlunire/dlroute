@@ -25,4 +25,16 @@ enum RouteIdentity: string {
      * @var string
      */
     case AUTH = "AUTH-";
+
+    /**
+     * Identificador utilizado para representar una ruta que requiere
+     * autenticación basada en tokens de autorización (e.g. Bearer Token).
+     *
+     * Permite al autómata diferenciar y aislar las rutas cuya validación
+     * de seguridad se efectúa directamente a través del encabezado de
+     * autorización o firmas por token.
+     *
+     * @var string
+     */
+    case TOKEN = "TOKEN-TYPE-";
 }

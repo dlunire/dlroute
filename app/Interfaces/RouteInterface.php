@@ -39,9 +39,38 @@ use DLRoute\Requests\DLParamValueType;
 interface RouteInterface {
 
     /**
+     * Define la ruta para manejar solicitudes HTTP utilizando el método `QUERY`.
+     * 
+     * El callback o controlador proporcionado se ejecutará cuando la URI definida sea accedida utilizando
+     * el método HTTP QUERY
+     * 
+     * @example
+     * 
+     * ```
+     * <?php
+     * # Apunta a un controlador usando un array:
+     * Route::query('/user/{id}', [ControladorUsuario::class, 'mostrar']);
+     * 
+     * # Apunta al controlador utilizando una cadena de texto:
+     * Route::query('/user/{id}', "Ruta\Al\Controlador@metodo");
+     * 
+     * # O directamente, ejecuta la función:
+     * Route::query('/user/{id}', function(object $data) {
+     *  // Lógica para el usuario.
+     * });
+     * ```
+     *
+     * @param string $uri Patrón de URI que se comparará con las solicitudes entrantes.
+     * @param callable|array|string $controller Controlador encargado de manejar la solicitud. Puede ser un callback o controlador.
+     * @param array $data Opcional. Permite implementar datos adicionales al controlador.
+     * @param string|null $mime_type Opcional. Permite establecer el tipo MIME de respuesta al cliente.
+     * @return DLParamValueType
+     */
+    public static function query(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType;
+
+    /**
      * Define una ruta para manejar solicitudes HTTP GET.
      *
-     * Este método te permite definir una ruta para manejar solicitudes HTTP GET.
      * El callback o controlador proporcionado se ejecutará cuando la URI definida sea accedida
      * utilizando el método HTTP GET.
      *
@@ -58,7 +87,7 @@ interface RouteInterface {
      * Route::get('/user/{id}', [ControladorUsuario::class, 'mostrar']);
      * 
      * # Apunta al controlador utilizando una cadena de texto:
-     * Route::get('/user/{id}', "Ruta\Al\Controlador@metodo);
+     * Route::get('/user/{id}', "Ruta\Al\Controlador@metodo");
      * 
      * # O directamente, ejecuta la función:
      * Route::get('/user/{id}', function(object $data) {
@@ -71,7 +100,22 @@ interface RouteInterface {
      */
     public static function get(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType;
 
-    
+    /**
+     * Define una ruta para manejar solicitudes `HTTP HEAD`.
+     * 
+     * Permite definir una ruta para manejar solicitudes `HTTP HEAD`. El callback o controlador
+     * proporcionado se ejecutará cuando la URI definida sea accedida utilizando
+     * el método `HTTP HEAD`.
+     * 
+     * @param string $uri Patrón URI que se comparará con las solicitudes entrantes
+     * @param callable|array|string $controller `callback` o controlador encargado de manejar la solicitud
+     * @param array|object $data Permite implementar datos adicionales al controlador.
+     * @param mixed $mime_type Permite establecer el tipo MIME de respuesta al cliente.
+     * @return DLParamValueType
+     */
+    public static function head(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType;
+
+
     /**
      * Define una ruta para manejar solicitudes HTTP POST.
      *
@@ -204,4 +248,19 @@ interface RouteInterface {
      * de la clase 'ControladorUsuario' para manejar la solicitud.
      */
     public static function delete(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType;
+
+    /**
+     * Define una ruta para manejar solicitudes `HTTP OPTIONS`.
+     * 
+     * Permite definir una ruta para manejar solicitudes `HTTP OPTIONS`. El callback o controlador
+     * proporcionado se ejecutará cuando la URI definida sea accedida utilizando
+     * el método `HTTP OPTIONS`.
+     * 
+     * @param string $uri Patrón URI que se comparará con las solicitudes entrantes
+     * @param callable|array|string $controller `callback` o controlador encargado de manejar la solicitud
+     * @param array|object $data Permite implementar datos adicionales al controlador.
+     * @param mixed $mime_type Permite establecer el tipo MIME de respuesta al cliente.
+     * @return DLParamValueType
+     */
+    public static function options(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType;
 }
