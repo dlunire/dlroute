@@ -1,0 +1,421 @@
+diff --git a/.gitignore b/.gitignore
+index ec9bf99..7993c8c 100755
+--- a/.gitignore
++++ b/.gitignore
+@@ -31,4 +31,4 @@ dlunire-os.iso
+ dlunire.php
+ build.sh
+ iso-build
+-read.php
+\ No newline at end of file
++read.php
+diff --git a/app/Core/Routing/Automaton/Route/RouteGenerator.php b/app/Core/Routing/Automaton/Route/RouteGenerator.php
+index bc74b25..1bab05c 100644
+--- a/app/Core/Routing/Automaton/Route/RouteGenerator.php
++++ b/app/Core/Routing/Automaton/Route/RouteGenerator.php
+@@ -55,6 +55,13 @@ use DLRoute\Server\DLServer;
+  */
+ final class RouteGenerator extends RouterLexer {
+ 
++    /**
++     * Ruta con parámetros tokenizados. Pendiente por terminar documentación aquí
++     *
++     * @var RequestRouterRequest
++     */
++    private readonly RequestRouterRequest $route_tokens;
++
+     /**
+      * Rutas generadas a partir de parámetros opcionales.
+      * 
+@@ -75,6 +82,8 @@ final class RouteGenerator extends RouterLexer {
+         parent::__construct($uri);
+         $this->scanner();
+         $this->generate();
++
++        $this->route_tokens = new RequestRouterRequest($this->get_tokens());
+     }
+ 
+     /**
+diff --git a/app/Requests/Route.php b/app/Requests/Route.php
+index 1a499d5..9c5cc9e 100755
+--- a/app/Requests/Route.php
++++ b/app/Requests/Route.php
+@@ -39,33 +39,6 @@ use DLRoute\Server\DLServer;
+ abstract class Route extends DLParamValueType implements RouteInterface, RouteLexerInterface {
+     use RouteParams;
+ 
+-    /**
+-     * Indica si las rutas a registrar deben marcarse como autenticadas.
+-     *
+-     * @var boolean
+-     */
+-    private static bool $mark_routes_authenticated = false;
+-
+-    /**
+-     * Indica si la sesión actual es válida.
+-     *
+-     * @var boolean
+-     */
+-    protected static bool $is_valid_session = false;
+-
+-    /**
+-     * Define la identidad de la ruta.
+-     *
+-     * Determina la identidad bajo la cual se registra y procesa la ruta. Actualmente, `DLRoute` utiliza
+-     * `RouteIdentity::AUTH` como identidad implementada para este contexto.
+-     *
+-     * La enumeración contempla otras identidades, como `PUBLIC`, que se mantienen como parte de la
+-     * estructura prevista para futuras extensiones del sistema de enrutamiento.
+-     *
+-     * @var RouteIdentity
+-     */
+-    protected static RouteIdentity $route_identity = RouteIdentity::AUTH;
+-
+     /**
+      * Almacenamiento de rutas
+      *
+@@ -119,10 +92,16 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+         /** @var RouteIdentity $route_identity */
+         $route_identity = self::$route_identity;
+ 
++        static::$public_current_route = DLServer::get_route();
++
+         $route = self::$mark_routes_authenticated
+             ? "{$route_identity->value}{$uri}"
+             : $uri;
+ 
++        static::$context_current_route = static::$is_valid_session
++            ? $route_identity->value . static::$public_current_route
++            : static::$public_current_route;
++
+         self::register_routes($method->value, $route, $controller);
+         self::$vars[$method->value][$route] = $vars;
+         self::$mime_types[$route] = $mime_type;
+@@ -138,14 +117,13 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+      * Cuando no existe un tipo MIME registrado para alguno de los contextos,
+      * se devuelve `null` en la propiedad correspondiente de `RouteMimeType`.
+      *
+-     * @param string $route URI de la ruta cuyo tipo MIME se desea obtener.
+      * @return RouteMimeType Estructura con los tipos MIME asociados a los contextos
+      * público y privado de la ruta.
+      */
+-    protected static function get_mimetype(string $route): RouteMimeType {
++    protected static function get_mimetype(): RouteMimeType {
+         return new RouteMimeType(
+-            private_mimetype: self::$mime_types[self::$route_identity->value . $route] ?? null,
+-            public_mimetype: self::$mime_types[$route] ?? null
++            private_mimetype: self::$mime_types[static::$context_current_route] ?? null,
++            public_mimetype: self::$mime_types[static::$public_current_route] ?? null
+         );
+     }
+ 
+@@ -178,7 +156,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+          * 
+          * @var string
+          */
+-        $route = DLServer::get_route();
++        $route = static::$public_current_route;
+ 
+         /**
+          * Tipo MIME resuelto para la respuesta, según el contexto de autenticación de la ruta actual.
+@@ -190,7 +168,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+          * @var string|null $mimetype
+          */
+         $mimetype = self::get_mimetype_by_context(
+-            route_mimetype: self::get_mimetype($route)
++            route_mimetype: self::get_mimetype()
+         );
+ 
+         /**
+@@ -199,8 +177,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+          * @var mixed
+          */
+         $controller = self::get_validated_controller_context(
+-            controller_context: self::get_controller($route),
+-            route: $route
++            controller_context: self::get_controller()
+         );
+ 
+         if ($controller === null) {
+@@ -250,7 +227,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+          */
+         $private_mimetype = $route_mimetype->private_mimetype;
+ 
+-        if (self::$is_valid_session && $private_mimetype !== null) {
++        if (static::$is_valid_session && $private_mimetype !== null) {
+             return $private_mimetype;
+         }
+ 
+@@ -270,13 +247,14 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+      * Si no existe un controlador correspondiente al contexto de autenticación actual, devuelve null.
+      *
+      * @param RouteContext $controller_context Contexto de controladores de la ruta.
+-     * @param string $route Ruta actual de la solicitud.
+      * @return mixed Controlador correspondiente al contexto de autenticación actual o null si no existe.
+      *
+      * @throws UnauthorizedException Si la ruta requiere autenticación y no existe
+      * una sesión válida.
+      */
+-    private static function get_validated_controller_context(RouteContext $controller_context, string $route): mixed {
++    private static function get_validated_controller_context(RouteContext $controller_context): mixed {
++        /** @var non-empty-string $current_route */
++        $current_route = static::$public_current_route;
+ 
+         /** @var mixed $public_controller */
+         $public_controller = $controller_context->public_controller;
+@@ -290,18 +268,20 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+          *
+          * @var bool $context_auth
+          */
+-        $context_auth = !self::$is_valid_session
++        $context_auth = !static::$is_valid_session
+             && ($private_controller !== null && $public_controller === null);
+ 
+         if ($context_auth) {
+             throw new UnauthorizedException(
+-                "Autenticación requerida en la ruta '{$route}'"
++                "Autenticación requerida en la ruta '{$current_route}'"
+             );
+         }
+ 
+-        return self::$is_valid_session && $private_controller !== null
++        $controller =  static::$is_valid_session && $private_controller !== null
+             ? $private_controller
+             : $public_controller;
++
++        return $controller;
+     }
+ 
+     /**
+@@ -325,7 +305,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+      */
+     protected static function register_routes(string $method, string $route, callable|array|string $controller): void {
+         if (isset(self::$routes[$method][$route])) return;
+-
++        
+         self::process_params($route);
+         self::$routes[$method][$route] = $controller;
+     }
+@@ -371,10 +351,9 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+      * Si el método HTTP o la ruta no se encuentran registrados, devuelve un `RouteContext` sin
+      * controladores asociados.
+      *
+-     * @param string $route Ruta seleccionada para la resolución.
+      * @return RouteContext Contexto con los controladores público y privado asociados a la ruta.
+      */
+-    protected static function get_controller(string $route): RouteContext {
++    protected static function get_controller(): RouteContext {
+         /**
+          * Método HTTP actual.
+          * 
+@@ -396,12 +375,12 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+             );
+         }
+ 
+-        print_r($routes);
+-
+-        return new RouteContext(
+-            private_controller: $routes[self::$route_identity->value . $route] ?? null,
+-            public_controller: $routes[$route] ?? null
++        $controller =  new RouteContext(
++            private_controller: $routes[static::$context_current_route] ?? null,
++            public_controller: $routes[self::$public_current_route] ?? null
+         );
++
++        return $controller;
+     }
+ 
+     /**
+@@ -865,7 +844,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
+          * 
+          * @var string
+          */
+-        $route = DLServer::get_route();
++        $route = static::$public_current_route;
+ 
+         /**
+          * Método HTTP de la petición
+diff --git a/app/Requests/RouteParams.php b/app/Requests/RouteParams.php
+index e4498a3..e11af79 100755
+--- a/app/Requests/RouteParams.php
++++ b/app/Requests/RouteParams.php
+@@ -25,11 +25,36 @@
+ 
+ namespace DLRoute\Requests;
+ 
++use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
+ use DLRoute\Routes\RouteDebugger;
+-use DLRoute\Server\DLServer;
+ 
+ trait RouteParams {
++    /**
++     * Define la identidad de la ruta.
++     *
++     * Determina la identidad bajo la cual se registra y procesa la ruta. Actualmente, `DLRoute` utiliza
++     * `RouteIdentity::AUTH` como identidad implementada para este contexto.
++     *
++     * La enumeración contempla otras identidades, como `PUBLIC`, que se mantienen como parte de la
++     * estructura prevista para futuras extensiones del sistema de enrutamiento.
++     *
++     * @var RouteIdentity
++     */
++    protected static RouteIdentity $route_identity = RouteIdentity::AUTH;
++
++    /**
++     * Indica si las rutas a registrar deben marcarse como autenticadas.
++     *
++     * @var boolean
++     */
++    protected static bool $mark_routes_authenticated = false;
+ 
++    /**
++     * Indica si la sesión actual es válida.
++     *
++     * @var boolean
++     */
++    protected static bool $is_valid_session = false;
+     /**
+      * Parámetros de la petición.
+      *
+@@ -44,6 +69,20 @@ trait RouteParams {
+      */
+     protected static array $current_param = [];
+ 
++    /**
++     * Ruta actual capturada de la petición. Es una ruta con identidad contextual
++     *
++     * @var non-empty-string $http_route
++     */
++    protected static string $context_current_route = "/";
++
++    /**
++     * Ruta actual capturada. No tiene contexto de autenticación.
++     *
++     * @var string
++     */
++    protected static string $public_current_route = "/";
++
+     /**
+      * Procesa las rutas y extrae de ellas sus parámetros.
+      *
+@@ -51,12 +90,19 @@ trait RouteParams {
+      * @return void
+      */
+     protected static function process_params(string &$route): void {
++        // TODO: el problema a resolver es $current_route
++
++        // self::$current_param[static::$context_current_route] = $route;
++
++        // print_r(self::$current_param);
++        // return;
++
+         /**
+          * Ruta actual de la petición.
+          * 
+-         * @var string
++         * @var non-empty-string $http_route
+          */
+-        $current_route = DLServer::get_route();
++        $current_route = static::$context_current_route;
+ 
+         /**
+          * Ruta sin slash en los extremos.
+@@ -94,13 +140,13 @@ trait RouteParams {
+      * @return bool
+      */
+     protected static function assign_param_value(array $route_parts): bool {
++        // TODO: reescribir este método utilizando un autómata.
+         /**
+          * Ruta actual de la peticón HTTP.
+          * 
+          * @var string
+          */
+-        $current_route = DLServer::get_route();
+-        $current_route = RouteDebugger::trim_slash($current_route);
++        $current_route = static::$context_current_route;
+ 
+         /**
+          * Partes de una ruta actual
+@@ -116,6 +162,8 @@ trait RouteParams {
+          */
+         $current_route_count = \count($current_route_parts);
+ 
++        // print_r("current_count: {$current_route_count} → " . implode("/", $route_parts) . "\n");
++
+         /**
+          * Cantidad de partes de una ruta ruta seleccinada.
+          * 
+@@ -123,6 +171,8 @@ trait RouteParams {
+          */
+         $route_count = \count($route_parts);
+ 
++        // print_r("count: {$route_count} → " . implode("/", $route_parts) . "\n");
++
+ 
+         if ($current_route_count !== $route_count) {
+             return false;
+@@ -142,6 +192,8 @@ trait RouteParams {
+          */
+         $route = "/" . implode("/", $route_parts);
+ 
++        // print_r($route_parts);
++
+         /**
+          * Indicador de búsqueda exitosa o no.
+          * 
+diff --git a/app/Server/DLServer.php b/app/Server/DLServer.php
+index 7ba469d..cf63783 100755
+--- a/app/Server/DLServer.php
++++ b/app/Server/DLServer.php
+@@ -187,7 +187,7 @@ class DLServer implements ServerInterface, RouteLexerInterface {
+ 
+         self::remove_duplicate_slash($route);
+ 
+-        return "/" . trim($route, "/");
++        return "/" . \trim($route, "/");
+     }
+ 
+     /**
+diff --git a/app/Test/AuthController.php b/app/Test/AuthController.php
+index fb6189f..1c993f9 100644
+--- a/app/Test/AuthController.php
++++ b/app/Test/AuthController.php
+@@ -43,14 +43,14 @@ final class AuthController extends Controller {
+     public function profile(object $params): array {
+ 
+         return [
+-            "params" => $params->test ?? null,
++            "params" => $params ?? null,
+             "info" => "Método público"
+         ];
+     }
+     
+     public function profile_with_auth(object $params): array {
+         return [
+-            "params" => $params->test ?? null,
++            "params" => $params ?? null,
+             "info" => "Método autenticado",
+         ];
+     }
+diff --git a/public/index.php b/public/index.php
+index 15b8590..a89b720 100755
+--- a/public/index.php
++++ b/public/index.php
+@@ -46,13 +46,13 @@ $auth = new AuthApps();
+ DLRoute::post('/login', [AuthController::class, 'auth']);
+ 
+ # Definición de rutas de pruebas para el controlador
+-DLRoute::get('/profile/{test?}', [AuthController::class, 'profile'])->filter_by_type([
+-    "test" => "integer"
++DLRoute::get('/profile/{algo?}', [AuthController::class, 'profile'])->filter_by_type([
++    "algo" => "integer"
+ ]);
+ 
+ $auth->require_auth(function () {
+-    DLRoute::get('/profile/{test?}', [AuthController::class, 'profile_with_auth'])->filter_by_type([
+-        "test" => "integer"
++    DLRoute::get('/profile/{auth?}', [AuthController::class, 'profile_with_auth'])->filter_by_type([
++        "auth" => "integer"
+     ]);
+ });
+ 

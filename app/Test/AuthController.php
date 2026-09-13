@@ -43,14 +43,14 @@ final class AuthController extends Controller {
     public function profile(object $params): array {
 
         return [
-            "params" => $params->test ?? null,
+            "params" => $params ?? null,
             "info" => "Método público"
         ];
     }
     
     public function profile_with_auth(object $params): array {
         return [
-            "params" => $params->test ?? null,
+            "params" => $params ?? null,
             "info" => "Método autenticado",
         ];
     }

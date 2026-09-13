@@ -46,13 +46,13 @@ $auth = new AuthApps();
 DLRoute::post('/login', [AuthController::class, 'auth']);
 
 # Definición de rutas de pruebas para el controlador
-DLRoute::get('/profile/{test?}', [AuthController::class, 'profile'])->filter_by_type([
-    "test" => "integer"
+DLRoute::get('/profile/{algo?}', [AuthController::class, 'profile'])->filter_by_type([
+    "algo" => "integer"
 ]);
 
 $auth->require_auth(function () {
-    DLRoute::get('/profile/{test?}', [AuthController::class, 'profile_with_auth'])->filter_by_type([
-        "test" => "integer"
+    DLRoute::get('/profile/{auth?}', [AuthController::class, 'profile_with_auth'])->filter_by_type([
+        "auth" => "integer"
     ]);
 });
 

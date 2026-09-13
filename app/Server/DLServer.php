@@ -187,7 +187,7 @@ class DLServer implements ServerInterface, RouteLexerInterface {
 
         self::remove_duplicate_slash($route);
 
-        return "/" . trim($route, "/");
+        return "/" . \trim($route, "/");
     }
 
     /**

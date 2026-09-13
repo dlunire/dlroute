@@ -25,11 +25,36 @@
 
 namespace DLRoute\Requests;
 
+use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Routes\RouteDebugger;
-use DLRoute\Server\DLServer;
 
 trait RouteParams {
+    /**
+     * Define la identidad de la ruta.
+     *
+     * Determina la identidad bajo la cual se registra y procesa la ruta. Actualmente, `DLRoute` utiliza
+     * `RouteIdentity::AUTH` como identidad implementada para este contexto.
+     *
+     * La enumeración contempla otras identidades, como `PUBLIC`, que se mantienen como parte de la
+     * estructura prevista para futuras extensiones del sistema de enrutamiento.
+     *
+     * @var RouteIdentity
+     */
+    protected static RouteIdentity $route_identity = RouteIdentity::AUTH;
 
+    /**
+     * Indica si las rutas a registrar deben marcarse como autenticadas.
+     *
+     * @var boolean
+     */
+    protected static bool $mark_routes_authenticated = false;
+
+    /**
+     * Indica si la sesión actual es válida.
+     *
+     * @var boolean
+     */
+    protected static bool $is_valid_session = false;
     /**
      * Parámetros de la petición.
      *
@@ -45,18 +70,39 @@ trait RouteParams {
     protected static array $current_param = [];
 
     /**
+     * Ruta actual capturada de la petición. Es una ruta con identidad contextual
+     *
+     * @var non-empty-string $http_route
+     */
+    protected static string $context_current_route = "/";
+
+    /**
+     * Ruta actual capturada. No tiene contexto de autenticación.
+     *
+     * @var string
+     */
+    protected static string $public_current_route = "/";
+
+    /**
      * Procesa las rutas y extrae de ellas sus parámetros.
      *
      * @param string $route Ruta a ser procesada.
      * @return void
      */
     protected static function process_params(string &$route): void {
+        // TODO: el problema a resolver es $current_route
+
+        // self::$current_param[static::$context_current_route] = $route;
+
+        // print_r(self::$current_param);
+        // return;
+
         /**
          * Ruta actual de la petición.
          * 
-         * @var string
+         * @var non-empty-string $http_route
          */
-        $current_route = DLServer::get_route();
+        $current_route = static::$context_current_route;
 
         /**
          * Ruta sin slash en los extremos.
@@ -94,13 +140,13 @@ trait RouteParams {
      * @return bool
      */
     protected static function assign_param_value(array $route_parts): bool {
+        // TODO: reescribir este método utilizando un autómata.
         /**
          * Ruta actual de la peticón HTTP.
          * 
          * @var string
          */
-        $current_route = DLServer::get_route();
-        $current_route = RouteDebugger::trim_slash($current_route);
+        $current_route = static::$context_current_route;
 
         /**
          * Partes de una ruta actual
@@ -116,12 +162,16 @@ trait RouteParams {
          */
         $current_route_count = \count($current_route_parts);
 
+        // print_r("current_count: {$current_route_count} → " . implode("/", $route_parts) . "\n");
+
         /**
          * Cantidad de partes de una ruta ruta seleccinada.
          * 
          * @var int
          */
         $route_count = \count($route_parts);
+
+        // print_r("count: {$route_count} → " . implode("/", $route_parts) . "\n");
 
 
         if ($current_route_count !== $route_count) {
@@ -141,6 +191,8 @@ trait RouteParams {
          * @var string
          */
         $route = "/" . implode("/", $route_parts);
+
+        // print_r($route_parts);
 
         /**
          * Indicador de búsqueda exitosa o no.

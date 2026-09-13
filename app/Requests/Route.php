@@ -40,33 +40,6 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
     use RouteParams;
 
     /**
-     * Indica si las rutas a registrar deben marcarse como autenticadas.
-     *
-     * @var boolean
-     */
-    private static bool $mark_routes_authenticated = false;
-
-    /**
-     * Indica si la sesión actual es válida.
-     *
-     * @var boolean
-     */
-    protected static bool $is_valid_session = false;
-
-    /**
-     * Define la identidad de la ruta.
-     *
-     * Determina la identidad bajo la cual se registra y procesa la ruta. Actualmente, `DLRoute` utiliza
-     * `RouteIdentity::AUTH` como identidad implementada para este contexto.
-     *
-     * La enumeración contempla otras identidades, como `PUBLIC`, que se mantienen como parte de la
-     * estructura prevista para futuras extensiones del sistema de enrutamiento.
-     *
-     * @var RouteIdentity
-     */
-    protected static RouteIdentity $route_identity = RouteIdentity::AUTH;
-
-    /**
      * Almacenamiento de rutas
      *
      * @var array $routes
@@ -119,9 +92,15 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         /** @var RouteIdentity $route_identity */
         $route_identity = self::$route_identity;
 
+        static::$public_current_route = DLServer::get_route();
+
         $route = self::$mark_routes_authenticated
             ? "{$route_identity->value}{$uri}"
             : $uri;
+
+        static::$context_current_route = static::$is_valid_session
+            ? $route_identity->value . static::$public_current_route
+            : static::$public_current_route;
 
         self::register_routes($method->value, $route, $controller);
         self::$vars[$method->value][$route] = $vars;
@@ -138,14 +117,13 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      * Cuando no existe un tipo MIME registrado para alguno de los contextos,
      * se devuelve `null` en la propiedad correspondiente de `RouteMimeType`.
      *
-     * @param string $route URI de la ruta cuyo tipo MIME se desea obtener.
      * @return RouteMimeType Estructura con los tipos MIME asociados a los contextos
      * público y privado de la ruta.
      */
-    protected static function get_mimetype(string $route): RouteMimeType {
+    protected static function get_mimetype(): RouteMimeType {
         return new RouteMimeType(
-            private_mimetype: self::$mime_types[self::$route_identity->value . $route] ?? null,
-            public_mimetype: self::$mime_types[$route] ?? null
+            private_mimetype: self::$mime_types[static::$context_current_route] ?? null,
+            public_mimetype: self::$mime_types[static::$public_current_route] ?? null
         );
     }
 
@@ -178,7 +156,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
          * 
          * @var string
          */
-        $route = DLServer::get_route();
+        $route = static::$public_current_route;
 
         /**
          * Tipo MIME resuelto para la respuesta, según el contexto de autenticación de la ruta actual.
@@ -190,7 +168,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
          * @var string|null $mimetype
          */
         $mimetype = self::get_mimetype_by_context(
-            route_mimetype: self::get_mimetype($route)
+            route_mimetype: self::get_mimetype()
         );
 
         /**
@@ -199,8 +177,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
          * @var mixed
          */
         $controller = self::get_validated_controller_context(
-            controller_context: self::get_controller($route),
-            route: $route
+            controller_context: self::get_controller()
         );
 
         if ($controller === null) {
@@ -250,7 +227,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
          */
         $private_mimetype = $route_mimetype->private_mimetype;
 
-        if (self::$is_valid_session && $private_mimetype !== null) {
+        if (static::$is_valid_session && $private_mimetype !== null) {
             return $private_mimetype;
         }
 
@@ -270,13 +247,14 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      * Si no existe un controlador correspondiente al contexto de autenticación actual, devuelve null.
      *
      * @param RouteContext $controller_context Contexto de controladores de la ruta.
-     * @param string $route Ruta actual de la solicitud.
      * @return mixed Controlador correspondiente al contexto de autenticación actual o null si no existe.
      *
      * @throws UnauthorizedException Si la ruta requiere autenticación y no existe
      * una sesión válida.
      */
-    private static function get_validated_controller_context(RouteContext $controller_context, string $route): mixed {
+    private static function get_validated_controller_context(RouteContext $controller_context): mixed {
+        /** @var non-empty-string $current_route */
+        $current_route = static::$public_current_route;
 
         /** @var mixed $public_controller */
         $public_controller = $controller_context->public_controller;
@@ -290,18 +268,20 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
          *
          * @var bool $context_auth
          */
-        $context_auth = !self::$is_valid_session
+        $context_auth = !static::$is_valid_session
             && ($private_controller !== null && $public_controller === null);
 
         if ($context_auth) {
             throw new UnauthorizedException(
-                "Autenticación requerida en la ruta '{$route}'"
+                "Autenticación requerida en la ruta '{$current_route}'"
             );
         }
 
-        return self::$is_valid_session && $private_controller !== null
+        $controller =  static::$is_valid_session && $private_controller !== null
             ? $private_controller
             : $public_controller;
+
+        return $controller;
     }
 
     /**
@@ -325,7 +305,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      */
     protected static function register_routes(string $method, string $route, callable|array|string $controller): void {
         if (isset(self::$routes[$method][$route])) return;
-
+        
         self::process_params($route);
         self::$routes[$method][$route] = $controller;
     }
@@ -371,10 +351,9 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      * Si el método HTTP o la ruta no se encuentran registrados, devuelve un `RouteContext` sin
      * controladores asociados.
      *
-     * @param string $route Ruta seleccionada para la resolución.
      * @return RouteContext Contexto con los controladores público y privado asociados a la ruta.
      */
-    protected static function get_controller(string $route): RouteContext {
+    protected static function get_controller(): RouteContext {
         /**
          * Método HTTP actual.
          * 
@@ -396,12 +375,12 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
             );
         }
 
-        print_r($routes);
-
-        return new RouteContext(
-            private_controller: $routes[self::$route_identity->value . $route] ?? null,
-            public_controller: $routes[$route] ?? null
+        $controller =  new RouteContext(
+            private_controller: $routes[static::$context_current_route] ?? null,
+            public_controller: $routes[self::$public_current_route] ?? null
         );
+
+        return $controller;
     }
 
     /**
@@ -865,7 +844,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
          * 
          * @var string
          */
-        $route = DLServer::get_route();
+        $route = static::$public_current_route;
 
         /**
          * Método HTTP de la petición
