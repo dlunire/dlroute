@@ -56,13 +56,6 @@ use DLRoute\Server\DLServer;
 final class RouteGenerator extends RouterLexer {
 
     /**
-     * Ruta con parámetros tokenizados. Pendiente por terminar documentación aquí
-     *
-     * @var RequestRouterRequest
-     */
-    private readonly RequestRouterRequest $route_tokens;
-
-    /**
      * Rutas generadas a partir de parámetros opcionales.
      * 
      * @var non-empty-string[]
@@ -82,8 +75,6 @@ final class RouteGenerator extends RouterLexer {
         parent::__construct($uri);
         $this->scanner();
         $this->generate();
-
-        $this->route_tokens = new RequestRouterRequest($this->get_tokens());
     }
 
     /**
