@@ -27,48 +27,20 @@ namespace DLRoute\Requests;
 
 use DLAuth\Data\SessionData;
 use DLRoute\Core\Data\RouteData\RouteContext;
+use DLRoute\Core\Data\RouteData\RouteController;
 use DLRoute\Core\Data\RouteData\RouteMimeType;
+use DLRoute\Core\Data\RouteData\RouteParam;
+use DLRoute\Core\Routing\Automaton\Route\RequestRouteLexer;
 use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Enums\Methods;
 use DLRoute\Errors\UnauthorizedException;
 use DLRoute\Interfaces\RouteInterface;
-use DLRoute\Interfaces\Routing\RouteLexerInterface;
+use DLRoute\Interfaces\Routing\LexerSymbolInterface;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Server\DLServer;
 
-abstract class Route extends DLParamValueType implements RouteInterface, RouteLexerInterface {
+abstract class Route extends DLParamValueType implements RouteInterface, LexerSymbolInterface {
     use RouteParams;
-
-    /**
-     * Almacenamiento de rutas
-     *
-     * @var array $routes
-     */
-    protected static array $routes = [];
-
-    /**
-     * Permite seleccionar múltiples métodos HTTP para registrar rutas
-     * 
-     * @var array<non-empty-string> $matches
-     */
-    protected static array $matches = [];
-
-    /**
-     * Variables globales para el controlador.
-     *
-     * @var array|object
-     */
-    protected static array|object $vars = [];
-
-    /**
-     * Almacena los tipos MIME asociados a las rutas registradas.
-     *
-     * Las claves corresponden a la identidad interna de cada ruta y los valores
-     * representan el tipo MIME que debe utilizarse al generar la respuesta.
-     *
-     * @var array<string, string|null>
-     */
-    protected static array $mime_types = [];
 
     /**
      * Registra una ruta y sus metadatos asociados en el autómata de enrutamiento.
@@ -79,32 +51,78 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      *
      * La identidad generada es exclusivamente interna y no modifica la URI expuesta al cliente.
      *
-     * @param string $uri URI de la ruta a registrar.
+     * @param string $route URI de la ruta a registrar.
      * @param callable|array|string $controller Controlador asociado a la ruta.
      * @param Methods $method Método HTTP asociado a la ruta.
-     * @param array|object $vars Datos disponibles como parámetros del controlador.
-     * @param non-empty-string|null $mime_type Tipo MIME de la respuesta,
+     * @param array $vars Variables o instancias de clases que serán inyectadas a los motores de plantillas
+     * @param non-empty-string|null $mimetype Tipo MIME de la respuesta,
      * opcionalmente especificado para la ruta.
      *
      * @return void
      */
-    protected static function request(string $uri, callable|array|string $controller, Methods $method, array|object $vars, ?string $mime_type = null): void {
+    protected static function request(string $route, callable|array|string $controller, RequestRouteLexer $request,  Methods $method, array $vars, ?string $mimetype = null): void {
+
+        /**
+         * Indica si requiere autenticación
+         * 
+         * @var boolean $require_auth
+         */
+        $require_auth = self::$mark_routes_authenticated;
+
+        self::$route_identity = $require_auth
+            ? RouteIdentity::PRIVATE
+            : RouteIdentity::PUBLIC;
+
         /** @var RouteIdentity $route_identity */
         $route_identity = self::$route_identity;
 
+        /**
+         * Ruta final de registro
+         * 
+         * @var non-empty-string $route_to_register
+         */
+        $route_to_register = self::$route_identity->value . "{$method->value}|" . $route;
+
         static::$public_current_route = DLServer::get_route();
 
-        $route = self::$mark_routes_authenticated
-            ? "{$route_identity->value}{$uri}"
-            : $uri;
 
+        $route = self::$mark_routes_authenticated
+            ? "{$route_identity->value}{$route}"
+            : $route;
+
+        # Esto se va a actualizar:
         static::$context_current_route = static::$is_valid_session
             ? $route_identity->value . static::$public_current_route
             : static::$public_current_route;
 
+        # Esto se va a eliminar:
         self::register_routes($method->value, $route, $controller);
+
+        # Esto se va a eliminar:
         self::$vars[$method->value][$route] = $vars;
-        self::$mime_types[$route] = $mime_type;
+
+        # Esto se va a eliminar:
+        self::$mime_types[$route] = $mimetype;
+
+        /**
+         * Ruta registrada que ha coincidido.
+         *
+         * @var non-empty-string|null $matched_route
+         */
+        $matched_route = $request->get_matched_route();
+
+
+        # Esto que está aquí es nuevo:
+        $route_controller = new RouteController(
+            controller: $controller,
+            method: $method->value,
+            required_auth: static::$mark_routes_authenticated,
+            params: new RouteParam($request->get_params_values()),
+            mimetype: $mimetype,
+            vars: $vars
+        );
+
+        self::$routes[$route_to_register] = $route_controller;
     }
 
     /**
@@ -134,6 +152,8 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      */
     public static function run(): never {
         // TODO: Preparar las rutas para identificar la autenticación o no.
+
+        echo DLOutput::to_json(self::$routes, true);
 
         /**
          * Variables
@@ -197,7 +217,6 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
         }
 
         $output = DLOutput::get_instance();
-
 
         $output->set_content($data);
         $output->print_response_data($mimetype);
@@ -305,41 +324,12 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      */
     protected static function register_routes(string $method, string $route, callable|array|string $controller): void {
         if (isset(self::$routes[$method][$route])) return;
-        
-        self::process_params($route);
+
+        // self::process_params($route);
+
         self::$routes[$method][$route] = $controller;
-    }
 
-    /**
-     * Cuenta la cantidad de barras diagonales (slashes) en una URI.
-     *
-     * Este método realiza un recorrido lineal sobre la cadena de entrada 
-     * utilizando un puntero de desplazamiento para identificar el carácter 
-     * definido como separador de ruta (self::SLASH).
-     *
-     * @param string $input La URI depurada a analizar.
-     * @param int    $quantity Variable pasada por referencia que almacena el 
-     * conteo acumulado. Este valor es incrementado por cada
-     * incidencia encontrada.
-     * 
-     * @return void
-     */
-    public static function count_slash(string $input, int &$quantity): void {
-        /** @var int $offset Puntero de posición actual en la cadena */
-        $offset = 0;
-
-        /** @var int $length Longitud total de la cadena de entrada */
-        $length = \strlen($input);
-
-        while ($offset < $length) {
-            $byte = $input[$offset];
-
-            if ($byte === self::SLASH) {
-                $quantity++;
-            }
-
-            $offset++;
-        }
+        // print_r(self::$routes);
     }
 
     /**
@@ -354,6 +344,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      * @return RouteContext Contexto con los controladores público y privado asociados a la ruta.
      */
     protected static function get_controller(): RouteContext {
+
         /**
          * Método HTTP actual.
          * 
@@ -379,6 +370,8 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
             private_controller: $routes[static::$context_current_route] ?? null,
             public_controller: $routes[self::$public_current_route] ?? null
         );
+
+        // print_r($routes);
 
         return $controller;
     }
@@ -839,37 +832,6 @@ abstract class Route extends DLParamValueType implements RouteInterface, RouteLe
      * @return array
      */
     private static function get_vars(): array|object {
-        /**
-         * Ruta HTTP
-         * 
-         * @var string
-         */
-        $route = static::$public_current_route;
-
-        /**
-         * Método HTTP de la petición
-         * 
-         * @var string
-         */
-        $method = DLServer::get_method();
-
-        /**
-         * Variables
-         * 
-         * @var array
-         */
-        $vars = [];
-
-        if (!\array_key_exists($method, self::$vars)) {
-            return $vars;
-        }
-
-        if (!\array_key_exists($route, self::$vars[$method])) {
-            return $vars;
-        }
-
-        $vars = self::$vars[$method][$route] ?? [];
-
-        return $vars;
+        return self::$vars[static::$context_current_route] ?? [];
     }
 }

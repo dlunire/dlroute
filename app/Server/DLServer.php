@@ -28,11 +28,11 @@ declare(strict_types=1);
 namespace DLRoute\Server;
 
 use DLRoute\Config\DLRealPath;
-use DLRoute\Interfaces\Routing\RouteLexerInterface;
+use DLRoute\Interfaces\Routing\LexerSymbolInterface;
 use DLRoute\Interfaces\ServerInterface;
 use DLRoute\Routes\RouteDebugger;
 
-class DLServer implements ServerInterface, RouteLexerInterface {
+class DLServer implements ServerInterface, LexerSymbolInterface {
     use Domain, IPAddress, PortCandidate;
 
     public static function get_uri(): string {

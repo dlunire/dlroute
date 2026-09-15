@@ -26,12 +26,15 @@
 namespace DLRoute\Requests;
 
 use DLRoute\Core\Data\RouteHandler;
+use DLRoute\Core\Routing\Automaton\Route\RequestRouteLexer;
 use DLRoute\Core\Routing\Automaton\Route\RouteGenerator;
 use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\RouteInterface;
 use DLRoute\Server\DLServer;
+
+// TODO: pendiente por eliminar `self::$route = $route;` después de implementar el autómata.
 
 /**
  * Define el sistema de enrutamiento del sistema.
@@ -46,147 +49,182 @@ use DLRoute\Server\DLServer;
 class DLRoute extends Route implements RouteInterface {
     private static ?self $instance = null;
 
-    public static function query(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        $routes = new RouteGenerator($uri);
+    public static function query(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route);
 
-        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
-            self::$route = $uri;
+        /** @var RequestRouteLexer $params */
+        $params = new RequestRouteLexer($routes->get_tokens());
 
-            if (!DLServer::is_query()) {
-                return self::get_instance();
-            }
-
-            self::request($uri, $controller, Methods::QUERY, $data, $mime_type);
+        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+            self::$route = $route;
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: $params,
+                method: Methods::QUERY,
+                vars: $varnames,
+                mimetype: $mimetype
+            );
         });
 
         return self::get_instance();
     }
 
-    public static function get(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        $routes = new RouteGenerator($uri);
+    public static function get(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route);
 
-        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
-            self::$route = $uri;
+        /** @var RequestRouteLexer $params */
+        $params = new RequestRouteLexer($routes->get_tokens());
 
-            if (!DLServer::is_get()) {
-                return self::get_instance();
-            }
-
-            self::request($uri, $controller, Methods::GET, $data, $mime_type);
+        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+            self::$route = $route;
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: $params,
+                method: Methods::GET,
+                vars: $varnames,
+                mimetype: $mimetype
+            );
         });
 
         return self::get_instance();
     }
 
-    public static function head(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        $routes = new RouteGenerator($uri);
+    public static function head(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route);
 
-        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
-            self::$route = $uri;
+        /** @var RequestRouteLexer $params */
+        $params = new RequestRouteLexer($routes->get_tokens());
 
-            if (!DLServer::is_head()) {
-                return self::get_instance();
-            }
-
-            self::request($uri, $controller, Methods::HEAD, $data, $mime_type);
-        });
-        return self::get_instance();
-    }
-
-    public static function post(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        $routes = new RouteGenerator($uri);
-
-        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
-            self::$route = $uri;
-
-            if (!DLServer::is_post()) {
-                return self::get_instance();
-            }
-
-            self::request($uri, $controller, Methods::POST, $data, $mime_type);
-        });
-        return self::get_instance();
-    }
-
-    public static function put(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        $routes = new RouteGenerator($uri);
-
-        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
-            self::$route = $uri;
-
-            if (!DLServer::is_put()) {
-                return self::get_instance();
-            }
-
-            self::request($uri, $controller, Methods::PUT, $data, $mime_type);
-        });
-        return self::get_instance();
-    }
-
-    public static function patch(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        $routes = new RouteGenerator($uri);
-
-        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
-            self::$route = $uri;
-
-            if (!DLServer::is_patch()) {
-                return self::get_instance();
-            }
-
-            self::request($uri, $controller, Methods::PATCH, $data, $mime_type);
-        });
-        return self::get_instance();
-    }
-
-    public static function delete(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        $routes = new RouteGenerator($uri);
-
-        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
-            self::$route = $uri;
-
-            if (!DLServer::is_delete()) {
-                return self::get_instance();
-            }
-
-            self::request($uri, $controller, Methods::DELETE, $data, $mime_type);
-        });
-        return self::get_instance();
-    }
-
-    public static function options(string $uri, callable|array|string $controller, array|object $data = [], ?string $mime_type = null): DLParamValueType {
-        $routes = new RouteGenerator($uri);
-
-        $routes->load_routes(function (string $uri) use ($controller, $data, $mime_type) {
-            self::$route = $uri;
-
-            if (!DLServer::is_options()) {
-                return self::get_instance();
-            }
-
-            self::request($uri, $controller, Methods::OPTIONS, $data, $mime_type);
+        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+            self::$route = $route;
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: $params,
+                method: Methods::HEAD,
+                vars: $varnames,
+                mimetype: $mimetype
+            );
         });
 
         return self::get_instance();
     }
 
+    public static function post(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route);
 
-    /**
-     * Registra de forma masiva múltiples métodos HTTP para una misma ruta de petición.
-     *
-     * Este método permite vincular una colección de verbos HTTP (definidos a través del enum Methods)
-     * a una única configuración de ruta (`RouteHandler`). Valida la integridad de los datos de entrada,
-     * resuelve dinámicamente el método de registro correspondiente de la clase e integra de manera fluida
-     * los filtros definidos si la ruta requiere validaciones por tipo de datos.
-     *
-     * @param Methods[]    $methods Lista de métodos HTTP (instancias de `DLRoute\Enums\Methods`) a registrar.
-     * @param RouteHandler $route   Objeto contenedor con la configuración de la URI, controlador, tipos MIME y filtros.
-     * @return void
-     * 
-     * @throws RouteException Si el array `$methods` está vacío (Código 500).
-     * @throws RouteException Si alguno de los elementos del array `$methods` no es una instancia válida de `Methods`.
-     * @see \DLRoute\Enums\Methods
-     * @see \DLRoute\Core\Data\RouteHandler
-     */
+        /** @var RequestRouteLexer $params */
+        $params = new RequestRouteLexer($routes->get_tokens());
+
+        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+            self::$route = $route;
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: $params,
+                method: Methods::POST,
+                vars: $varnames,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::get_instance();
+    }
+
+    public static function put(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route);
+
+        /** @var RequestRouteLexer $params */
+        $params = new RequestRouteLexer($routes->get_tokens());
+
+        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+            self::$route = $route;
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: $params,
+                method: Methods::PUT,
+                vars: $varnames,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::get_instance();
+    }
+
+    public static function patch(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route);
+
+        /** @var RequestRouteLexer $params */
+        $params = new RequestRouteLexer($routes->get_tokens());
+
+        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+            self::$route = $route;
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: $params,
+                method: Methods::PATCH,
+                vars: $varnames,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::get_instance();
+    }
+
+    public static function delete(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route);
+
+        /** @var RequestRouteLexer $params */
+        $params = new RequestRouteLexer($routes->get_tokens());
+
+        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+            self::$route = $route;
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: $params,
+                method: Methods::DELETE,
+                vars: $varnames,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::get_instance();
+    }
+
+    public static function options(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route);
+
+        /** @var RequestRouteLexer $params */
+        $params = new RequestRouteLexer($routes->get_tokens());
+
+        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+            self::$route = $route;
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: $params,
+                method: Methods::OPTIONS,
+                vars: $varnames,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::get_instance();
+    }
+
     public static function match(array $methods, RouteHandler $route): void {
 
         if (\count($methods) < 1) {
@@ -234,6 +272,9 @@ class DLRoute extends Route implements RouteInterface {
      * @return void
      */
     public static function execute(): void {
+
+        $params = [];
+
         /**
          * Instancia de esta clase.
          * 
@@ -267,7 +308,7 @@ class DLRoute extends Route implements RouteInterface {
         $route = DLServer::get_route();
 
         /** @var non-empty-string $route_with_required_authentication */
-        $route_with_required_authentication = RouteIdentity::AUTH->value . $route;
+        $route_with_required_authentication = RouteIdentity::PRIVATE->value . $route;
 
         /**
          * Ruta actualmente registrada con parámetros
@@ -282,7 +323,7 @@ class DLRoute extends Route implements RouteInterface {
             $registered_current_route = self::$current_param[$route] ?? null;
         }
 
-        if (self::$params === null) {
+        if ($params === null) {
             self::run();
         }
 
@@ -305,7 +346,7 @@ class DLRoute extends Route implements RouteInterface {
          */
         $current_filters = $filters[$method][$registered_current_route];
 
-        $instance->filter_param($current_filters, self::$params);
+        $instance->filter_param($current_filters, (object) $params);
         self::run();
     }
 

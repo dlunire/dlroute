@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace DLRoute\Core\Routing\Automaton\QueryParams;
 
 use DLRoute\Core\Data\QueryParam;
-use DLRoute\Interfaces\Routing\RouteLexerInterface;
+use DLRoute\Interfaces\Routing\LexerSymbolInterface;
 
 /**
  * Analizador léxico base del querystring de la petición HTTP.
@@ -77,7 +77,7 @@ use DLRoute\Interfaces\Routing\RouteLexerInterface;
  * @copyright (c) 2026 DLUnire
  * @license AGPL-3.0 license
  */
-abstract class QueryStringLexer implements RouteLexerInterface {
+abstract class QueryStringLexer implements LexerSymbolInterface {
 
     /**
      * Cadena del querystring decodificada con `urldecode()`.

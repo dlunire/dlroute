@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Errors\RouteException;
-use DLRoute\Interfaces\Routing\RouteLexerInterface;
+use DLRoute\Interfaces\Routing\LexerSymbolInterface;
 
 /**
  * Analizador léxico de rutas URI.
@@ -55,7 +55,7 @@ use DLRoute\Interfaces\Routing\RouteLexerInterface;
  * @copyright (c) 2026 David E Luna M
  * @license AGPL-3.0 license
  */
-abstract class RouterLexer implements RouteLexerInterface {
+abstract class RouterLexer implements LexerSymbolInterface {
 
     /**
      * URI a ser analizada por el autómata.
@@ -122,6 +122,19 @@ abstract class RouterLexer implements RouteLexerInterface {
 
             $this->offset++;
         }
+    }
+
+    /**
+     * Devuelve la ruta que será procesada por el analizador léxico.
+     *
+     * La ruta puede corresponder a la URI de una petición o a una ruta
+     * previamente registrada, según el contexto en el que sea utilizado
+     * el objeto.
+     *
+     * @return string Ruta destinada al procesamiento léxico.
+     */
+    public function get_uri(): string {
+        return $this->uri;
     }
 
     /**
@@ -254,7 +267,7 @@ abstract class RouterLexer implements RouteLexerInterface {
      *
      * @return array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int}> Lista de tokens producidos por {@see scanner()}.
      */
-    protected function get_tokens(): array {
+    public function get_tokens(): array {
         return $this->tokens;
     }
 }

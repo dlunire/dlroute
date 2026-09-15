@@ -24,7 +24,7 @@ enum RouteIdentity: string {
      *
      * @var string
      */
-    case AUTH = "AUTH-";
+    case PRIVATE = "AUTH|";
 
     /**
      * Identificador utilizado para representar una ruta que requiere
@@ -36,5 +36,5 @@ enum RouteIdentity: string {
      *
      * @var string
      */
-    case TOKEN = "TOKEN-TYPE-";
+    case PUBLIC = "PUBLIC|";
 }

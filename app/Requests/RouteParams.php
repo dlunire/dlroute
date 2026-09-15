@@ -40,7 +40,7 @@ trait RouteParams {
      *
      * @var RouteIdentity
      */
-    protected static RouteIdentity $route_identity = RouteIdentity::AUTH;
+    protected static RouteIdentity $route_identity = RouteIdentity::PRIVATE;
 
     /**
      * Indica si las rutas a registrar deben marcarse como autenticadas.
@@ -55,12 +55,6 @@ trait RouteParams {
      * @var boolean
      */
     protected static bool $is_valid_session = false;
-    /**
-     * Parámetros de la petición.
-     *
-     * @var object|null
-     */
-    protected static ?object $params = null;
 
     /**
      * Captura la ruta con parámetro actual
@@ -84,211 +78,26 @@ trait RouteParams {
     protected static string $public_current_route = "/";
 
     /**
-     * Procesa las rutas y extrae de ellas sus parámetros.
+     * Almacenamiento de rutas
      *
-     * @param string $route Ruta a ser procesada.
-     * @return void
+     * @var array $routes
      */
-    protected static function process_params(string &$route): void {
-        // TODO: el problema a resolver es $current_route
-
-        // self::$current_param[static::$context_current_route] = $route;
-
-        // print_r(self::$current_param);
-        // return;
-
-        /**
-         * Ruta actual de la petición.
-         * 
-         * @var non-empty-string $http_route
-         */
-        $current_route = static::$context_current_route;
-
-        /**
-         * Ruta sin slash en los extremos.
-         * 
-         * @var string
-         */
-        $route_without_slash = RouteDebugger::trim_slash($route);
-
-        /**
-         * Partes de una ruta.
-         * 
-         * @var array<string>
-         */
-        $route_parts = explode("/", $route_without_slash);
-
-        /**
-         * Indicador de existencia de parámetros. Si los parámetros
-         * existen, entonces, la ruta será dinámica en las partes
-         * donde hayan llaves `{variable}`.
-         * 
-         * @var boolean
-         */
-        $param_exists = self::assign_param_value($route_parts);
-
-        if ($param_exists) {
-            self::$current_param[$current_route] = $route;
-            $route = $current_route;
-        }
-    }
+    protected static array $routes = [];
 
     /**
-     * Asigna el valor al parámetro.
+     * Variables globales para el controlador.
      *
-     * @param array $route_parts
-     * @return bool
+     * @var array|object
      */
-    protected static function assign_param_value(array $route_parts): bool {
-        // TODO: reescribir este método utilizando un autómata.
-        /**
-         * Ruta actual de la peticón HTTP.
-         * 
-         * @var string
-         */
-        $current_route = static::$context_current_route;
-
-        /**
-         * Partes de una ruta actual
-         * 
-         * @var array<string>
-         */
-        $current_route_parts = explode("/", $current_route);
-
-        /**
-         * Cantidad de partes de la ruta actual de la petición.
-         * 
-         * @var int
-         */
-        $current_route_count = \count($current_route_parts);
-
-        // print_r("current_count: {$current_route_count} → " . implode("/", $route_parts) . "\n");
-
-        /**
-         * Cantidad de partes de una ruta ruta seleccinada.
-         * 
-         * @var int
-         */
-        $route_count = \count($route_parts);
-
-        // print_r("count: {$route_count} → " . implode("/", $route_parts) . "\n");
-
-
-        if ($current_route_count !== $route_count) {
-            return false;
-        }
-
-        /**
-         * Patrón de búsqueda de parámetros.
-         * 
-         * @var string
-         */
-        $pattern = "/\{.*?\}/";
-
-        /**
-         * Ruta actual
-         * 
-         * @var string
-         */
-        $route = "/" . implode("/", $route_parts);
-
-        // print_r($route_parts);
-
-        /**
-         * Indicador de búsqueda exitosa o no.
-         * 
-         * @var boolean
-         */
-        $found = preg_match($pattern, $route, $matches);
-
-        if (!$found) {
-            return false;
-        }
-        // return false;
-        foreach ($route_parts as $key => $part) {
-            $value_part = $current_route_parts[$key];
-            $value_part = trim($value_part);
-
-            if (!preg_match($pattern, $part, $matches) && $value_part !== $part) {
-                return false;
-            }
-        }
-
-        /**
-         * Parámetros capturados.
-         * 
-         * @var array
-         */
-        $params = [];
-
-        foreach ($route_parts as $key => $part) {
-            $part = trim($part);
-            $found = preg_match($pattern, $part);
-
-            if (!$found) {
-                continue;
-            }
-
-            /**
-             * Valor del parámetro.
-             * 
-             * @var string|float|int|boolean
-             */
-            $value = $current_route_parts[$key] ?? '';
-
-            self::remove_keys($part);
-            self::process_value($value);
-
-            $params[$part] = $value;
-        }
-
-        self::$params = (object) $params;
-
-        return true;
-    }
+    protected static array|object $vars = [];
 
     /**
-     * Remueve las llaves de los parámetros.
+     * Almacena los tipos MIME asociados a las rutas registradas.
      *
-     * @param string $input Texto con llaves a ser procesada.
-     * @return void
-     */
-    private static function remove_keys(string &$input): void {
-        $input = str_replace("{", '', $input);
-        $input = str_replace("}", '', $input);
-        $input = trim($input);
-    }
-
-    /**
-     * Procesa una entrada y determina su tipo.
+     * Las claves corresponden a la identidad interna de cada ruta y los valores
+     * representan el tipo MIME que debe utilizarse al generar la respuesta.
      *
-     * @param mixed $value Valor a ser procesado.
-     * @return void
+     * @var array<string, string|null>
      */
-    private static function process_value(mixed &$value): void {
-        $value = trim($value);
-
-        if (strtolower($value) === "true") {
-            $value = true;
-        }
-
-        if (strtolower($value) === "false") {
-            $value = false;
-        }
-
-        if (is_numeric($value)) {
-
-            $is_float = preg_match("/\./", $value);
-
-            if ($is_float) {
-                $value = (float) $value;
-            }
-
-            if (!\is_float($value)) {
-                $value = (int) $value;
-            }
-
-            return;
-        }
-    }
+    protected static array $mime_types = [];
 }

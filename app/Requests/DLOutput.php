@@ -77,7 +77,7 @@ class DLOutput implements OutputInterface {
         return self::$instance;
     }
 
-    public function print_response_data(?string $mime_type = null): void {
+    public function print_response_data(?string $mimetype = null): void {
         $mime = "blob";
 
         if ($this->is_string()) {
@@ -97,8 +97,8 @@ class DLOutput implements OutputInterface {
             $this->content = self::to_json($this->content, true);
         }
 
-        if ($mime_type !== null) {
-            $mime = $mime_type;
+        if ($mimetype !== null) {
+            $mime = $mimetype;
         }
 
         \header("Content-Type: {$mime}; charset=utf-8");

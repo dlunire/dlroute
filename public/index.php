@@ -42,8 +42,13 @@ include dirname(__DIR__)
 /** @var AuthApps $auth */
 $auth = new AuthApps();
 
-# Inicio de sesión de prueba:
-DLRoute::post('/login', [AuthController::class, 'auth']);
+DLRoute::get('/ruta', function() {
+    return ["status" => "Ok"];
+});
+
+DLRoute::post('/ruta', function() {
+    return ["status" => "Ok"];
+});
 
 # Definición de rutas de pruebas para el controlador
 DLRoute::get('/profile/{algo?}', [AuthController::class, 'profile'])->filter_by_type([
@@ -51,10 +56,13 @@ DLRoute::get('/profile/{algo?}', [AuthController::class, 'profile'])->filter_by_
 ]);
 
 $auth->require_auth(function () {
-    DLRoute::get('/profile/{auth?}', [AuthController::class, 'profile_with_auth'])->filter_by_type([
+    DLRoute::get('/profile/{auth}', [AuthController::class, 'profile_with_auth'])->filter_by_type([
         "auth" => "integer"
     ]);
 });
+
+# Inicio de sesión de prueba:
+DLRoute::post('/login', [AuthController::class, 'auth']);
 
 # Cerrar una sesión de prueba:
 DLRoute::delete("/logout", [AuthController::class, 'logout']);

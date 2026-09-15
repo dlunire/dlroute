@@ -58,9 +58,9 @@ abstract class DLParamValueType implements ParamTypeInterface {
     /**
      * Ruta actual de registro.
      *
-     * @var string
+     * @var string $route
      */
-    protected static string $route = "";
+    protected static string $route = "/";
 
     /**
      * Registra filtros de tipo para los parámetros dinámicos de la ruta actual.

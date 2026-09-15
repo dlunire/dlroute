@@ -33,7 +33,7 @@ final class RouteParam {
      * Construye los parámetros de una ruta a partir de los campos ya resueltos
      * por el enrutador.
      *
-     * @param array $fields Campos a ser cargados, indexados por nombre de
+     * @param array<string, mixed> $fields Campos a ser cargados, indexados por nombre de
      * parámetro.
      */
     public function __construct(private readonly array $fields = []) {
