@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace DLRoute\Core\Routing\Automaton\Route;
 
+use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 use DLRoute\Server\DLServer;
 
@@ -71,8 +72,8 @@ final class RouteGenerator extends RouterLexer {
      *
      * @param string $uri URI del patrón de ruta a procesar.
      */
-    public function __construct(string $uri) {
-        parent::__construct($uri);
+    public function __construct(string $uri, Methods $method = Methods::GET) {
+        parent::__construct($uri, $method);
         $this->scanner();
         $this->generate();
     }

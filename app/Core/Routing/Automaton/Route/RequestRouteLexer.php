@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DLRoute\Core\Routing\Automaton\Route;
 
-use DLRoute\Requests\DLOutput;
+use DLRoute\Enums\Methods;
 use DLRoute\Server\DLServer;
 
 /**
@@ -26,6 +26,11 @@ final class RequestRouteLexer extends RouterLexer {
 
     /**
      * Tokens capturados con la metadata de la ruta registrada por el programador.
+     *
+     * Corresponde exactamente al array recibido en el constructor a través de `$tokens`,
+     * sin ninguna clave `method`: la comparación de método HTTP no se resuelve mediante
+     * esta estructura, sino a través de los parámetros `$method` y `$request_method`
+     * del constructor (ver {@see self::$method} y {@see self::load_params_values()}).
      *
      * @var array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int}> $route_tokens
      */
@@ -53,20 +58,25 @@ final class RequestRouteLexer extends RouterLexer {
     private readonly array $params_values;
 
     /**
-     * Ruta registrada que coincide con la petición actual.
+     * Ruta registrada que coincide con la petición actual, en su forma resuelta
+     * (sin llaves, sin signos de interrogación).
      *
      * Contiene la ruta registrada cuyo patrón ha sido reconocido como
      * coincidente con la semántica de la petición procesada por el analizador
-     * léxico.
+     * léxico. El valor almacenado ya ha pasado por {@see self::remove_bracket()},
+     * por lo que refleja los segmentos limpios, no el patrón original tal como
+     * fue escrito por el programador.
      *
      * El valor se establece cuando el procesamiento determina una ruta
      * registrada coincidente y permanece como `null` mientras no exista una
-     * coincidencia.
+     * coincidencia, o cuando la ruta coincidente es puramente estática
+     * (ver {@see self::$static_route}, que tiene prioridad en ese caso).
      *
      * Ejemplo:
      *
-     *     Petición:        /profile/1200
-     *     Ruta coincidente: /profile/{algo}
+     *     Petición:            /profile/1200
+     *     Ruta registrada:     /profile/{algo}
+     *     Valor almacenado:    /profile/algo
      *
      * @var ?string
      */
@@ -97,11 +107,35 @@ final class RequestRouteLexer extends RouterLexer {
      *
      * Toma la ruta de la petición actual mediante {@see DLServer::get_route()}
      * y ejecuta de inmediato el análisis léxico sobre ella.
-     * 
-     * @param array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int}> $tokens Tokens de la ruta registrada por el desarrollador.
+     *
+     * Recibe los tokens de una ruta registrada y los métodos HTTP de la ruta
+     * y de la petición para permitir su comparación durante el reconocimiento.
+     * La comparación de método ocurre en {@see self::load_params_values()}
+     * confrontando `$method` (método de la ruta registrada) contra el resultado
+     * de `$this->get_method()` (método de la petición actual, ya resuelto por
+     * la clase base a partir de `$request_method`); ninguna clave relacionada
+     * con el método HTTP se espera dentro de `$tokens`.
+     *
+     * @param array<int, array{
+     *     lexeme: string,
+     *     length: int,
+     *     optional: boolean,
+     *     tokentype: TokenType,
+     *     offset: int
+     * }> $tokens Tokens de la ruta registrada.
+     * @param Methods $method Método HTTP de la ruta registrada.
+     * @param Methods $request_method Método HTTP de la petición actual.
      */
-    public function __construct(array $tokens) {
-        parent::__construct(DLServer::get_route());
+    public function __construct(
+        array $tokens,
+        private readonly Methods $method,
+        Methods $request_method
+    ) {
+        parent::__construct(
+            uri: DLServer::get_route(),
+            method: $request_method
+        );
+
         $this->route_tokens = $tokens;
         $this->scanner();
         $this->init();
@@ -153,7 +187,9 @@ final class RequestRouteLexer extends RouterLexer {
      * tipo {@see TokenType::PARAM} de la ruta registrada.
      *
      * Si la cantidad de tokens de la petición no coincide con la cantidad de tokens de la ruta registrada,
-     * no se cargan valores de parámetros.
+     * o si el método HTTP de la ruta registrada (`$this->method`) no coincide con el método de la petición
+     * actual (`$this->get_method()`), no se cargan valores de parámetros y tanto {@see self::$matched_route}
+     * como {@see self::$static_route} quedan en `null`.
      *
      * @return void
      */
@@ -176,11 +212,14 @@ final class RequestRouteLexer extends RouterLexer {
 
         $this->request_token_quantity = \count($request_tokens);
 
-        if ($this->request_token_quantity !== $this->route_tokens_quantity) {
+        if (
+            $this->request_token_quantity !== $this->route_tokens_quantity ||
+            $this->get_method() !== $this->method
+        ) {
             $this->params_values = $params;
 
             $this->matched_route = null;
-            $this->static_route = null;
+            $this->static_route = $this->get_uri();
 
             return;
         }
@@ -208,13 +247,17 @@ final class RequestRouteLexer extends RouterLexer {
         $route = "/" . join("/", $route_components);
 
         $this->static_route = $this->get_uri() === $route
-            ? $route    
+            ? $route
             : null;
 
         $this->matched_route = $this->static_route === null && \count($params) > 0
             ? $route
             : null;
 
+        // NOTA: variable de depuración sin consumir. No se elimina en esta pasada
+        // de documentación porque no se confirmó si es intencional (cf. el
+        // `print_r($routes)` deliberado en `Route::get_controller()`) o un
+        // remanente a retirar; pendiente de tu decisión.
         $test = [
             "static_route" => $this->static_route,
             "matched_route" => $this->matched_route,

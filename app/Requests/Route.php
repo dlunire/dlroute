@@ -83,7 +83,11 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
          */
         $route_to_register = self::$route_identity->value . "{$method->value}|" . $route;
 
-        static::$public_current_route = DLServer::get_route();
+        /** @var non-empty-string $matched_route */
+        $matched_route = self::$route_identity->value . "{$method->value}|{$request->get_matched_route()}";
+
+        // print_r("$matched_route\n");
+        print_r("{$route_to_register} →→→ {$matched_route}\n\n");
 
 
         $route = self::$mark_routes_authenticated
@@ -96,7 +100,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
             : static::$public_current_route;
 
         # Esto se va a eliminar:
-        self::register_routes($method->value, $route, $controller);
+        // self::register_routes($method->value, $route, $controller);
 
         # Esto se va a eliminar:
         self::$vars[$method->value][$route] = $vars;

@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace DLRoute\Core\Routing\Automaton\Route;
 
+use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\Routing\LexerSymbolInterface;
 
@@ -88,19 +89,20 @@ abstract class RouterLexer implements LexerSymbolInterface {
      * - `tokentype` — clasificación del segmento ({@see TokenType}).
      * - `offset`    — Posición del cursor durante la emisión del token.
      *
-     * @var array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int}>
+     * @var array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int, method: Methods}>
      */
     private array $tokens = [];
 
     /**
-     * Inicializa el autómata con la URI a analizar.
+     * Inicializa el autómata con la URI a analizar y el método HTTP asociado a la ruta.
      *
      * Normaliza la URI eliminando espacios en blanco al inicio y al final,
      * y calcula su tamaño en bytes para controlar el recorrido del cursor.
      *
-     * @param string $uri URI del patrón de ruta a tokenizar.
+     * @param string      $uri    URI del patrón de ruta a tokenizar.
+     * @param Methods|null $method Método HTTP con el que fue registrada la ruta.
      */
-    public function __construct(string $uri) {
+    public function __construct(string $uri, private readonly ?Methods $method = null) {
         $this->uri = trim($uri);
         $this->size = \strlen($this->uri);
     }
@@ -180,7 +182,8 @@ abstract class RouterLexer implements LexerSymbolInterface {
             "length" => $length,
             "optional" => $is_optional,
             "tokentype" => $this->get_tokentype($lexeme, $length),
-            "offset" => $current_offset
+            "offset" => $current_offset,
+            "method" => $this->method
         ];
 
         $this->offset = $end;
@@ -265,9 +268,18 @@ abstract class RouterLexer implements LexerSymbolInterface {
     /**
      * Devuelve todos los tokens capturados durante el análisis léxico.
      *
-     * @return array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int}> Lista de tokens producidos por {@see scanner()}.
+     * @return array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int, method: Methods}> Lista de tokens producidos por {@see scanner()}.
      */
     public function get_tokens(): array {
         return $this->tokens;
+    }
+
+    /**
+     * Devuelve el método HTTP con el que registró la ruta
+     *
+     * @return Methods|null
+     */
+    public function get_method(): ?Methods {
+        return $this->method;
     }
 }

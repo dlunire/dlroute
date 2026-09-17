@@ -51,10 +51,14 @@ class DLRoute extends Route implements RouteInterface {
 
     public static function query(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
-        $routes = new RouteGenerator($route);
+        $routes = new RouteGenerator($route, Methods::QUERY);
 
         /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer($routes->get_tokens());
+        $params = new RequestRouteLexer(
+            tokens: $routes->get_tokens(),
+            request_method: Methods::tryFrom(DLServer::get_method()),
+            method: Methods::QUERY,
+        );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -73,10 +77,14 @@ class DLRoute extends Route implements RouteInterface {
 
     public static function get(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
-        $routes = new RouteGenerator($route);
+        $routes = new RouteGenerator($route, Methods::GET);
 
         /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer($routes->get_tokens());
+        $params = new RequestRouteLexer(
+            tokens: $routes->get_tokens(),
+            request_method: Methods::tryFrom(DLServer::get_method()),
+            method: Methods::GET
+        );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -95,10 +103,14 @@ class DLRoute extends Route implements RouteInterface {
 
     public static function head(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
-        $routes = new RouteGenerator($route);
+        $routes = new RouteGenerator($route, Methods::HEAD);
 
         /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer($routes->get_tokens());
+        $params = new RequestRouteLexer(
+            tokens: $routes->get_tokens(),
+            request_method: Methods::tryFrom(DLServer::get_method()),
+            method: Methods::HEAD
+        );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -117,10 +129,14 @@ class DLRoute extends Route implements RouteInterface {
 
     public static function post(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
-        $routes = new RouteGenerator($route);
+        $routes = new RouteGenerator($route, Methods::POST);
 
         /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer($routes->get_tokens());
+        $params = new RequestRouteLexer(
+            tokens: $routes->get_tokens(),
+            request_method: Methods::tryFrom(DLServer::get_method()),
+            method: Methods::POST
+        );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -139,10 +155,14 @@ class DLRoute extends Route implements RouteInterface {
 
     public static function put(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
-        $routes = new RouteGenerator($route);
+        $routes = new RouteGenerator($route, Methods::PUT);
 
         /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer($routes->get_tokens());
+        $params = new RequestRouteLexer(
+            tokens: $routes->get_tokens(),
+            request_method: Methods::tryFrom(DLServer::get_method()),
+            method: Methods::PUT
+        );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -161,10 +181,14 @@ class DLRoute extends Route implements RouteInterface {
 
     public static function patch(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
-        $routes = new RouteGenerator($route);
+        $routes = new RouteGenerator($route, Methods::PATCH);
 
         /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer($routes->get_tokens());
+        $params = new RequestRouteLexer(
+            tokens: $routes->get_tokens(),
+            request_method: Methods::tryFrom(DLServer::get_method()),
+            method: Methods::PATCH
+        );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -183,10 +207,14 @@ class DLRoute extends Route implements RouteInterface {
 
     public static function delete(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
-        $routes = new RouteGenerator($route);
+        $routes = new RouteGenerator($route, Methods::DELETE);
 
         /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer($routes->get_tokens());
+        $params = new RequestRouteLexer(
+            tokens: $routes->get_tokens(),
+            request_method: Methods::tryFrom(DLServer::get_method()),
+            method: Methods::DELETE
+        );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -205,10 +233,14 @@ class DLRoute extends Route implements RouteInterface {
 
     public static function options(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
-        $routes = new RouteGenerator($route);
+        $routes = new RouteGenerator($route, Methods::OPTIONS);
 
         /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer($routes->get_tokens());
+        $params = new RequestRouteLexer(
+            tokens: $routes->get_tokens(),
+            request_method: Methods::tryFrom(DLServer::get_method()),
+            method: Methods::OPTIONS
+        );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
