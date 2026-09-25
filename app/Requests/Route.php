@@ -63,7 +63,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
     protected static function request(string $route, callable|array|string $controller, RequestRouteLexer $request,  Methods $method, array $vars, ?string $mimetype = null): void {
 
         /**
-         * Indica si requiere autenticación
+         * Indica si la ruta requiere ser autenticada.
          * 
          * @var boolean $require_auth
          */
@@ -73,9 +73,6 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
             ? RouteIdentity::PRIVATE
             : RouteIdentity::PUBLIC;
 
-        /** @var RouteIdentity $route_identity */
-        $route_identity = self::$route_identity;
-
         /**
          * Ruta final de registro
          * 
@@ -83,38 +80,9 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
          */
         $route_to_register = self::$route_identity->value . "{$method->value}|" . $route;
 
-        /** @var non-empty-string $matched_route */
-        $matched_route = self::$route_identity->value . "{$method->value}|{$request->get_matched_route()}";
+        self::$matched_route = self::$route_identity->value . "{$method->value}|{$request->get_matched_route()}";
 
-        // print_r("$matched_route\n");
-        print_r("{$route_to_register} →→→ {$matched_route}\n\n");
-
-
-        $route = self::$mark_routes_authenticated
-            ? "{$route_identity->value}{$route}"
-            : $route;
-
-        # Esto se va a actualizar:
-        static::$context_current_route = static::$is_valid_session
-            ? $route_identity->value . static::$public_current_route
-            : static::$public_current_route;
-
-        # Esto se va a eliminar:
-        // self::register_routes($method->value, $route, $controller);
-
-        # Esto se va a eliminar:
-        self::$vars[$method->value][$route] = $vars;
-
-        # Esto se va a eliminar:
-        self::$mime_types[$route] = $mimetype;
-
-        /**
-         * Ruta registrada que ha coincidido.
-         *
-         * @var non-empty-string|null $matched_route
-         */
-        $matched_route = $request->get_matched_route();
-
+        // print_r(self::$matched_route . "\n");
 
         # Esto que está aquí es nuevo:
         $route_controller = new RouteController(
@@ -155,76 +123,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
      * @return never
      */
     public static function run(): never {
-        // TODO: Preparar las rutas para identificar la autenticación o no.
-
-        echo DLOutput::to_json(self::$routes, true);
-
-        /**
-         * Variables
-         * 
-         * @var array|object
-         */
-        $vars = self::get_vars();
-
-        /**
-         * Salida del controlador.
-         * 
-         * @var mixed
-         */
-        $data = null;
-
-        // TODO: Rutas autenticasas, establecer las claves correspondientes.
-
-        /**
-         * Ruta actual de la solicitud HTTP.
-         * 
-         * @var string
-         */
-        $route = static::$public_current_route;
-
-        /**
-         * Tipo MIME resuelto para la respuesta, según el contexto de autenticación de la ruta actual.
-         *
-         * Se obtiene evaluando los tipos MIME público y privado registrados para la ruta (ver
-         * {@see Route::get_mimetype()}) contra el estado de la sesión actual, a través de
-         * {@see Route::get_mimetype_by_context()}.
-         *
-         * @var string|null $mimetype
-         */
-        $mimetype = self::get_mimetype_by_context(
-            route_mimetype: self::get_mimetype()
-        );
-
-        /**
-         * Controlador asociado a la ruta y método de la petición.
-         * 
-         * @var mixed
-         */
-        $controller = self::get_validated_controller_context(
-            controller_context: self::get_controller()
-        );
-
-        if ($controller === null) {
-            DLOutput::not_found();
-        }
-
-        if (\is_string($controller)) {
-            $data = self::string_controller($controller, $vars);
-        }
-
-        if (is_callable($controller)) {
-            $data = self::callable_controller($controller, $vars);
-        }
-
-        if (\is_array($controller)) {
-            $data = self::array_controller($controller, $vars);
-        }
-
-        $output = DLOutput::get_instance();
-
-        $output->set_content($data);
-        $output->print_response_data($mimetype);
-
+        // print_r(self::$routes);
         exit;
     }
 
@@ -318,22 +217,6 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
     public static function set_authentication_context(SessionData $session, bool $requires_authentication): void {
         static::$is_valid_session = $session->is_valid_session;
         static::$mark_routes_authenticated = $requires_authentication;
-    }
-
-    /**
-     * Registra nuevas rutas
-     *
-     * @param string $route
-     * @return void
-     */
-    protected static function register_routes(string $method, string $route, callable|array|string $controller): void {
-        if (isset(self::$routes[$method][$route])) return;
-
-        // self::process_params($route);
-
-        self::$routes[$method][$route] = $controller;
-
-        // print_r(self::$routes);
     }
 
     /**

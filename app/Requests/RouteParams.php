@@ -100,4 +100,13 @@ trait RouteParams {
      * @var array<string, string|null>
      */
     protected static array $mime_types = [];
+
+
+    /**
+     * Ruta con la que hará match para la búsqueda del controlador. Esto es para ser utilizado
+     * por el dispachador cuando se hace una solicitud.
+     *
+     * @var string|null
+     */
+    protected static ?string $matched_route = null;
 }

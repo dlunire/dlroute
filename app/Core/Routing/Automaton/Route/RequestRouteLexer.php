@@ -200,6 +200,8 @@ final class RequestRouteLexer extends RouterLexer {
         /** @var non-empty-string $route */
         $route = "";
 
+        // print_r($this->get_tokens());
+
         /**
          * Componentes de ruta
          * 
@@ -254,15 +256,7 @@ final class RequestRouteLexer extends RouterLexer {
             ? $route
             : null;
 
-        // NOTA: variable de depuración sin consumir. No se elimina en esta pasada
-        // de documentación porque no se confirmó si es intencional (cf. el
-        // `print_r($routes)` deliberado en `Route::get_controller()`) o un
-        // remanente a retirar; pendiente de tu decisión.
-        $test = [
-            "static_route" => $this->static_route,
-            "matched_route" => $this->matched_route,
-            "params" => $params
-        ];
+        // print_r($params);
 
         $this->params_values = $params;
     }

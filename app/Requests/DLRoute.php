@@ -88,6 +88,9 @@ class DLRoute extends Route implements RouteInterface {
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
+
+            print_r("\$route: {$route}\n");
+
             self::request(
                 route: $route,
                 controller: $controller,

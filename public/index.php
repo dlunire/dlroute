@@ -30,7 +30,6 @@ session_start();
 ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
-use DLRoute\Test\AuthController;
 
 include dirname(__DIR__)
     . DIRECTORY_SEPARATOR
@@ -42,29 +41,30 @@ include dirname(__DIR__)
 /** @var AuthApps $auth */
 $auth = new AuthApps();
 
-DLRoute::get('/ruta', function() {
-    return ["status" => "Ok"];
-});
+// DLRoute::post('/algo', function() {
+//     return ["status" => "Ok"];
+// });
 
-DLRoute::post('/ruta', function() {
-    return ["status" => "Ok"];
-});
+// DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
+DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
 
-# Definición de rutas de pruebas para el controlador
-DLRoute::get('/profile/{algo?}', [AuthController::class, 'profile'])->filter_by_type([
-    "algo" => "integer"
-]);
+// DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
 
-$auth->require_auth(function () {
-    DLRoute::get('/profile/{auth}', [AuthController::class, 'profile_with_auth'])->filter_by_type([
-        "auth" => "integer"
-    ]);
-});
+// # Definición de rutas de pruebas para el controlador
+// DLRoute::get('/profile/{algo?}', [AuthController::class, 'profile'])->filter_by_type([
+//     "algo" => "integer"
+// ]);
 
-# Inicio de sesión de prueba:
-DLRoute::post('/login', [AuthController::class, 'auth']);
+// $auth->require_auth(function () {
+//     DLRoute::get('/profile/{auth}', [AuthController::class, 'profile_with_auth'])->filter_by_type([
+//         "auth" => "integer"
+//     ]);
+// });
 
-# Cerrar una sesión de prueba:
-DLRoute::delete("/logout", [AuthController::class, 'logout']);
+// # Inicio de sesión de prueba:
+// DLRoute::post('/login', [AuthController::class, 'auth']);
+
+// # Cerrar una sesión de prueba:
+// DLRoute::delete("/logout", [AuthController::class, 'logout']);
 
 DLRoute::execute();
