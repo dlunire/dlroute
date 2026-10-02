@@ -55,9 +55,7 @@ class DLRoute extends Route implements RouteInterface {
 
         /** @var RequestRouteLexer $params */
         $params = new RequestRouteLexer(
-            tokens: $routes->get_tokens(),
-            request_method: Methods::tryFrom(DLServer::get_method()),
-            method: Methods::QUERY,
+            route_tokens: $routes->get_tokens()
         );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
@@ -81,9 +79,7 @@ class DLRoute extends Route implements RouteInterface {
 
         /** @var RequestRouteLexer $params */
         $params = new RequestRouteLexer(
-            tokens: $routes->get_tokens(),
-            request_method: Methods::tryFrom(DLServer::get_method()),
-            method: Methods::GET
+            route_tokens: $routes->get_tokens()
         );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
@@ -110,9 +106,7 @@ class DLRoute extends Route implements RouteInterface {
 
         /** @var RequestRouteLexer $params */
         $params = new RequestRouteLexer(
-            tokens: $routes->get_tokens(),
-            request_method: Methods::tryFrom(DLServer::get_method()),
-            method: Methods::HEAD
+            route_tokens: $routes->get_tokens()
         );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
@@ -136,9 +130,7 @@ class DLRoute extends Route implements RouteInterface {
 
         /** @var RequestRouteLexer $params */
         $params = new RequestRouteLexer(
-            tokens: $routes->get_tokens(),
-            request_method: Methods::tryFrom(DLServer::get_method()),
-            method: Methods::POST
+            route_tokens: $routes->get_tokens()
         );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
@@ -162,9 +154,7 @@ class DLRoute extends Route implements RouteInterface {
 
         /** @var RequestRouteLexer $params */
         $params = new RequestRouteLexer(
-            tokens: $routes->get_tokens(),
-            request_method: Methods::tryFrom(DLServer::get_method()),
-            method: Methods::PUT
+            route_tokens: $routes->get_tokens()
         );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
@@ -188,9 +178,7 @@ class DLRoute extends Route implements RouteInterface {
 
         /** @var RequestRouteLexer $params */
         $params = new RequestRouteLexer(
-            tokens: $routes->get_tokens(),
-            request_method: Methods::tryFrom(DLServer::get_method()),
-            method: Methods::PATCH
+            route_tokens: $routes->get_tokens()
         );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
@@ -214,9 +202,7 @@ class DLRoute extends Route implements RouteInterface {
 
         /** @var RequestRouteLexer $params */
         $params = new RequestRouteLexer(
-            tokens: $routes->get_tokens(),
-            request_method: Methods::tryFrom(DLServer::get_method()),
-            method: Methods::DELETE
+            route_tokens: $routes->get_tokens()
         );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
@@ -240,9 +226,7 @@ class DLRoute extends Route implements RouteInterface {
 
         /** @var RequestRouteLexer $params */
         $params = new RequestRouteLexer(
-            tokens: $routes->get_tokens(),
-            request_method: Methods::tryFrom(DLServer::get_method()),
-            method: Methods::OPTIONS
+            route_tokens: $routes->get_tokens()
         );
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {

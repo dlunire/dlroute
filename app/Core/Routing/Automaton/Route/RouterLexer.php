@@ -94,6 +94,14 @@ abstract class RouterLexer implements LexerSymbolInterface {
     private array $tokens = [];
 
     /**
+     * El valor por defecto es `false`, pero si es `true`, significa que la ruta analizada
+     * contiene parámetro.
+     *
+     * @var boolean $has_param
+     */
+    private bool $has_param = false;
+
+    /**
      * Inicializa el autómata con la URI a analizar y el método HTTP asociado a la ruta.
      *
      * Normaliza la URI eliminando espacios en blanco al inicio y al final,
@@ -177,14 +185,25 @@ abstract class RouterLexer implements LexerSymbolInterface {
         /** @var boolean $is_optional */
         $is_optional = $this->is_optional($lexeme, $length);
 
+        /**
+         * Tipo de token asociado al componente de la ruta.
+         * 
+         * @var TokenType $tokentype
+         */
+        $tokentype = $this->get_tokentype($lexeme, $length);
+
         $this->tokens[] = [
             "lexeme" => $lexeme,
             "length" => $length,
             "optional" => $is_optional,
-            "tokentype" => $this->get_tokentype($lexeme, $length),
+            "tokentype" => $tokentype,
             "offset" => $current_offset,
             "method" => $this->method
         ];
+
+        if (!$this->has_param && $tokentype === TokenType::PARAM) {
+            $this->has_param = true;
+        }
 
         $this->offset = $end;
     }
@@ -281,5 +300,15 @@ abstract class RouterLexer implements LexerSymbolInterface {
      */
     public function get_method(): ?Methods {
         return $this->method;
+    }
+
+    /**
+     * Deuelve un booleando que indica si la ruta analizada contiene al menos un parámetro. El valor por
+     * defecto es `false`. Si es `true`, entonces, la ruta analizada contiene uno o más parámetros.
+     *
+     * @return boolean
+     */
+    public function has_param(): bool {
+        return $this->has_param;
     }
 }

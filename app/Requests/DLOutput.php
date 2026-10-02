@@ -115,7 +115,11 @@ class DLOutput implements OutputInterface {
             ? \json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK)
             : \json_encode($content, JSON_NUMERIC_CHECK);
 
-        return self::validate_json_structure($string_data);
+        return self::validate_json_structure(
+            input: $string_data === false
+                ? "\"" . print_r($content, true) . "\""
+                : $string_data
+        );
     }
 
 

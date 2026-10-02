@@ -117,4 +117,11 @@ enum Methods: string {
      * @var string
      */
     case DELETE = "DELETE";
+
+    /**
+     * Este valor está reservado para la ejecución del script directamente en la terminal
+     * 
+     * @var string
+     */
+    case CLI = "CLI";
 }

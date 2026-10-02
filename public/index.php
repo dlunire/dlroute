@@ -46,7 +46,7 @@ $auth = new AuthApps();
 // });
 
 // DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
-DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
+DLRoute::get('/profile/{a?}/{b}/{c}/{d?}', fn () => ["status" => "Ok"]);
 
 // DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
 

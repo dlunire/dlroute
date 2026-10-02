@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Enums\Methods;
+use DLRoute\Requests\DLOutput;
 use DLRoute\Server\DLServer;
 
 /**
@@ -23,18 +24,6 @@ use DLRoute\Server\DLServer;
  * @license AGPL-3.0-or-later
  */
 final class RequestRouteLexer extends RouterLexer {
-
-    /**
-     * Tokens capturados con la metadata de la ruta registrada por el programador.
-     *
-     * Corresponde exactamente al array recibido en el constructor a través de `$tokens`,
-     * sin ninguna clave `method`: la comparación de método HTTP no se resuelve mediante
-     * esta estructura, sino a través de los parámetros `$method` y `$request_method`
-     * del constructor (ver {@see self::$method} y {@see self::load_params_values()}).
-     *
-     * @var array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int}> $route_tokens
-     */
-    private readonly array $route_tokens;
 
     /**
      * Cantidad de tokens de la ruta enviada por el cliente HTTP.
@@ -121,22 +110,15 @@ final class RequestRouteLexer extends RouterLexer {
      *     length: int,
      *     optional: boolean,
      *     tokentype: TokenType,
-     *     offset: int
-     * }> $tokens Tokens de la ruta registrada.
-     * @param Methods $method Método HTTP de la ruta registrada.
-     * @param Methods $request_method Método HTTP de la petición actual.
+     *     offset: int,
+     *     method: Methods
+     * }> $route_tokens Tokens de la ruta registrada.
      */
     public function __construct(
-        array $tokens,
-        private readonly Methods $method,
-        Methods $request_method
+        private readonly array $route_tokens,
+        private readonly bool $has_param = false
     ) {
-        parent::__construct(
-            uri: DLServer::get_route(),
-            method: $request_method
-        );
-
-        $this->route_tokens = $tokens;
+        parent::__construct(uri: DLServer::get_route());
         $this->scanner();
         $this->init();
     }
@@ -197,10 +179,14 @@ final class RequestRouteLexer extends RouterLexer {
         /** @var array<string,string> $params */
         $params = [];
 
-        /** @var non-empty-string $route */
-        $route = "";
+        /** @var non-empty-string|null $route */
+        $route = null;
 
-        // print_r($this->get_tokens());
+        /**
+         * Tokens de la ruta de la petición a ser constratada con los tokens de la ruta 
+         * registradas
+         */
+        $tokens = $this->get_tokens();
 
         /**
          * Componentes de ruta
@@ -214,31 +200,38 @@ final class RequestRouteLexer extends RouterLexer {
 
         $this->request_token_quantity = \count($request_tokens);
 
-        if (
-            $this->request_token_quantity !== $this->route_tokens_quantity ||
-            $this->get_method() !== $this->method
-        ) {
-            $this->params_values = $params;
+        // if (
+        //     $this->request_token_quantity !== $this->route_tokens_quantity ||
+        //     $this->get_method() !== $this->method
+        // ) {
+        //     $this->params_values = $params;
 
-            $this->matched_route = null;
-            $this->static_route = $this->get_uri();
+        //     $this->matched_route = null;
+        //     $this->static_route = $this->get_uri();
 
-            return;
-        }
+        //     return;
+        // }
 
-        foreach ($this->route_tokens as $key => $token) {
-            /** @var TokenType $type */
-            $type = $token['tokentype'];
+        // if (!$this->has_param && ) {
 
+        // }
+
+        foreach ($tokens as $key => $token) {
             /** @var non-empty-string $lexeme */
             $lexeme = $token['lexeme'];
 
-            $route_components[] = $lexeme;
+            /** @var Methods $method */
+            $method = $token['method'];
 
-            $this->remove_bracket($lexeme);
+            /** @var boolean $is_optional */
+            $is_optional = $token['optional'];
 
-            if ($type !== TokenType::PARAM) continue;
-            $params[$lexeme] = $request_tokens[$key] ?? null;
+            /** @var TokenType $type */
+            $type = $token['tokentype'];
+
+            $is_static_route = $type === TokenType::TEXT_PLAIN;
+
+            // print_r($type);
         }
 
         /**
@@ -246,7 +239,13 @@ final class RequestRouteLexer extends RouterLexer {
          * 
          * @var non-empty-string $route
          */
-        $route = "/" . join("/", $route_components);
+        $route ??= "/" . join("/", $params);
+
+        // print_r("\$route: {$route}\n\n");
+
+        echo DLOutput::to_json($this->has_param(), true);
+        echo DLOutput::to_json($this->has_param, true);
+        echo "\n\n";
 
         $this->static_route = $this->get_uri() === $route
             ? $route
@@ -255,8 +254,6 @@ final class RequestRouteLexer extends RouterLexer {
         $this->matched_route = $this->static_route === null && \count($params) > 0
             ? $route
             : null;
-
-        // print_r($params);
 
         $this->params_values = $params;
     }
