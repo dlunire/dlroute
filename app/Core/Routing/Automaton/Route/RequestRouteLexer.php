@@ -9,14 +9,10 @@ use DLRoute\Requests\DLOutput;
 use DLRoute\Server\DLServer;
 
 /**
- * Analiza léxicamente la URI de la petición HTTP actual.
- *
- * Extiende el analizador léxico base ({@see RouterLexer}) para tokenizar la ruta enviada por el cliente
- * HTTP en el momento de la instanciación, reutilizando el mismo autómata utilizado para analizar las rutas
- * registradas por el programador.
- *
- * A diferencia de una ruta registrada, la URI aquí analizada nunca contiene segmentos delimitados por llaves:
- * son los valores reales enviados por el cliente, no parámetros dinámicos.
+ * Reescribiendo por completo este analizador semántico que utiliza el analizador léxico `RouterLexer`.
+ * 
+ * La documentación todavía no se encuentra completa, por lo que cambiará en cuanto se haya 
+ * terminado de escribir el código fuente.
  *
  * @package DLRoute\Core\Routing\Automaton\Route
  * @author David Eduardo Luna Montilla <info@dlunire.dev>
@@ -33,7 +29,7 @@ final class RequestRouteLexer extends RouterLexer {
     private readonly int $request_token_quantity;
 
     /**
-     * Cantidad de tokens de la ruta registrada.
+     * Cantidad de tokens de la ruta registrada por el desarrollador.
      *
      * @var int $route_tokens_quantity
      */
@@ -47,27 +43,10 @@ final class RequestRouteLexer extends RouterLexer {
     private readonly array $params_values;
 
     /**
-     * Ruta registrada que coincide con la petición actual, en su forma resuelta
-     * (sin llaves, sin signos de interrogación).
+     * Ruta compuesta por segmentos dinámicos (no todos los segmentos son dinámicos) que coinciden
+     * con la ruta de la petición hecha por el cliente HTTP.
      *
-     * Contiene la ruta registrada cuyo patrón ha sido reconocido como
-     * coincidente con la semántica de la petición procesada por el analizador
-     * léxico. El valor almacenado ya ha pasado por {@see self::remove_bracket()},
-     * por lo que refleja los segmentos limpios, no el patrón original tal como
-     * fue escrito por el programador.
-     *
-     * El valor se establece cuando el procesamiento determina una ruta
-     * registrada coincidente y permanece como `null` mientras no exista una
-     * coincidencia, o cuando la ruta coincidente es puramente estática
-     * (ver {@see self::$static_route}, que tiene prioridad en ese caso).
-     *
-     * Ejemplo:
-     *
-     *     Petición:            /profile/1200
-     *     Ruta registrada:     /profile/{algo}
-     *     Valor almacenado:    /profile/algo
-     *
-     * @var ?string
+     * @var string|null
      */
     private readonly ?string $matched_route;
 
@@ -113,6 +92,8 @@ final class RequestRouteLexer extends RouterLexer {
      *     offset: int,
      *     method: Methods
      * }> $route_tokens Tokens de la ruta registrada.
+     * 
+     * @param bool $has_param Indica si la ruta a analizar contiene segmentos dinámicos (parámetros)
      */
     public function __construct(
         private readonly array $route_tokens,
@@ -152,6 +133,9 @@ final class RequestRouteLexer extends RouterLexer {
         /** @var array $request_tokens Tokens capturados de la URI enviada por el cliente HTTP */
         $request_tokens = $this->get_tokens();
 
+        print_r($request_tokens);
+        exit;
+
         /** @var array<string> $tokens Lexemas extraídos de cada token */
         $tokens = [];
 
@@ -163,99 +147,13 @@ final class RequestRouteLexer extends RouterLexer {
     }
 
     /**
-     * Carga los valores asociados a los parámetros de la petición HTTP.
-     *
-     * Obtiene los tokens de la URI enviada por el cliente y los relaciona con los tokens de
-     * tipo {@see TokenType::PARAM} de la ruta registrada.
-     *
-     * Si la cantidad de tokens de la petición no coincide con la cantidad de tokens de la ruta registrada,
-     * o si el método HTTP de la ruta registrada (`$this->method`) no coincide con el método de la petición
-     * actual (`$this->get_method()`), no se cargan valores de parámetros y tanto {@see self::$matched_route}
-     * como {@see self::$static_route} quedan en `null`.
+     * Permite cargar los parámetros de la petición por medio del autómata. Este método
+     * se encuentra en desarrollo en este momento, por lo que esta documentación se 
+     * actualizalizará en cuanto esté completamente terminado.
      *
      * @return void
      */
     private function load_params_values(): void {
-        /** @var array<string,string> $params */
-        $params = [];
-
-        /** @var non-empty-string|null $route */
-        $route = null;
-
-        /**
-         * Tokens de la ruta de la petición a ser constratada con los tokens de la ruta 
-         * registradas
-         */
-        $tokens = $this->get_tokens();
-
-        /**
-         * Componentes de ruta
-         * 
-         * @var string[] $route_components
-         */
-        $route_components = [];
-
-        /** @var array<string> $request_tokens */
-        $request_tokens = $this->get_request_tokens();
-
-        $this->request_token_quantity = \count($request_tokens);
-
-        // if (
-        //     $this->request_token_quantity !== $this->route_tokens_quantity ||
-        //     $this->get_method() !== $this->method
-        // ) {
-        //     $this->params_values = $params;
-
-        //     $this->matched_route = null;
-        //     $this->static_route = $this->get_uri();
-
-        //     return;
-        // }
-
-        // if (!$this->has_param && ) {
-
-        // }
-
-        foreach ($tokens as $key => $token) {
-            /** @var non-empty-string $lexeme */
-            $lexeme = $token['lexeme'];
-
-            /** @var Methods $method */
-            $method = $token['method'];
-
-            /** @var boolean $is_optional */
-            $is_optional = $token['optional'];
-
-            /** @var TokenType $type */
-            $type = $token['tokentype'];
-
-            $is_static_route = $type === TokenType::TEXT_PLAIN;
-
-            // print_r($type);
-        }
-
-        /**
-         * Rutas registradas
-         * 
-         * @var non-empty-string $route
-         */
-        $route ??= "/" . join("/", $params);
-
-        // print_r("\$route: {$route}\n\n");
-
-        echo DLOutput::to_json($this->has_param(), true);
-        echo DLOutput::to_json($this->has_param, true);
-        echo "\n\n";
-
-        $this->static_route = $this->get_uri() === $route
-            ? $route
-            : null;
-
-        $this->matched_route = $this->static_route === null && \count($params) > 0
-            ? $route
-            : null;
-
-        $this->params_values = $params;
     }
 
     /**

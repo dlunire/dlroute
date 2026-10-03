@@ -46,7 +46,7 @@ use DLRoute\Server\DLServer;
  * @copyright 2023 David E Luna M
  * @license AGPL-3.0 license
  */
-class DLRoute extends Route implements RouteInterface {
+final class DLRoute extends Route implements RouteInterface {
     private static ?self $instance = null;
 
     public static function query(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType {
