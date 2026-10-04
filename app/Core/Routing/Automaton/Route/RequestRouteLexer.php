@@ -6,6 +6,7 @@ namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Enums\Methods;
 use DLRoute\Requests\DLOutput;
+use DLRoute\Requests\DLRoute;
 use DLRoute\Server\DLServer;
 
 /**
@@ -33,14 +34,14 @@ final class RequestRouteLexer extends RouterLexer {
      *
      * @var int $route_tokens_quantity
      */
-    private readonly int $route_tokens_quantity;
+    private int $route_tokens_quantity = 0;
 
     /**
      * Valores asociados a los parámetros de la petición.
      *
      * @var array<string, string|null> $params_values
      */
-    private readonly array $params_values;
+    private array $params_values = [];
 
     /**
      * Ruta compuesta por segmentos dinámicos (no todos los segmentos son dinámicos) que coinciden
@@ -48,7 +49,7 @@ final class RequestRouteLexer extends RouterLexer {
      *
      * @var string|null
      */
-    private readonly ?string $matched_route;
+    private ?string $matched_route = null;
 
     /**
      * Ruta registrada compuesta exclusivamente por segmentos estáticos.
@@ -67,7 +68,7 @@ final class RequestRouteLexer extends RouterLexer {
      *
      * @var ?string $static_route
      */
-    private readonly ?string $static_route;
+    private ?string $static_route = null;
 
 
     /**
@@ -133,9 +134,6 @@ final class RequestRouteLexer extends RouterLexer {
         /** @var array $request_tokens Tokens capturados de la URI enviada por el cliente HTTP */
         $request_tokens = $this->get_tokens();
 
-        print_r($request_tokens);
-        exit;
-
         /** @var array<string> $tokens Lexemas extraídos de cada token */
         $tokens = [];
 
@@ -154,6 +152,43 @@ final class RequestRouteLexer extends RouterLexer {
      * @return void
      */
     private function load_params_values(): void {
+
+        /**
+         * Segmentos de la ruta de la petición.
+         * 
+         * @var array<non-empty-string> $tokens
+         */
+        $tokens = $this->get_request_tokens();
+
+        /**
+         * Valores de parámetros
+         * 
+         * @var array<string,mixed> $param_values
+         */
+        $param_values = [];
+
+        // print_r($this->get_uri());
+
+        foreach ($this->route_tokens as $key => $token) {
+            /** @var non-empty-string|null $lexeme  */
+            $lexeme = $tokens[$key] ?? null;
+
+            if ($lexeme === null) continue;
+
+            /** @var boolean $is_$optional */
+            $is_optional = $token['optional'];
+
+            /** @var non-empty-string|null $pick */
+            $pick = $tokens[$key + 1] ?? null;
+            // if (!$is_optional && $pick === null) continue;
+
+            $param_values[$token['lexeme']] =$lexeme;
+
+            // print_r("\$lexeme: {$lexeme} | is_optional: " . ($is_optional ? "true" : "false") . "\n");
+        }
+
+        print_r($this->get_tokens());
+        // echo DLOutput::to_json($this->get_tokens(), true);
     }
 
     /**

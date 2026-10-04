@@ -126,8 +126,9 @@ abstract class RouterLexer implements LexerSymbolInterface {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$this->offset];
 
-            if ($byte !== self::WHITE_SPACE) {
+            if ($byte !== self::WHITE_SPACE && $byte !== self::SLASH) {
                 $this->tokenizer();
+                continue;
             }
 
             $this->offset++;
@@ -161,11 +162,12 @@ abstract class RouterLexer implements LexerSymbolInterface {
         /** @var integer $current_offset */
         $current_offset = $this->offset;
 
+        /**
+         * Posición final del cursor del autómata
+         * 
+         * @var int $end
+         */
         $end = $this->next_delimiter($current_offset);
-
-        if ($end === false) {
-            $end = $this->size;
-        }
 
         /**
          * Tamaño del lexema.
