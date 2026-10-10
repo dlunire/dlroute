@@ -113,6 +113,7 @@ abstract class RouterLexer implements LexerSymbolInterface {
     public function __construct(string $uri, private readonly ?Methods $method = null) {
         $this->uri = trim($uri);
         $this->size = \strlen($this->uri);
+        $this->scanner();
     }
 
     /**
@@ -120,15 +121,17 @@ abstract class RouterLexer implements LexerSymbolInterface {
      *
      * @return void
      */
-    public function scanner(): void {
+    private function scanner(): void {
+        $count = 0;
 
         while ($this->offset < $this->size) {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$this->offset];
 
+            $count++;
+
             if ($byte !== self::WHITE_SPACE && $byte !== self::SLASH) {
                 $this->tokenizer();
-                continue;
             }
 
             $this->offset++;

@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace DLRoute\Server;
 
 use DLRoute\Config\DLRealPath;
+use DLRoute\Core\Routing\Automaton\Route\RequestURILexer;
 use DLRoute\Interfaces\Routing\LexerSymbolInterface;
 use DLRoute\Interfaces\ServerInterface;
 use DLRoute\Routes\RouteDebugger;
@@ -44,6 +45,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         }
 
         $uri = \trim($uri, "/");
+
 
         self::remove_duplicate_slash($uri);
 
@@ -174,6 +176,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         $uri = self::get_uri();
         $uri = urldecode($uri);
 
+
         /** @var int $uri_length */
         $uri_length = \strlen($uri);
 
@@ -205,6 +208,12 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         /** @var int $length */
         $length = \strlen($input);
 
+        echo "input: {$input}\n";
+        $request = new RequestURILexer($input);
+        $input = $request->get_processed_route();
+
+        return;
+
         /** @var non-empty-string[] $buffer Contenedor de tokens normalizados */
         $buffer = [];
 
@@ -233,10 +242,11 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
 
                 // Extracción, decodificación y limpieza del token
                 $lexeme = \substr(
-                    $input,
-                    $start_offset,
-                    $end ? $lexeme_length + 1 : $lexeme_length,
+                    string: $input,
+                    offset: $start_offset,
+                    length: $end ? $lexeme_length + 1 : $lexeme_length,
                 );
+
                 $lexeme = urldecode($lexeme);
                 $lexeme = trim($lexeme);
 

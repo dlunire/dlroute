@@ -74,7 +74,6 @@ final class RouteGenerator extends RouterLexer {
      */
     public function __construct(string $uri, Methods $method = Methods::GET) {
         parent::__construct($uri, $method);
-        $this->scanner();
         $this->generate();
     }
 

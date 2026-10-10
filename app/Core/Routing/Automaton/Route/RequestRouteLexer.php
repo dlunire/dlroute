@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Enums\Methods;
-use DLRoute\Requests\DLOutput;
-use DLRoute\Requests\DLRoute;
 use DLRoute\Server\DLServer;
 
 /**
@@ -101,8 +99,9 @@ final class RequestRouteLexer extends RouterLexer {
         private readonly bool $has_param = false
     ) {
         parent::__construct(uri: DLServer::get_route());
-        $this->scanner();
         $this->init();
+
+        echo "route: " . DLServer::get_route() . "\n";
     }
 
     /**
