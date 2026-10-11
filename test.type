@@ -1,7 +1,7 @@
 /**
  * Nombre de la aplicación y entorno de ejecución.
  */
-APP_NAME: string = "DLUnire Core"
+APP_NAME_RUNTIME: string = "DLUnire Core"
 APP_ENV: string = 'production'
 
 /**
@@ -21,6 +21,38 @@ HEALTH_CHECK_OK: boolean = BASE_CONNECTIONS < MAX_CONNECTIONS
 INSTANCE_UUID: uuid = 7b4e3f12-98ab-4cd2-b0ef-56789abcdef0
 CONTACT_EMAIL: email = support@dlunire.dev
 
-/** 
- * Esta es una prueba que estoy realizando con este lenguaje que he creado.
+
+/**
+ * Tiempo máximo de espera por petición saliente, en milisegundos.
+ *
+ * Define cuánto tiempo puede esperar la aplicación una respuesta de un
+ * servicio externo (API de terceros, pasarela de pagos, servidor de
+ * correo) antes de cancelar la conexión y lanzar un error de tiempo
+ * agotado.
+ *
+ * Un valor demasiado bajo provoca fallos intermitentes en redes lentas.
+ * Un valor demasiado alto mantiene procesos bloqueados y consume
+ * conexiones del pool configurado en `MAX_CONNECTIONS`.
+ *
+ * Reglas de validación:
+ * - Debe ser mayor que 0.
+ * - Debe ser menor o igual a 120000 (2 minutos).
+ * - No puede superar `GLOBAL_TIMEOUT_MS` si ese valor está definido.
+ *
+ * @var integer
+ * @default 30000
+ * @unit milliseconds
+ * @since 1.4.0
+ * @see MAX_CONNECTIONS
+ * @see RETRY_ATTEMPTS
+ * @throws TimeoutError Cuando una petición excede este valor.
+ * @deprecated 2.0.0 Se reemplazará por `REQUEST_TIMEOUT` con unidades
+ *             explícitas (por ejemplo `30s`).
+ *
+ * @example
+ * REQUEST_TIMEOUT_MS: integer = 30000
+ *
+ * @example Entorno de pruebas, con espera corta:
+ * REQUEST_TIMEOUT_MS: integer = 2000
  */
+REQUEST_TIMEOUT_MS: integer = 30000

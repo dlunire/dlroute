@@ -102,18 +102,75 @@ abstract class RouterLexer implements LexerSymbolInterface {
     private bool $has_param = false;
 
     /**
+     * Instancia compartida del analizador léxico.
+     *
+     * Es `null` hasta la primera llamada a {@see RouterLexer::from()}. A partir
+     * de ahí contiene la instancia reutilizada, de modo que la URI no se vuelve
+     * a analizar en las llamadas siguientes.
+     *
+     * @var self|null
+     */
+    private static ?self $instance = null;
+
+    /**
      * Inicializa el autómata con la URI a analizar y el método HTTP asociado a la ruta.
      *
      * Normaliza la URI eliminando espacios en blanco al inicio y al final,
      * y calcula su tamaño en bytes para controlar el recorrido del cursor.
      *
-     * @param string      $uri    URI del patrón de ruta a tokenizar.
-     * @param Methods|null $method Método HTTP con el que fue registrada la ruta.
+     * Si `$capture_query_string` es `true`, al encontrar el símbolo `?` fuera de
+     * un parámetro (`{param?}`), el autómata deja de analizar la URI y captura,
+     * como un único lexema, todo lo que sigue después de ese símbolo. El propio
+     * `?` no forma parte del lexema. Este lexema no se procesa aquí: se entrega
+     * al autómata especializado en cadenas de consulta (query string), lo que
+     * evita una segunda pasada sobre la URI.
+     *
+     * @param string       $uri                   URI del patrón de ruta a tokenizar.
+     * @param Methods|null $method                Método HTTP con el que fue registrada la ruta.
+     * @param bool         $capture_query_string  Si es `true`, captura como lexema lo que sigue
+     *                                            al símbolo `?` (sin incluirlo). Por defecto: `false`.
      */
-    public function __construct(string $uri, private readonly ?Methods $method = null) {
+    public function __construct(
+        string $uri,
+        private readonly ?Methods $method = null,
+        private readonly bool $capture_query_string = false
+    ) {
         $this->uri = trim($uri);
         $this->size = \strlen($this->uri);
         $this->scanner();
+    }
+
+    /**
+     * Devuelve el analizador léxico compartido para la URI de la petición.
+     *
+     * En la primera llamada crea la instancia, y con ella se ejecuta el análisis
+     * léxico de `$uri`. En las llamadas siguientes, si la instancia guardada es
+     * de la misma clase que la invoca, la devuelve sin volver a analizar nada.
+     *
+     * Los argumentos solo se usan al crear la instancia: si ya existe una de la
+     * misma clase, `$uri`, `$method` y `$capture_query_string` se ignoran, aunque
+     * sean distintos de los de la primera llamada.
+     *
+     * Está pensado únicamente para la URI de la petición: las rutas registradas
+     * deben instanciarse con `new`, porque cada una necesita su propio análisis.
+     *
+     * @param string       $uri                   URI a tokenizar.
+     * @param Methods|null $method                Método HTTP asociado a la ruta.
+     * @param bool         $capture_query_string  Si es `true`, captura como lexema lo que sigue
+     *                                            al símbolo `?` (sin incluirlo). Por defecto: `false`.
+     * @throws RouteException Si la URI tiene una sintaxis inválida durante la creación.
+     * @return static Instancia compartida de la clase que invoca el método.
+     */
+    public static function from(string $uri, ?Methods $method = null, bool $capture_query_string = false): static {
+        if (!(self::$instance instanceof static)) {
+            self::$instance = new static(
+                uri: $uri,
+                method: $method,
+                capture_query_string: $capture_query_string
+            );
+        }
+
+        return self::$instance;
     }
 
     /**
@@ -225,27 +282,44 @@ abstract class RouterLexer implements LexerSymbolInterface {
      * @return integer Posición del próximo `/` encontrado, o {@see RouterLexer::$size} si no hay más delimitadores.
      */
     private function next_delimiter(int $offset): int {
+        /** @var boolean $bracket_open */
+        $bracket_open = false;
 
+        static $var = 0;
+        $var++;
+
+        echo $var;
+        echo "→ {$this->offset} ← \n";
         while ($offset < $this->size) {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$offset];
+
+            if ($byte === self::BRACKET_OPEN) {
+                $bracket_open = true;
+            }
 
             /** @var non-empty-string|null $pick */
             $pick = $this->uri[$offset + 1] ?? null;
 
             if ($byte === self::SLASH) {
+                $bracket_open = false;
                 return $offset;
             }
 
             if ($byte === self::OPTIONAL_PARAMETER && $pick !== self::BRACKET_CLOSE) {
                 $fragment = \substr($this->uri, $offset, $this->size - $offset);
 
-                throw new RouteException(\sprintf(
-                    "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). En su lugar, se recibió «%s».\nLos parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.\nRuta definida: «%s»",
-                    $offset,
-                    $fragment,
-                    $this->uri
-                ));
+                // throw new RouteException(\sprintf(
+                //     "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). En su lugar, se recibió «%s».\nLos parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.\nRuta definida: «%s»",
+                //     $offset,
+                //     $fragment,
+                //     $this->uri
+                // ));
+            }
+
+            if ($bracket_open) {
+                echo "bracket: " . json_encode($bracket_open) . "\n";
+                $bracket_open = false;
             }
 
             $offset++;

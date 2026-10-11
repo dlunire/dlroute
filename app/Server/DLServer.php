@@ -205,63 +205,8 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
      * @return void
      */
     public static function remove_duplicate_slash(string &$input): void {
-        /** @var int $length */
-        $length = \strlen($input);
-
-        echo "input: {$input}\n";
         $request = new RequestURILexer($input);
         $input = $request->get_processed_route();
-
-        return;
-
-        /** @var non-empty-string[] $buffer Contenedor de tokens normalizados */
-        $buffer = [];
-
-        /** @var int $start_offset Puntero de inicio del lexema actual */
-        $start_offset = 0;
-
-        /** @var int $offset Puntero de lectura actual */
-        $offset = 0;
-
-        while ($offset < $length) {
-            $byte = $input[$offset];
-
-            /** @var boolean $end Indicador de fin de cadena */
-            $end = $offset === $length - 1;
-
-            if (self::SLASH === $byte || $end) {
-                /** @var int $lexeme_length Tamaño del segmento extraído */
-                $lexeme_length = $offset - $start_offset;
-
-                // Salto de seguridad: ignora segmentos vacíos consecutivos
-                if ($lexeme_length < 1) {
-                    $offset++;
-                    $start_offset = $offset;
-                    continue;
-                }
-
-                // Extracción, decodificación y limpieza del token
-                $lexeme = \substr(
-                    string: $input,
-                    offset: $start_offset,
-                    length: $end ? $lexeme_length + 1 : $lexeme_length,
-                );
-
-                $lexeme = urldecode($lexeme);
-                $lexeme = trim($lexeme);
-
-                // Solo almacena lexemas válidos
-                if ($lexeme !== "") {
-                    $buffer[] = $lexeme;
-                }
-                $start_offset = $offset + 1;
-            }
-
-            $offset++;
-        }
-
-        // Reconstrucción de la ruta normalizada
-        $input = "/" . implode("/", $buffer);
     }
 
     public static function get_script_name(): string {

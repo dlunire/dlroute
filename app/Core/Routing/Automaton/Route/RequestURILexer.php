@@ -45,10 +45,6 @@ final class RequestURILexer extends RouterLexer {
         /** Tokens de la URI */
         $tokens = $this->get_tokens();
 
-        echo "\$tokens: ";
-        print_r($tokens);
-        echo "\n";
-
         /** @var string[] $buffer Lexemas de cada segmento de ruta */
         $buffer = [];
 

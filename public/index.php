@@ -30,6 +30,7 @@ session_start();
 ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
+use DLRoute\Server\DLServer;
 
 include dirname(__DIR__)
     . DIRECTORY_SEPARATOR
@@ -48,7 +49,7 @@ $auth = new AuthApps();
 // DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
 // DLRoute::get('/profile/{a?}/{b?}/{c?}/{d?}', fn () => ["status" => "Ok"]);
 
-DLRoute::get('/////////f////dd', fn () => "Test");
+// DLRoute::get('/////////f////dd', fn () => "Test");
 
 // DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
 
@@ -68,5 +69,7 @@ DLRoute::get('/////////f////dd', fn () => "Test");
 
 // # Cerrar una sesión de prueba:
 // DLRoute::delete("/logout", [AuthController::class, 'logout']);
+
+DLServer::get_route();
 
 DLRoute::execute();
