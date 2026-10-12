@@ -205,7 +205,12 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
      * @return void
      */
     public static function remove_duplicate_slash(string &$input): void {
-        $request = new RequestURILexer($input);
+        $request = RequestURILexer::from(
+            uri: $input,
+            method: null,
+            capture_query_string: true
+        );
+
         $input = $request->get_processed_route();
     }
 

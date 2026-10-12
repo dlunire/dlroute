@@ -113,6 +113,19 @@ abstract class RouterLexer implements LexerSymbolInterface {
     private static ?self $instance = null;
 
     /**
+     * Cadena de consulta capturada tras el símbolo `?`.
+     *
+     * Contiene lo que sigue al primer `?` que aparece fuera de un parámetro (`{param?}`), sin incluir el
+     * propio `?`. Solo se captura si `$capture_query_string` es `true`. En caso contrario, o si la URI no
+     * contiene ese símbolo, vale `null`.
+     *
+     * No se analiza aquí: se entrega tal cual al autómata especializado en cadenas de consulta.
+     *
+     * @var string|null
+     */
+    private readonly ?string $query_string;
+
+    /**
      * Inicializa el autómata con la URI a analizar y el método HTTP asociado a la ruta.
      *
      * Normaliza la URI eliminando espacios en blanco al inicio y al final,
@@ -138,6 +151,10 @@ abstract class RouterLexer implements LexerSymbolInterface {
         $this->uri = trim($uri);
         $this->size = \strlen($this->uri);
         $this->scanner();
+
+        if (!isset($this->query_string)) {
+            $this->query_string = null;
+        }
     }
 
     /**
@@ -179,13 +196,10 @@ abstract class RouterLexer implements LexerSymbolInterface {
      * @return void
      */
     private function scanner(): void {
-        $count = 0;
-
         while ($this->offset < $this->size) {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$this->offset];
 
-            $count++;
 
             if ($byte !== self::WHITE_SPACE && $byte !== self::SLASH) {
                 $this->tokenizer();
@@ -285,11 +299,6 @@ abstract class RouterLexer implements LexerSymbolInterface {
         /** @var boolean $bracket_open */
         $bracket_open = false;
 
-        static $var = 0;
-        $var++;
-
-        echo $var;
-        echo "→ {$this->offset} ← \n";
         while ($offset < $this->size) {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$offset];
@@ -301,24 +310,35 @@ abstract class RouterLexer implements LexerSymbolInterface {
             /** @var non-empty-string|null $pick */
             $pick = $this->uri[$offset + 1] ?? null;
 
+            /**
+             * Una pequeña observación: self::OPTIONAL_PARAMETER se usó original para indicar que el
+             * símbolo de interrogación (`?`) fue utilizado para detectar parámetros opcionales, sin
+             * embargo, si `$this->capture_query_string = true`, es decir, es `true`, entonces, el autómata
+             * termina y carga la cadena en `$this->query_string`
+             */
+            if ($this->capture_query_string && $byte === self::OPTIONAL_PARAMETER) {
+                $this->query_string = \substr($this->uri, $offset + 1, $this->size - $offset);
+                return $this->size;
+            }
+
             if ($byte === self::SLASH) {
                 $bracket_open = false;
                 return $offset;
             }
 
-            if ($byte === self::OPTIONAL_PARAMETER && $pick !== self::BRACKET_CLOSE) {
+            if ($byte === self::OPTIONAL_PARAMETER && $pick !== self::BRACKET_CLOSE && $bracket_open) {
                 $fragment = \substr($this->uri, $offset, $this->size - $offset);
+                $bracket_open = false;
 
-                // throw new RouteException(\sprintf(
-                //     "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). En su lugar, se recibió «%s».\nLos parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.\nRuta definida: «%s»",
-                //     $offset,
-                //     $fragment,
-                //     $this->uri
-                // ));
+                throw new RouteException(\sprintf(
+                    "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). En su lugar, se recibió «%s».\nLos parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.\nRuta definida: «%s»",
+                    $offset,
+                    $fragment,
+                    $this->uri
+                ));
             }
 
-            if ($bracket_open) {
-                echo "bracket: " . json_encode($bracket_open) . "\n";
+            if ($bracket_open && $byte === self::BRACKET_CLOSE) {
                 $bracket_open = false;
             }
 

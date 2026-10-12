@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Core\Routing\Automaton\Route\RouterLexer;
+use DLRoute\Enums\Methods;
 
 /**
  * Analizador léxico para la URI de una petición entrante.
@@ -24,8 +25,12 @@ final class RequestURILexer extends RouterLexer {
      * @param string $uri URI de la petición a tokenizar.
      * @return void
      */
-    public function __construct(string $uri) {
-        parent::__construct($uri);
+    public function __construct(string $uri, ?Methods $method, bool $capture_query_string) {
+        parent::__construct(
+            uri: $uri,
+            method: $method,
+            capture_query_string: $capture_query_string
+        );
     }
 
     /**
