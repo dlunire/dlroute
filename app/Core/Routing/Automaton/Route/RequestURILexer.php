@@ -62,4 +62,27 @@ final class RequestURILexer extends RouterLexer {
             array: $buffer
         );
     }
+
+    /**
+     * Devuelve la URI procesada por el autómata.
+     *
+     * Es la ruta reconstruida ({@see RequestURILexer::get_processed_route()})
+     * seguida, si hay una cadena de consulta no vacía, del símbolo `?` y de esa
+     * cadena sin procesar ni decodificar. Si no hay cadena de consulta, o está
+     * vacía (`/users?`), devuelve solo la ruta.
+     *
+     * Ejemplo: `//users//42?page=2` produce `/users/42?page=2`.
+     *
+     * @return non-empty-string URI procesada, siempre con `/` inicial.
+     */
+    public function get_processed_uri(): string {
+        /** @var non-empty-string|null $query_string */
+        $query_string = $this->get_query_string();
+
+        return $this->get_processed_route() . (
+            $query_string === null
+            ? ''
+            : "?{$query_string}"
+        );
+    }
 }

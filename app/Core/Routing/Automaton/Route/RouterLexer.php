@@ -410,4 +410,22 @@ abstract class RouterLexer implements LexerSymbolInterface {
     public function has_param(): bool {
         return $this->has_param;
     }
+
+    /**
+     * Devuelve la cadena de consulta capturada durante el análisis léxico de la URI.
+     *
+     * Contiene los datos originales situados después del primer símbolo `?`
+     * reconocido como delimitador de la cadena de consulta, sin incluir dicho
+     * símbolo ni realizar el análisis o la decodificación de sus parámetros.
+     *
+     * Si la cadena de consulta está vacía o no fue capturada durante el análisis
+     * léxico, devuelve `null`.
+     *
+     * @return string|null Cadena de consulta sin procesar, o `null` si está vacía o no existe.
+     */
+    public function get_query_string(): ?string {
+        return $this->query_string === '' || $this->query_string === null
+            ? null
+            : $this->query_string;
+    }
 }
