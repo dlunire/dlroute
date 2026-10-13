@@ -180,14 +180,14 @@ abstract class RouterLexer implements LexerSymbolInterface {
      */
     public static function from(string $uri, ?Methods $method = null, bool $capture_query_string = false): static {
         if (!(self::$instance instanceof static)) {
-            self::$instance = new static(
+            static::$instance = new static(
                 uri: $uri,
                 method: $method,
                 capture_query_string: $capture_query_string
             );
         }
 
-        return self::$instance;
+        return static::$instance;
     }
 
     /**
@@ -200,9 +200,12 @@ abstract class RouterLexer implements LexerSymbolInterface {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$this->offset];
 
-
             if ($byte !== self::WHITE_SPACE && $byte !== self::SLASH) {
                 $this->tokenizer();
+
+                if (isset($this->query_string)) {
+                    break;
+                }
             }
 
             $this->offset++;
@@ -311,14 +314,14 @@ abstract class RouterLexer implements LexerSymbolInterface {
             $pick = $this->uri[$offset + 1] ?? null;
 
             /**
-             * Una pequeña observación: self::OPTIONAL_PARAMETER se usó original para indicar que el
+             * Una pequeña observación: `self::OPTIONAL_PARAMETER` se usó original para indicar que el
              * símbolo de interrogación (`?`) fue utilizado para detectar parámetros opcionales, sin
              * embargo, si `$this->capture_query_string = true`, es decir, es `true`, entonces, el autómata
              * termina y carga la cadena en `$this->query_string`
              */
             if ($this->capture_query_string && $byte === self::OPTIONAL_PARAMETER) {
                 $this->query_string = \substr($this->uri, $offset + 1, $this->size - $offset);
-                return $this->size;
+                return $offset;
             }
 
             if ($byte === self::SLASH) {
