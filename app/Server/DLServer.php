@@ -159,7 +159,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
     }
 
     /**
-     * Devuelve el software del servidor (en el caso de que sea posible)
+     * Devuelve el software del servidor (en el caso de que sea posible).
      *
      * @return string|null
      */
@@ -195,6 +195,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
 
     /**
      * Elimina barras diagonales duplicadas y normaliza la estructura de la URI.
+     * 
      * Este método actúa como un analizador léxico básico que fragmenta la entrada mediante el delimitador
      * SLASH. Durante el recorrido, filtra vacíos, decodifica entidades URL y aplica un trim, reconstruyendo
      * la cadena final con un formato canónico (un solo separador entre tokens).
@@ -227,7 +228,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         /**
          * Archivo principal de ejecución de la aplicación.
          *
-         * @var string
+         * @var string $file
          */
         $file = self::get_script_name();
 
@@ -259,7 +260,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         /**
          * Directorio base de ejecución de la aplicación.
          *
-         * @var string $basedir
+         * @var non-empty-string $basedir
          */
         $basedir = self::get_script_dir();
 
@@ -270,9 +271,9 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
     }
 
     /**
-     * Devuelve el subdirectorio en función de la URL base de la aplicación
+     * Devuelve el subdirectorio en función de la URL base de la aplicación.
      *
-     * @param string $subdir Subdirectorio
+     * @param string $subdir Subdirectorio.
      * @return string
      */
     public static function get_subdir(string $subdir): string {
