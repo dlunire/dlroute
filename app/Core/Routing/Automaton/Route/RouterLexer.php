@@ -334,7 +334,7 @@ abstract class RouterLexer implements LexerSymbolInterface {
                 $bracket_open = false;
 
                 throw new RouteException(\sprintf(
-                    "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). En su lugar, se recibió «%s».\nLos parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.\nRuta definida: «%s»",
+                    "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). En su lugar, se recibió «%s». Los parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.Ruta definida: «%s»",
                     $offset,
                     $fragment,
                     $this->uri

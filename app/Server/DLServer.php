@@ -195,13 +195,12 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
 
     /**
      * Elimina barras diagonales duplicadas y normaliza la estructura de la URI.
-     * * Este método actúa como un analizador léxico básico que fragmenta la entrada
-     * mediante el delimitador SLASH. Durante el recorrido, filtra vacíos,
-     * decodifica entidades URL y aplica un trim, reconstruyendo la cadena
-     * final con un formato canónico (un solo separador entre tokens).
+     * Este método actúa como un analizador léxico básico que fragmenta la entrada mediante el delimitador
+     * SLASH. Durante el recorrido, filtra vacíos, decodifica entidades URL y aplica un trim, reconstruyendo
+     * la cadena final con un formato canónico (un solo separador entre tokens).
      *
      * @param string $input Referencia a la URI original; será sobrescrita con
-     * la versión normalizada.
+     *                      la versión normalizada.
      * @return void
      */
     public static function remove_duplicate_slash(string &$input): void {

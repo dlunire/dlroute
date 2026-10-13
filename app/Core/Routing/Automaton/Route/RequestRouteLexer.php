@@ -186,7 +186,7 @@ final class RequestRouteLexer extends RouterLexer {
             // print_r("\$lexeme: {$lexeme} | is_optional: " . ($is_optional ? "true" : "false") . "\n");
         }
 
-        print_r($this->get_tokens());
+        // print_r($this->get_tokens());
         // echo DLOutput::to_json($this->get_tokens(), true);
     }
 
