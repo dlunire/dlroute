@@ -119,11 +119,13 @@ class DLRealPath implements RealPathInterface, InstanceInterface {
          *
          * @var string|false
          */
-        $entry_point = \realpath(\dirname($this->entry_point_file));
+        $entry_point = \realpath(
+            path: \dirname($this->entry_point_file)
+        );
 
         if ($entry_point === false) {
             throw new RouteException(
-                "No se pudo resolver el directorio del punto de entrada."
+                message: "No se pudo resolver el directorio del punto de entrada."
             );
         }
 
