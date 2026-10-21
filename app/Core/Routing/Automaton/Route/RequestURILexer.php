@@ -85,4 +85,9 @@ final class RequestURILexer extends RouterLexer {
             : "?{$query_string}"
         );
     }
+
+    public function get_dir(): string {
+
+        return "/";
+    }
 }

@@ -244,7 +244,7 @@ abstract class RouterLexer implements LexerSymbolInterface {
          * 
          * @var int $end
          */
-        $end = $this->next_delimiter($current_offset);
+        $end = $this->next_delimiter(offset: $current_offset);
 
         /**
          * Tamaño del lexema.

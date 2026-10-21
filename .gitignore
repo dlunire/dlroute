@@ -23,6 +23,7 @@ public/subdirectorio
 commit.txt
 commit.md
 info.txt
+commits
 
 # Archivos para generar sistemas operativos
 dlunire-os.php
@@ -33,3 +34,5 @@ build.sh
 iso-build
 read.php
 fragment.txt
+question.md
+public/dir

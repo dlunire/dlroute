@@ -30,7 +30,7 @@ interface InstanceInterface {
     /**
      * Devuelve una instance de clase
      *
-     * @return self
+     * @return static
      */
-    public static function get_instance(): self;
+    public static function from(): static;
 }

@@ -100,8 +100,6 @@ final class RequestRouteLexer extends RouterLexer {
     ) {
         parent::__construct(uri: DLServer::get_route());
         $this->init();
-
-        echo "route: " . DLServer::get_route() . "\n";
     }
 
     /**

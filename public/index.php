@@ -1,6 +1,7 @@
 <?php
 
 use DLRoute\Core\Auth\AuthApps;
+use DLRoute\Core\Routing\Automaton\Route\RequestURILexer;
 
 /**
  * DLUnire
@@ -31,6 +32,12 @@ ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
 use DLRoute\Server\DLServer;
+use DLRoute\Test\AuthController;
+
+error_log('ENTRY: ' . __FILE__);
+error_log('REALPATH: ' . (realpath(__FILE__) ?: 'false'));
+error_log('SCRIPT_FILENAME: ' . ($_SERVER['SCRIPT_FILENAME'] ?? ''));
+error_log('REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? ''));
 
 include dirname(__DIR__)
     . DIRECTORY_SEPARATOR
@@ -49,7 +56,7 @@ $auth = new AuthApps();
 // DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
 // DLRoute::get('/profile/{a?}/{b?}/{c?}/{d?}', fn () => ["status" => "Ok"]);
 
-DLRoute::get('/////////f////dd', fn () => "Test");
+DLRoute::get('/////////f////dd', fn() => "Test");
 
 // DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
 
@@ -65,11 +72,18 @@ DLRoute::get('/////////f////dd', fn () => "Test");
 // });
 
 // # Inicio de sesión de prueba:
-// DLRoute::post('/login', [AuthController::class, 'auth']);
+DLRoute::post('/login', [AuthController::class, 'auth']);
 
 // # Cerrar una sesión de prueba:
 // DLRoute::delete("/logout", [AuthController::class, 'logout']);
 
-DLServer::get_route();
+$value = [
+    "base_url" => DLServer::get_base_url(),
+    "dir" => DLServer::get_dir()
+];
+
+DLServer::get_dir();
+
+print_r($value);
 
 DLRoute::execute();

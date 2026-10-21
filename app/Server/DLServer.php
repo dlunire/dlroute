@@ -37,19 +37,32 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
     use Domain, IPAddress, PortCandidate;
 
     public static function get_uri(): string {
-        /** @var string $uri */
-        $uri = "";
+        return self::get_processed_uri(
+            uri: $_SERVER['REQUEST_URI'] ?? "/"
+        );
+    }
 
-        if (\array_key_exists("REQUEST_URI", $_SERVER)) {
-            $uri = $_SERVER["REQUEST_URI"];
-        }
+    /**
+     * Procesa una URI mediante el autómata léxico de `RequestURILexer`.
+     *
+     * Obtiene la instancia reutilizable del lexer mediante `from()`, evitando instanciamientos innecesarios
+     * durante el procesamiento de la petición.
+     * 
+     * Habilita la captura de la cadena de consulta y devuelve la URI procesada conforme a las reglas
+     * léxicas implementadas.
+     *
+     * @param non-empty-string $uri URI original de la petición HTTP.
+     *
+     * @return string URI procesada por el autómata léxico.
+     */
+    private static function get_processed_uri(string $uri): string {
+        $request = RequestURILexer::from(
+            uri: $uri,
+            method: null,
+            capture_query_string: true
+        );
 
-        $uri = \trim($uri, "/");
-
-
-        self::remove_duplicate_slash($uri);
-
-        return $uri;
+        return $request->get_processed_uri();
     }
 
     public static function get_hostname(): string {
@@ -106,7 +119,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
     }
 
     public static function get_document_root(): string {
-        $realpath = DLRealPath::get_instance();
+        $realpath = DLRealPath::from();
         return trim($realpath->get_document_root());
     }
 
@@ -174,13 +187,9 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
          * @var string
          */
         $uri = self::get_uri();
-        $uri = urldecode($uri);
-
 
         /** @var int $uri_length */
         $uri_length = \strlen($uri);
-
-        self::remove_querystring($uri);
 
         /** @var int $offset */
         $offset = \strlen(self::get_script_dir()) - 1;
@@ -215,8 +224,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
     }
 
     public static function get_script_name(): string {
-        $script_name = $_SERVER["SCRIPT_NAME"] ?? "";
-        return trim(urldecode($script_name));
+        return $_SERVER['SCRIPT_NAME'] ?? "/";
     }
 
     /**
@@ -231,17 +239,13 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
          * @var string $file
          */
         $file = self::get_script_name();
-
+        
         /**
          * Directorio principal de ejecución.
          *
          * @var string
          */
-        $script_dir = dirname($file);
-        $script_dir = trim($script_dir, "/");
-        $script_dir = trim($script_dir);
-
-        return "/{$script_dir}";
+        return dirname($file);
     }
 
     /**
@@ -268,50 +272,6 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         $base_url = trim("{$host}{$basedir}", "/");
 
         return $base_url;
-    }
-
-    /**
-     * Devuelve el subdirectorio en función de la URL base de la aplicación.
-     *
-     * @param string $subdir Subdirectorio.
-     * @return string
-     */
-    public static function get_subdir(string $subdir): string {
-        /**
-         * URL base de la aplicación
-         *
-         * @var string
-         */
-        $base_url = self::get_base_url();
-
-        $base_url = rtrim($base_url, "\/");
-        $base_url = trim($base_url);
-
-        $subdir = RouteDebugger::dot_to_slash($subdir);
-        $subdir = RouteDebugger::trim_slash($subdir);
-        $subdir = "{$base_url}/{$subdir}";
-
-        return $subdir;
-    }
-
-    /**
-     * Remueve las query de las URI.
-     *
-     * @param string $input Entrada a ser procesada
-     * @return void
-     */
-    private static function remove_querystring(string &$input): void {
-        $input = trim($input);
-
-        /** @var int|false $offset */
-        $offset = \strpos($input, "?", 0);
-
-        if ($offset === false) {
-            $offset = \strlen($input);
-        }
-
-        $input = \substr($input, 0, $offset);
-        $input = \trim($input, "/");
     }
 
     /**

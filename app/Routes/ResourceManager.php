@@ -189,7 +189,7 @@ class ResourceManager implements ResourceInterface {
             $title = $config->title ?? '';
         }
 
-        $realpath = DLRealPath::get_instance();
+        $realpath = DLRealPath::from();
 
         /**
          * Directorio raíz de la aplicación.
@@ -332,7 +332,7 @@ class ResourceManager implements ResourceInterface {
          * 
          * @var DLRealPath
          */
-        $realpath = DLRealPath::get_instance();
+        $realpath = DLRealPath::from();
 
         /**
          * URI del directorio de trabajo.
@@ -466,7 +466,7 @@ class ResourceManager implements ResourceInterface {
      * @return string
      */
     private static function process_uri(string $path): string | false {
-        $realpath = DLRealPath::get_instance();
+        $realpath = DLRealPath::from();
         $root = $realpath->get_document_root();
 
         /**

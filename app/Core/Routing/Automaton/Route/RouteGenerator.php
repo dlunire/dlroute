@@ -194,8 +194,6 @@ final class RouteGenerator extends RouterLexer {
         /** @var non-empty-string|null $current_route */
         $current_route = $this->routes[0] ?? null;
 
-        var_dump($current_route);
-
         if (DLServer::get_route() === $current_route && DLServer::get_route() === "/") {
             $callback($this->routes[0]);
             return;

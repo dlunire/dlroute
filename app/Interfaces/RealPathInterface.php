@@ -28,24 +28,37 @@ namespace DLRoute\Interfaces;
 interface RealPathInterface {
 
     /**
-     * Devuelve la ruta raíz real de la aplicación.
+     * Devuelve la raíz real del proyecto.
      *
-     * @return string
+     * Es el directorio padre de la ruta real de {@see self::get_entry_point()},
+     * es decir, un único nivel por encima del directorio web. Queda fuera del
+     * directorio web. Si el directorio web es un enlace simbólico, es el padre
+     * del destino y no del enlace.
+     *
+     * @return string Ruta absoluta, sin barra final.
      */
     public function get_document_root(): string;
 
+    /**
+     * Devuelve el directorio real que contiene el punto de entrada de la
+     * aplicación (enlaces simbólicos resueltos).
+     *
+     * Es un DIRECTORIO, no un archivo, y su nombre es indiferente
+     * (`public`, `web`, etc.). Para obtener el archivo, use
+     * {@see self::get_entry_point_file()}.
+     *
+     * @return string Ruta absoluta, sin barra final.
+     */
+    public function get_entry_point(): string;
 
     /**
-     * Devuelve el nombre del directorio real de trabajo del proyecto.
+     * Devuelve el archivo que lanzó PHP, es decir, el punto de entrada real
+     * (`get_included_files()[0]`).
      *
-     * @return string
-     */
-    public function get_workdir(): string;
-
-    /**
-     * Devuelve la URI del directorio de trabajo.
+     * No depende de `$_SERVER`, por lo que su valor es el mismo en Apache,
+     * Nginx, `php -S` y CLI.
      *
-     * @return string
+     * @return string Ruta absoluta del archivo.
      */
-    public function get_uri_from_workdir(): string;
+    public function get_entry_point_file(): string;
 }
