@@ -29,7 +29,7 @@ use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\InstanceInterface;
 use DLRoute\Interfaces\RealPathInterface;
 
-class DLRealPath implements RealPathInterface, InstanceInterface {
+class RealPath implements RealPathInterface, InstanceInterface {
 
     /**
      * Raíz del proyecto: padre de la ruta real de {@see self::$entry_point}.

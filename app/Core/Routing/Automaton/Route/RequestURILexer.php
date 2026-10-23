@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DLRoute\Core\Routing\Automaton\Route;
 
+use DLRoute\Config\RealPath;
 use DLRoute\Core\Routing\Automaton\Route\RouterLexer;
 use DLRoute\Enums\Methods;
 
@@ -86,7 +87,13 @@ final class RequestURILexer extends RouterLexer {
         );
     }
 
+    /**
+     * Devuelve el directoro base de ejecición de la aplicación
+     *
+     * @return non-empty-string
+     */
     public function get_dir(): string {
+        $realpath = RealPath::from();
 
         return "/";
     }

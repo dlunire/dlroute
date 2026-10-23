@@ -20,7 +20,6 @@ HEALTH_CHECK_OK: boolean = BASE_CONNECTIONS < MAX_CONNECTIONS
  */
 INSTANCE_UUID: uuid = 7b4e3f12-98ab-4cd2-b0ef-56789abcdef0
 CONTACT_EMAIL: email = support@dlunire.dev
-
 /**
  * Tiempo máximo de espera por petición saliente, en milisegundos.
  *

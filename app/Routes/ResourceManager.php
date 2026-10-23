@@ -24,7 +24,7 @@
  */
 namespace DLRoute\Routes;
 
-use DLRoute\Config\DLRealPath;
+use DLRoute\Config\RealPath;
 use DLRoute\Config\FileInfo;
 use DLRoute\Interfaces\ResourceInterface;
 use DLRoute\Server\DLServer;
@@ -189,7 +189,7 @@ class ResourceManager implements ResourceInterface {
             $title = $config->title ?? '';
         }
 
-        $realpath = DLRealPath::from();
+        $realpath = RealPath::from();
 
         /**
          * Directorio raíz de la aplicación.
@@ -330,9 +330,9 @@ class ResourceManager implements ResourceInterface {
         /**
          * Instancia de DLRealPath
          * 
-         * @var DLRealPath
+         * @var RealPath
          */
-        $realpath = DLRealPath::from();
+        $realpath = RealPath::from();
 
         /**
          * URI del directorio de trabajo.
@@ -466,7 +466,7 @@ class ResourceManager implements ResourceInterface {
      * @return string
      */
     private static function process_uri(string $path): string | false {
-        $realpath = DLRealPath::from();
+        $realpath = RealPath::from();
         $root = $realpath->get_document_root();
 
         /**

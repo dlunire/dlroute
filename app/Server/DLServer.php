@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace DLRoute\Server;
 
-use DLRoute\Config\DLRealPath;
+use DLRoute\Config\RealPath;
 use DLRoute\Core\Routing\Automaton\Route\RequestURILexer;
 use DLRoute\Interfaces\Routing\LexerSymbolInterface;
 use DLRoute\Interfaces\ServerInterface;
@@ -119,7 +119,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
     }
 
     public static function get_document_root(): string {
-        $realpath = DLRealPath::from();
+        $realpath = RealPath::from();
         return trim($realpath->get_document_root());
     }
 
