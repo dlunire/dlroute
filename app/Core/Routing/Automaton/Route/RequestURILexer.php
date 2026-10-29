@@ -88,13 +88,18 @@ final class RequestURILexer extends RouterLexer {
     }
 
     /**
-     * Devuelve el directoro base de ejecición de la aplicación
+     * Devuelve el directorio base de ejecución de la aplicación.
      *
      * @return non-empty-string
      */
     public function get_dir(): string {
+        /** @var RealPath $realpath */
         $realpath = RealPath::from();
 
+        // TODO: pendiente por escribir lo que falta para comprobar cada segmento
+        // de ruta contra el punto de entrada de ejecución real del sistema.
+        
+        print_r($realpath->get_entry_point());
         return "/";
     }
 }
