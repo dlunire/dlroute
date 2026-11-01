@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Config\RealPath;
+use DLRoute\Core\Data\RouteData\RouteResolution;
 use DLRoute\Core\Routing\Automaton\Route\RouterLexer;
 use DLRoute\Enums\Methods;
 
@@ -21,16 +22,33 @@ use DLRoute\Enums\Methods;
 final class RequestURILexer extends RouterLexer {
 
     /**
-     * Inicializa el analizador léxico con la URI de la petición.
+     * Instancia de clase
      *
-     * @param string $uri URI de la petición a tokenizar.
-     * @return void
+     * @var self|null $instance
      */
-    public function __construct(string $uri, ?Methods $method, bool $capture_query_string) {
+    private static ?self $instance = null;
+
+    /**
+     * Resultado de la resolución de la URI de la petición.
+     *
+     * Permanece en `null` mientras no se haya completado la resolución.
+     *
+     * @var RouteResolution|null $route_resolution
+     */
+    private ?RouteResolution $route_resolution = null;
+
+    /**
+     * Analiza la URI durante su instancia
+     */
+    private function __construct() {
+        global $argv;
+
         parent::__construct(
-            uri: $uri,
-            method: $method,
-            capture_query_string: $capture_query_string
+            uri: PHP_SAPI === 'cli'
+                ? ($argv[1] ?? "/")
+                : ($_SERVER['REQUEST_URI'] ?? "/"),
+            method: null,
+            capture_query_string: true
         );
     }
 
@@ -96,10 +114,98 @@ final class RequestURILexer extends RouterLexer {
         /** @var RealPath $realpath */
         $realpath = RealPath::from();
 
-        // TODO: pendiente por escribir lo que falta para comprobar cada segmento
-        // de ruta contra el punto de entrada de ejecución real del sistema.
-        
-        print_r($realpath->get_entry_point());
-        return "/";
+        /** @var non-empty-string $entry_point_dir */
+        $entry_point_dir = $realpath->get_entry_point();
+
+        $tokens = $this->get_tokens();
+
+        /** @var non-empty-string[] $segments Segmentos de ruta */
+        $segments = [];
+
+        foreach ($tokens as $token) {
+            /** @var non-empty-string $segment */
+            $segment = $token['lexeme'];
+
+            /** @var non-empty-string $path */
+            $path = $entry_point_dir . DIRECTORY_SEPARATOR . $segment;
+
+            if (!\is_dir($path)) {
+                break;
+            }
+
+            $segments[] = $segment;
+            $entry_point_dir = $path;
+        }
+
+        return "/" . \implode(
+            separator: "/",
+            array: $segments
+        );
+    }
+
+    private function load_route_resolution(): void {
+        /** @var RealPath $realpath */
+        $realpath = RealPath::from();
+
+        /** @var non-empty-string $entry_point_dir */
+        $entry_point_dir = $realpath->get_entry_point();
+
+        $tokens = $this->get_tokens();
+
+        /** @var non-empty-string[] $dir_segments Segmentos de ruta */
+        $dir_segments = [];
+
+        /** @var non-empty-string[] $route_segments */
+        $route_segments = [];
+
+        /** @var boolean $resolve_dir */
+        $resolve_dir = true;
+
+        foreach ($tokens as $token) {
+            /** @var non-empty-string $segment */
+            $segment = $token['lexeme'];
+
+            /** @var non-empty-string $path */
+            $path = $entry_point_dir . DIRECTORY_SEPARATOR . $segment;
+
+            if ($resolve_dir) {
+                $route_segments[] = $segment;
+                continue;
+            }
+
+            if (!\is_dir($path)) {
+                continue;
+            }
+
+            $dir_segments[] = $segment;
+            $entry_point_dir = $path;
+        }
+
+        $this->route_resolution = new RouteResolution(
+            uri: $this->get_processed_uri(),
+            dir: "/" . implode("/", $dir_segments),
+            route: "/" . implode("/", $route_segments)
+        );
+    }
+
+    /**
+     * Obtiene la instancia única del analizador léxico de la URI de petición.
+     *
+     * Implementa el patrón Singleton mediante inicialización diferida (Lazy
+     * Initialization). Si todavía no existe una instancia de la clase, la
+     * construye y la almacena para su reutilización durante el ciclo de vida
+     * de la aplicación.
+     *
+     * Las llamadas posteriores devuelven la instancia previamente construida,
+     * evitando nuevas inicializaciones y análisis repetidos de la URI.
+     *
+     * @return static Instancia única de RequestURILexer.
+     */
+    public static function from(): static {
+        if (!(static::$instance instanceof static)) {
+            static::$instance = new static;
+        }
+
+        return self::$instance;
     }
 }

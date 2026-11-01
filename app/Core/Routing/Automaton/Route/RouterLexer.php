@@ -102,17 +102,6 @@ abstract class RouterLexer implements LexerSymbolInterface {
     private bool $has_param = false;
 
     /**
-     * Instancia compartida del analizador léxico.
-     *
-     * Es `null` hasta la primera llamada a {@see RouterLexer::from()}. A partir
-     * de ahí contiene la instancia reutilizada, de modo que la URI no se vuelve
-     * a analizar en las llamadas siguientes.
-     *
-     * @var self|null
-     */
-    private static ?self $instance = null;
-
-    /**
      * Cadena de consulta capturada tras el símbolo `?`.
      *
      * Contiene lo que sigue al primer `?` que aparece fuera de un parámetro (`{param?}`), sin incluir el
@@ -155,39 +144,6 @@ abstract class RouterLexer implements LexerSymbolInterface {
         if (!isset($this->query_string)) {
             $this->query_string = null;
         }
-    }
-
-    /**
-     * Devuelve el analizador léxico compartido para la URI de la petición.
-     *
-     * En la primera llamada crea la instancia, y con ella se ejecuta el análisis
-     * léxico de `$uri`. En las llamadas siguientes, si la instancia guardada es
-     * de la misma clase que la invoca, la devuelve sin volver a analizar nada.
-     *
-     * Los argumentos solo se usan al crear la instancia: si ya existe una de la
-     * misma clase, `$uri`, `$method` y `$capture_query_string` se ignoran, aunque
-     * sean distintos de los de la primera llamada.
-     *
-     * Está pensado únicamente para la URI de la petición: las rutas registradas
-     * deben instanciarse con `new`, porque cada una necesita su propio análisis.
-     *
-     * @param string       $uri                   URI a tokenizar.
-     * @param Methods|null $method                Método HTTP asociado a la ruta.
-     * @param bool         $capture_query_string  Si es `true`, captura como lexema lo que sigue
-     *                                            al símbolo `?` (sin incluirlo). Por defecto: `false`.
-     * @throws RouteException Si la URI tiene una sintaxis inválida durante la creación.
-     * @return static Instancia compartida de la clase que invoca el método.
-     */
-    public static function from(string $uri, ?Methods $method = null, bool $capture_query_string = false): static {
-        if (!(self::$instance instanceof static)) {
-            static::$instance = new static(
-                uri: $uri,
-                method: $method,
-                capture_query_string: $capture_query_string
-            );
-        }
-
-        return static::$instance;
     }
 
     /**

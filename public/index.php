@@ -84,6 +84,8 @@ $value = [
 
 DLServer::get_dir();
 
-print_r($value);
+$test = RequestURILexer::from();
+
+print_r("dir: " . $test->get_dir() . "\n");
 
 DLRoute::execute();
