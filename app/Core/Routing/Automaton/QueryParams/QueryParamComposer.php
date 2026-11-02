@@ -185,7 +185,7 @@ final class QueryParamComposer extends QueryStringLexer {
 
             $value = $lexeme === ''
                 ? null
-                : $next_token->lexeme;
+                : $lexeme;
 
             $length = $lexeme === ''
                 ? 0
