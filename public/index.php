@@ -86,6 +86,12 @@ DLServer::get_dir();
 
 $test = RequestURILexer::from();
 
-print_r("dir: " . $test->get_dir() . "\n");
+// print_r("dir: " . $test->get_dir() . "\n");
+// print_r("route: " . $test->get_route() . "\n");
+// print_r("uri: " . $test->get_uri() . "\n");
+// print_r("processed_uri: " . $test->get_processed_uri() . "\n");
+// print_r("processed_uri: " . $test->get_query_string() . "\n");
+
+print_r($test->get_route_resolution());
 
 DLRoute::execute();
