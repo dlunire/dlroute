@@ -46,6 +46,7 @@ include dirname(__DIR__)
     . "autoload.php";
 
 
+header("Content-type: text/plain; charset=utf-8", true, 200);
 /** @var AuthApps $auth */
 $auth = new AuthApps();
 
@@ -84,6 +85,16 @@ $value = [
 
 DLServer::get_dir();
 
+function newline(int $steps = 1): void {
+    if ($steps < 1) {
+        $steps = 1;
+    }
+
+    for ($index = 0; $index < $steps; ++$index) {
+        echo "\n";
+    }
+}
+
 $test = RequestURILexer::from();
 
 // print_r("dir: " . $test->get_dir() . "\n");
@@ -92,6 +103,14 @@ $test = RequestURILexer::from();
 // print_r("processed_uri: " . $test->get_processed_uri() . "\n");
 // print_r("processed_uri: " . $test->get_query_string() . "\n");
 
-print_r($test->get_route_resolution());
+var_dump($test->get_route_resolution());
+
+// newline(2);
+
+print_r($_SERVER['REQUEST_URI']);
+
+// newline(2);
+
+// print_r($test->get_query_string());
 
 DLRoute::execute();

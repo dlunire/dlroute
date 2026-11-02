@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Config\RealPath;
+use DLRoute\Core\Data\QueryParamValue;
 use DLRoute\Core\Data\RouteData\RouteResolution;
+use DLRoute\Core\Routing\Automaton\QueryParams\QueryParamComposer;
 use DLRoute\Core\Routing\Automaton\Route\RouterLexer;
 use DLRoute\Enums\Methods;
+use DLRoute\Errors\RouteException;
 
 /**
  * Analizador léxico para la URI de una petición entrante.
@@ -187,6 +190,10 @@ final class RequestURILexer extends RouterLexer {
             /** @var non-empty-string $segment */
             $segment = $token['lexeme'];
 
+            if ($segment === ".." || $segment === ".") {
+                throw new RouteException("El segmento de directorio '{$segment}' no está permitido", 403);
+            }
+
             /** @var non-empty-string $path */
             $path = $entry_point_dir . DIRECTORY_SEPARATOR . $segment;
 
@@ -205,10 +212,21 @@ final class RequestURILexer extends RouterLexer {
             $route_segments[] = $segment;
         }
 
+        /** @var non-empty-string|null $query_string */
+        $query_string = $this->get_query_string();
+
+        /** @var QueryParamComposer $query_param_composer */
+        $query_param_composer = new QueryParamComposer(
+            query_string: $query_string
+        );
+
         $this->route_resolution = new RouteResolution(
             uri: $this->get_processed_uri(),
             dir: "/" . implode("/", $dir_segments),
-            route: "/" . implode("/", $route_segments)
+            route: "/" . implode("/", $route_segments),
+            query_string: $query_string,
+            query_param_values: $query_param_composer->get_query_params()
+
         );
     }
 

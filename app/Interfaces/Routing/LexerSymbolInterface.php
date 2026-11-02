@@ -140,6 +140,16 @@ interface LexerSymbolInterface {
     public const AT_SIGN = "\x40";
 
     /**
+     * Carácter de tabulación horizontal (Horizontal Tab, HT).
+     *
+     * Representa el byte `0x09` de la tabla ASCII, utilizado para separar o alinear elementos mediante
+     * espacios de tabulación.
+     *
+     * @var string
+     */
+    public const TAB = "\x09";
+
+    /**
      * Tabla de conversión directa de valores de byte a símbolos.
      *
      * Cada índice representa un valor de byte comprendido entre `0x00` y `0xFF`, y su valor asociado

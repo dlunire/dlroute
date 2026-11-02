@@ -173,11 +173,11 @@ abstract class QueryStringLexer implements LexerSymbolInterface {
      * | `null` (por defecto)   | `$_SERVER['QUERY_STRING']` — querystring de la petición HTTP activa                 |
      * | `string`               | La cadena suministrada directamente — delegación desde `RouteLexer` o uso autónomo |
      *
-     * @param string|null $uri URI o fragmento de querystring a analizar.
+     * @param string|null $query_string URI o fragmento de querystring a analizar.
      *                         Si es `null`, se usa `$_SERVER['QUERY_STRING']`.
      */
-    public function __construct(?string $uri = null) {
-        $this->load_query_string($uri);
+    public function __construct(?string $query_string = null) {
+        $this->load_query_string($query_string);
         $this->scanner();
     }
 
@@ -193,16 +193,19 @@ abstract class QueryStringLexer implements LexerSymbolInterface {
      * secuencias de escape URL (`%20`, `%3D`, etc.) antes del análisis léxico,
      * y calcula `$this->size` con `strlen()` sobre la cadena ya decodificada.
      *
-     * @param string|null $uri URI de la petición a ser analizada.
+     * @param string|null $query_string Cadena de consulta de la petición.
      * @return void
      */
-    private function load_query_string(?string $uri = null): void {
-        $query_string = $uri === null
+    private function load_query_string(?string $query_string = null): void {
+        $query_string = $query_string === null
             ? $_SERVER['QUERY_STRING'] ?? null
-            : $uri;
+            : $query_string;
 
-        if ($query_string !== null && trim($query_string) !== '') {
-            $this->query_string = \urldecode($query_string);
+        if (
+            $query_string !== null &&
+            \trim($query_string) !== ''
+        ) {
+            $this->query_string = $query_string;
             $this->size = \strlen($this->query_string);
 
             return;

@@ -57,7 +57,7 @@ use DLRoute\Core\Data\QueryParamValue;
  * @package DLRoute\Core\Routing\Automaton\QueryParams
  *
  * @version v1.0.0 (release)
- * @author David E Luna M <dlunireframework@gmail.com>
+ * @author David E Luna M <info@dlunire.dev>
  * @copyright (c) 2026 David E Luna M
  * @copyright (c) 2026 DLUnire
  * @license AGPL-3.0 license
@@ -76,6 +76,18 @@ final class QueryParamComposer extends QueryStringLexer {
     private array $query_params = [];
 
     /**
+     * Valores de los parámetros de consulta asociados a la instancia.
+     *
+     * Contiene un arreglo de instancias de {@see QueryParamValue}, proporcionando acceso tipado
+     * a los valores de los parámetros de consulta correspondientes.
+     *
+     * La propiedad es de solo lectura y se inicializa durante la construcción de la instancia.
+     *
+     * @var QueryParamValue[]
+     */
+    public readonly array $query_param_value;
+
+    /**
      * Inicializa el compositor invocando el analizador léxico base
      * y construyendo los pares `nombre → valor` desde los tokens capturados.
      *
@@ -85,12 +97,14 @@ final class QueryParamComposer extends QueryStringLexer {
      * útil para delegación desde el `RouteLexer` o para uso autónomo fuera
      * del ciclo de vida HTTP.
      *
-     * @param string|null $uri Cadena de querystring a analizar, o `null` para
+     * @param string|null $query_string Cadena de querystring a analizar, o `null` para
      *                         leer `$_SERVER['QUERY_STRING']` automáticamente.
      */
-    public function __construct(?string $uri = null) {
-        parent::__construct($uri);
+    public function __construct(?string $query_string = null) {
+        parent::__construct($query_string);
         $this->build_tokens();
+
+        $this->query_param_value = $this->query_params;
     }
 
     /**
@@ -162,22 +176,28 @@ final class QueryParamComposer extends QueryStringLexer {
         /** @var int $length */
         $length = 0;
 
+        /** @var string $token_lexeme */
+        $token_lexeme = \trim(\urldecode($token->lexeme));
+
         if ($next_token instanceof QueryParam) {
-            $value = trim($next_token->lexeme) === ''
+            /** @var string $lexeme */
+            $lexeme = \trim(\urldecode($next_token->lexeme));
+
+            $value = $lexeme === ''
                 ? null
                 : $next_token->lexeme;
 
-            $length = trim($next_token->lexeme) === ''
+            $length = $lexeme === ''
                 ? 0
                 : $next_token->length;
         }
 
-        if (trim($token->lexeme) === '') {
+        if (trim($token_lexeme) === '') {
             return;
         }
 
         /** @var non-empty-string $lexeme */
-        $lexeme = $token->lexeme;
+        $lexeme = $token_lexeme;
 
         /** @var int $original_lexeme_length Longitud original del lexema (incluye espacios en blanco) */
         $original_lexeme_length = \strlen($lexeme);
@@ -197,23 +217,24 @@ final class QueryParamComposer extends QueryStringLexer {
     }
 
     /**
-     * Normaliza el nombre de un parámetro extraído del querystring.
+     * Normaliza el nombre de un parámetro extraído del query string.
      *
-     * Opera directamente sobre la variable original mediante paso por referencia,
-     * evitando la creación de copias intermedias de la cadena. El proceso
-     * consta de dos fases:
+     * Modifica directamente la cadena recibida por referencia, evitando asignaciones de cadenas
+     * intermedias durante la sustitución. El proceso consta de dos fases:
      *
-     * 1. **Saneamiento de bordes** — `trim()` elimina espacios al inicio y al final.
-     * 2. **Sustitución interna** — recorrido byte a byte que reemplaza cada
-     *    ocurrencia de `self::WHITE_SPACE` por `self::UNDERSCORE`.
+     * 1. **Saneamiento de bordes:** elimina los espacios en blanco reconocidos por `trim()` al inicio y al
+     *    final de la cadena.
+     * 2. **Normalización interna:** recorre la cadena byte a byte y sustituye cada espacio (`self::WHITE_SPACE`)
+     *    o tabulación horizontal (`self::TAB`) por un guion bajo (`self::UNDERSCORE`).
      *
      * Ejemplo:
      * ```
      * " nombre con espacios " → "nombre_con_espacios"
+     * "nombre\tcon\ttabulaciones" → "nombre_con_tabulaciones"
      * ```
      *
-     * @param string &$input Referencia a la cadena del nombre a normalizar.
-     *                       La variable es mutada directamente.
+     * @param string &$input Nombre del parámetro que se desea normalizar.
+     *                       La variable original se modifica directamente.
      * @return void
      */
     private function normalize_key(string &$input): void {
@@ -226,7 +247,7 @@ final class QueryParamComposer extends QueryStringLexer {
             /** @var non-empty-string $byte */
             $byte = $input[$index];
 
-            if ($byte === self::WHITE_SPACE) {
+            if ($byte === self::WHITE_SPACE || $byte === self::TAB) {
                 $input[$index] = self::UNDERSCORE;
             }
         }
