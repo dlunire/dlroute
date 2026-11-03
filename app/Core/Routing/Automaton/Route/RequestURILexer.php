@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Config\RealPath;
-use DLRoute\Core\Data\QueryParamValue;
 use DLRoute\Core\Data\RouteData\RouteResolution;
 use DLRoute\Core\Routing\Automaton\QueryParams\QueryParamComposer;
 use DLRoute\Core\Routing\Automaton\Route\RouterLexer;
-use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 
 /**
@@ -81,7 +79,7 @@ final class RequestURILexer extends RouterLexer {
             $buffer[] = $token['lexeme'];
         }
 
-        return "/" . join(
+        return "/" . \join(
             separator: "/",
             array: $buffer
         );
@@ -90,10 +88,9 @@ final class RequestURILexer extends RouterLexer {
     /**
      * Devuelve la URI procesada por el autómata.
      *
-     * Es la ruta reconstruida ({@see RequestURILexer::get_processed_route()})
-     * seguida, si hay una cadena de consulta no vacía, del símbolo `?` y de esa
-     * cadena sin procesar ni decodificar. Si no hay cadena de consulta, o está
-     * vacía (`/users?`), devuelve solo la ruta.
+     * Es la ruta reconstruida ({@see RequestURILexer::get_processed_route()}) seguida, si hay una cadena
+     * de consulta no vacía, del símbolo `?` y de esa cadena sin procesar ni decodificar. Si no hay cadena
+     * de consulta, o está vacía (`/users?`), devuelve solo la ruta.
      *
      * Ejemplo: `//users//42?page=2` produce `/users/42?page=2`.
      *
@@ -138,8 +135,6 @@ final class RequestURILexer extends RouterLexer {
     public function get_route(): string {
         return $this->route_resolution->route;
     }
-
-
 
     /**
      * Resuelve la URI de la solicitud en relación con el punto de entrada físico.
@@ -191,7 +186,10 @@ final class RequestURILexer extends RouterLexer {
             $segment = $token['lexeme'];
 
             if ($segment === ".." || $segment === ".") {
-                throw new RouteException("El segmento de directorio '{$segment}' no está permitido", 403);
+                throw new RouteException(
+                    message: "El segmento de directorio '{$segment}' no está permitido",
+                    code: 403
+                );
             }
 
             /** @var non-empty-string $path */
@@ -222,8 +220,8 @@ final class RequestURILexer extends RouterLexer {
 
         $this->route_resolution = new RouteResolution(
             uri: $this->get_processed_uri(),
-            dir: "/" . implode("/", $dir_segments),
-            route: "/" . implode("/", $route_segments),
+            dir: "/" . join(separator: "/", array: $dir_segments),
+            route: "/" . join(separator: "/", array: $route_segments),
             query_string: $query_string,
             query_param_values: $query_param_composer->get_query_params()
 
