@@ -156,6 +156,18 @@ abstract class RouterLexer implements LexerSymbolInterface {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$this->offset];
 
+            if (self::REJECTED_BYTES[$byte] ?? false) {
+                $byte_value = self::SYMBOL_TO_BYTE[$byte];
+
+                throw new RouteException(
+                    message: \vsprintf(
+                        format: "Byte no válido (0x%02X), desplazamiento %d.",
+                        values: [$byte_value, $this->offset]
+                    ),
+                    code: 403
+                );
+            }
+
             if ($byte !== self::WHITE_SPACE && $byte !== self::SLASH) {
                 $this->tokenizer();
 
@@ -261,6 +273,17 @@ abstract class RouterLexer implements LexerSymbolInterface {
         while ($offset < $this->size) {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$offset];
+
+            if (self::REJECTED_BYTES[$byte] ?? false) {
+                $byte_value = self::SYMBOL_TO_BYTE[$byte];
+                throw new RouteException(
+                    message: \vsprintf(
+                        format: "Byte no válido (0x%02X), desplazamiento %d.",
+                        values: [$byte_value, $offset]
+                    ),
+                    code: 403
+                );
+            }
 
             if ($byte === self::BRACKET_OPEN) {
                 $bracket_open = true;

@@ -50,7 +50,6 @@ final class RequestURILexer extends RouterLexer {
      * Tras construir la clase padre, carga la resolución de rutas con `load_route_resolution()`.
      */
     private function __construct() {
-        global $argv;
 
         parent::__construct(
             uri: PHP_SAPI === 'cli'

@@ -42,7 +42,7 @@ use DLRoute\Interfaces\Routing\LexerSymbolInterface;
  * sin `parse_str()`, sin `explode()` y sin expresiones regulares.
  *
  * El constructor acepta una URI externa opcional, lo que permite que el
- * lexer opere tanto sobre `$_SERVER['QUERY_STRING']` como sobre una cadena
+ * lexer opere tanto sobre `$_SERVER['querystring']` como sobre una cadena
  * suministrada directamente — por ejemplo, cuando el `RouteLexer` delega
  * el fragmento del querystring detectado en la URI registrada por el
  * desarrollador.
@@ -82,13 +82,13 @@ abstract class QueryStringLexer implements LexerSymbolInterface {
     /**
      * Cadena del querystring decodificada con `urldecode()`.
      *
-     * Se asigna en `load_query_string()` a partir de `$_SERVER['QUERY_STRING']`
+     * Se asigna en `load_querystring()` a partir de `$_SERVER['querystring']`
      * o de la URI suministrada externamente. Vale `null` cuando el querystring
      * está ausente o es una cadena vacía o en blanco.
      *
-     * @var string|null $query_string
+     * @var string|null $querystring
      */
-    private readonly ?string $query_string;
+    private ?string $querystring;
 
     /**
      * Posición actual del cursor del autómata en la cadena de bytes.
@@ -104,7 +104,7 @@ abstract class QueryStringLexer implements LexerSymbolInterface {
     /**
      * Longitud en bytes del querystring.
      *
-     * Se calcula una sola vez en `load_query_string()` con `strlen()` y se
+     * Se calcula una sola vez en `load_querystring()` con `strlen()` y se
      * almacena como propiedad inmutable para evitar recalcularla en cada
      * iteración del autómata. Vale `0` cuando el querystring está vacío o
      * ausente.
@@ -158,7 +158,7 @@ abstract class QueryStringLexer implements LexerSymbolInterface {
      * Inicializa el analizador léxico del querystring.
      *
      * Orquesta la secuencia de análisis en dos fases:
-     *  1. `load_query_string()` — carga y normaliza la cadena de parámetros
+     *  1. `load_querystring()` — carga y normaliza la cadena de parámetros
      *     y calcula `$this->size`.
      *  2. `scanner()` — ejecuta el autómata sobre la cadena cargada y
      *     popula `$this->tokens` con instancias de `QueryParam`.
@@ -170,49 +170,49 @@ abstract class QueryStringLexer implements LexerSymbolInterface {
      *
      * | Valor de `$uri`        | Fuente del querystring                                                              |
      * | ---------------------- | ----------------------------------------------------------------------------------- |
-     * | `null` (por defecto)   | `$_SERVER['QUERY_STRING']` — querystring de la petición HTTP activa                 |
+     * | `null` (por defecto)   | `$_SERVER['querystring']` — querystring de la petición HTTP activa                 |
      * | `string`               | La cadena suministrada directamente — delegación desde `RouteLexer` o uso autónomo |
      *
-     * @param string|null $query_string URI o fragmento de querystring a analizar.
-     *                         Si es `null`, se usa `$_SERVER['QUERY_STRING']`.
+     * @param string|null $querystring URI o fragmento de querystring a analizar.
+     *                         Si es `null`, se usa `$_SERVER['querystring']`.
      */
-    public function __construct(?string $query_string = null) {
-        $this->load_query_string($query_string);
+    public function __construct(?string $querystring = null) {
+        $this->load_querystring($querystring);
         $this->scanner();
     }
 
     /**
      * Carga y normaliza la cadena de parámetros del querystring.
      *
-     * Si `$uri` es `null`, intenta leer `$_SERVER['QUERY_STRING']`. Si la
+     * Si `$uri` es `null`, intenta leer `$_SERVER['querystring']`. Si la
      * cadena resultante está vacía o contiene solo espacios en blanco, asigna
-     * `null` a `$this->query_string` y `0` a `$this->size`, lo que hace que
+     * `null` a `$this->querystring` y `0` a `$this->size`, lo que hace que
      * `scanner()` retorne inmediatamente sin procesar nada.
      *
      * Cuando la cadena es válida, aplica `urldecode()` para normalizar
      * secuencias de escape URL (`%20`, `%3D`, etc.) antes del análisis léxico,
      * y calcula `$this->size` con `strlen()` sobre la cadena ya decodificada.
      *
-     * @param string|null $query_string Cadena de consulta de la petición.
+     * @param string|null $querystring Cadena de consulta de la petición.
      * @return void
      */
-    private function load_query_string(?string $query_string = null): void {
-        $query_string = $query_string === null
-            ? $_SERVER['QUERY_STRING'] ?? null
-            : $query_string;
+    private function load_querystring(?string $querystring = null): void {
+        $querystring = $querystring === null
+            ? $_SERVER['querystring'] ?? null
+            : $querystring;
 
         if (
-            $query_string !== null &&
-            \trim($query_string) !== ''
+            $querystring !== null &&
+            \trim($querystring) !== ''
         ) {
-            $this->query_string = $query_string;
-            $this->size = \strlen($this->query_string);
+            $this->querystring = $querystring;
+            $this->size = \strlen($this->querystring);
 
             return;
         }
 
         $this->size = 0;
-        $this->query_string = null;
+        $this->querystring = null;
     }
 
     /**
@@ -267,7 +267,17 @@ abstract class QueryStringLexer implements LexerSymbolInterface {
 
         while ($this->offset < $this->size) {
             /** @var non-empty-string $byte */
-            $byte = $this->query_string[$this->offset];
+            $byte = $this->querystring[$this->offset];
+
+            if (
+                (
+                    self::SYMBOL_TO_BYTE[$byte] <= 0x20 ||
+                    $byte === self::BYTE_TO_SYMBOL[0x7F] ||
+                    $byte === self::BYTE_TO_SYMBOL[0x5E]) &&
+                $this->tokentype === QueryStringTokenType::QUERY_NAME
+            ) {
+                $this->querystring[$this->offset] = "_";
+            }
 
             if ($byte === self::QUERY_ASSIGN && $this->tokentype === QueryStringTokenType::QUERY_NAME) {
                 $this->tokentype = QueryStringTokenType::QUERY_VALUE;
@@ -338,7 +348,7 @@ abstract class QueryStringLexer implements LexerSymbolInterface {
 
         $this->tokens[] = new QueryParam(...[
             "lexeme" => $length === 0 ? '' : \substr(
-                string: $this->query_string,
+                string: $this->querystring,
                 offset: $start_offset,
                 length: $length
             ),

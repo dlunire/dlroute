@@ -961,4 +961,60 @@ interface LexerSymbolInterface {
         "%fe" => 0xfe,
         "%ff" => 0xff
     ];
+
+    /**
+     * Bytes que provocan el rechazo de la petición con una excepción.
+     *
+     * Se evalúan sobre los segmentos de la ruta y sobre los nombres de los parámetros del querystring,
+     * no sobre los valores, que llegan crudos. Si aparece alguno, el analizador lanza una `RouteException`
+     * en lugar de normalizarlo.
+     *
+     * Son bytes que RFC 3986 no admite sin codificar y que, además, pueden alterar el significado de la ruta
+     * o resultar peligrosos si se escriben sin escapar:
+     *
+     *  - `\` (`0x5C`): separador de directorios en algunos sistemas.
+     *  - `"` (`0x22`), `<` (`0x3C`) y `>` (`0x3E`): delimitadores de HTML.
+     *  - `^` (`0x5E`), `` ` `` (`0x60`), `{` (`0x7B`), `|` (`0x7C`) y `}` (`0x7D`).
+     *
+     * No incluye los controles («0x00» a «0x1F»), el espacio («0x20») ni «DEL» («0x7F»), que se sustituyen
+     * por «_», ni los bytes «0x80» a «0xFF» (secuencias UTF-8).
+     * 
+     * Tampoco se decodifican las secuencias «%XX»: «%5c» llega como texto literal y no se rechaza.
+     *
+     * Las claves son símbolos de un byte, igual que en {@see self::SYMBOL_TO_BYTE}, y se
+     * consultan con `self::REJECTED_BYTES[$byte] ?? false`:
+     *
+     * ```php
+     * if (self::REJECTED_BYTES[$byte] ?? false) {
+     *     throw new RouteException(message: "...", code: 403);
+     * }
+     * ```
+     *
+     * @var array<string,true>
+     */
+    public const REJECTED_BYTES = [
+        "\x00" => true,
+        "\x22" => true,
+        "\x3c" => true,
+        "\x3e" => true,
+        "\x5c" => true,
+        "\x5e" => true,
+        "\x60" => true,
+        "\x7b" => true,
+        "\x7c" => true,
+        "\x7d" => true,
+        "\xc0" => true,
+        "\xc1" => true,
+        "\xf5" => true,
+        "\xf6" => true,
+        "\xf7" => true,
+        "\xf8" => true,
+        "\xf9" => true,
+        "\xfa" => true,
+        "\xfb" => true,
+        "\xfc" => true,
+        "\xfd" => true,
+        "\xfe" => true,
+        "\xff" => true,
+    ];
 }
