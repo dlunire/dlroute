@@ -189,6 +189,16 @@ final class RequestURILexer extends RouterLexer {
      *   se incorporan a `route_segments`, independientemente de que existan
      *   directorios físicos con esos nombres.
      *
+     * Reglas de la resolución:
+     *
+     * - Cada segmento se comprueba con `is_dir()` sobre la ruta construida a partir del punto de entrada,
+     *   por lo que los enlaces simbólicos a directorios se siguen y pueden encadenarse
+     *   (por ejemplo, `/dir/dir/dir`).
+     * - Los segmentos se comparan tal como llegan, sin decodificar: `%2e%2e` es un nombre literal y no `..`.
+     *   Decodificar la ruta es responsabilidad de quien consuma `route`.
+     * - Los segmentos `.` y `..` se rechazan en cualquier posición de la URI, incluso después de que la
+     *   resolución de directorios haya terminado.
+     *
      * La resolución física comienza desde el directorio real del punto de entrada, obtenido mediante
      * {@see RealPath::get_entry_point()}.
      *
@@ -196,9 +206,14 @@ final class RequestURILexer extends RouterLexer {
      * resuelto y la ruta lógica resultante.
      *
      * Esta separación permite distinguir el contexto físico de ejecución de la ruta lógica que debe procesar
-     * el enrutador, sin derivar el prefijo de montaje de la URL a partir del sistema de archivos.
+     * el enrutador. No infiere el prefijo de montaje de la URL (por ejemplo, `/dir/dir`) comparando la
+     * ubicación física del punto de entrada con la URI: toma los segmentos de la URI tal como llegan y solo
+     * consulta el sistema de archivos (`is_dir()`) para decidir cuáles corresponden a directorios existentes
+     * a partir del punto de entrada.
      *
      * @return void
+     *
+     * @throws RouteException Con código 403, si algún segmento de la URI es `.` o `..`.
      */
     private function load_route_resolution(): void {
         /** @var RealPath $realpath */
