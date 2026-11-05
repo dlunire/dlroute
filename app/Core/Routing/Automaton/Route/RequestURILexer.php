@@ -244,13 +244,12 @@ final class RequestURILexer extends RouterLexer {
     /**
      * Obtiene la instancia única del analizador léxico de la URI de petición.
      *
-     * Implementa el patrón Singleton mediante inicialización diferida (Lazy
-     * Initialization). Si todavía no existe una instancia de la clase, la
-     * construye y la almacena para su reutilización durante el ciclo de vida
-     * de la aplicación.
+     * Implementa el patrón Singleton mediante inicialización diferida (Lazy Initialization). Si todavía
+     * no existe una instancia de la clase, la construye y la almacena para su reutilización durante el
+     * ciclo de vida de la aplicación.
      *
-     * Las llamadas posteriores devuelven la instancia previamente construida,
-     * evitando nuevas inicializaciones y análisis repetidos de la URI.
+     * Las llamadas posteriores devuelven la instancia previamente construida, evitando nuevas inicializaciones
+     * y análisis repetidos de la URI.
      *
      * @return static Instancia única de RequestURILexer.
      */
