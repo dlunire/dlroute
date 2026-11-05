@@ -28,28 +28,30 @@ declare(strict_types=1);
 namespace DLRoute\Core\Data;
 
 /**
- * Representa un par «nombre → valor» compuesto a partir de los tokens
- * capturados durante el análisis léxico del querystring.
+ * Representa un par «nombre → valor» compuesto a partir de los tokens capturados durante el análisis
+ * léxico del querystring.
  *
- * Cada instancia es inmutable — sus propiedades se asignan una sola vez
- * en el constructor y no pueden modificarse posteriormente. Esto garantiza
- * que los parámetros de la petición no sean alterados después del análisis.
+ * Cada instancia es inmutable: sus propiedades se asignan una sola vez en el constructor y no pueden
+ * modificarse posteriormente.
  *
- * Además del par «nombre → valor», expone metadatos de posición que permiten
- * al analizador semántico localizar con precisión cada parámetro dentro de la
- * cadena original del querystring sin necesidad de releerla.
+ * Además del par «nombre → valor», expone metadatos de posición que permiten localizar cada parámetro
+ * dentro de la cadena original del querystring sin necesidad de releerla. Todas las posiciones y
+ * longitudes se miden en bytes sobre la cadena original, sin decodificar, mientras que «name» y «value»
+ * se entregan decodificados.
  *
- * La distinción entre valor nulo y valor vacío es semántica:
- *  - «null» → el parámetro existe pero no tiene valor asignado («?campo»)
- *  - «""»   → el parámetro tiene un valor explícitamente vacío («?campo=»),
- *             sin embargo el autómata normaliza este caso a «null» también.
+ * Reglas de análisis:
+ *  - «null» → el valor está vacío («?campo=») o falta el operador «=» («?campo»). El autómata no distingue ambos
+ *    casos.
+ *  - Si un parámetro se repite («a=1&a=2»), prevalece el último.
+ *  - «+» se interpreta como espacio y las secuencias «%XX» válidas se decodifican. Una secuencia inválida
+ *    («%zz» o un «%» suelto» se
+ *    conserva literal.
+ *  - Solo el primer «=» separa nombre y valor: en «a=1=2», el valor es «1=2».
  *
  * @package DLRoute\Core\Data
- *
- * @version v1.0.0 (release)
- * @author  David E Luna M <dlunireframework@gmail.com>
- * @copyright (c) 2026 David E Luna M
- * @copyright (c) 2026 DLUnire
+ * 
+ * @author David E Luna M <info@dlunire.dev>
+ * @copyright 2026 DLUnire
  * @license AGPL-3.0 license
  */
 final class QueryParamValue {

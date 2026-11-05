@@ -31,13 +31,13 @@ session_start();
 ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
-use DLRoute\Server\DLServer;
-use DLRoute\Test\AuthController;
+// use DLRoute\Server\DLServer;
+// use DLRoute\Test\AuthController;
 
-error_log('ENTRY: ' . __FILE__);
-error_log('REALPATH: ' . (realpath(__FILE__) ?: 'false'));
-error_log('SCRIPT_FILENAME: ' . ($_SERVER['SCRIPT_FILENAME'] ?? ''));
-error_log('REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? ''));
+// error_log('ENTRY: ' . __FILE__);
+// error_log('REALPATH: ' . (realpath(__FILE__) ?: 'false'));
+// error_log('SCRIPT_FILENAME: ' . ($_SERVER['SCRIPT_FILENAME'] ?? ''));
+// error_log('REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? ''));
 
 include dirname(__DIR__)
     . DIRECTORY_SEPARATOR
@@ -57,7 +57,7 @@ $auth = new AuthApps();
 // DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
 // DLRoute::get('/profile/{a?}/{b?}/{c?}/{d?}', fn () => ["status" => "Ok"]);
 
-DLRoute::get('/////////f////dd', fn() => "Test");
+// DLRoute::get('/////////f////dd', fn() => "Test");
 
 // DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
 
@@ -73,17 +73,17 @@ DLRoute::get('/////////f////dd', fn() => "Test");
 // });
 
 // # Inicio de sesión de prueba:
-DLRoute::post('/login', [AuthController::class, 'auth']);
+// DLRoute::post('/login', [AuthController::class, 'auth']);
 
 // # Cerrar una sesión de prueba:
 // DLRoute::delete("/logout", [AuthController::class, 'logout']);
 
-$value = [
-    "base_url" => DLServer::get_base_url(),
-    "dir" => DLServer::get_dir()
-];
+// $value = [
+//     "base_url" => DLServer::get_base_url(),
+//     "dir" => DLServer::get_dir()
+// ];
 
-DLServer::get_dir();
+// DLServer::get_dir();
 
 function newline(int $steps = 1): void {
     if ($steps < 1) {
@@ -103,11 +103,11 @@ $test = RequestURILexer::from();
 // print_r("processed_uri: " . $test->get_processed_uri() . "\n");
 // print_r("processed_uri: " . $test->get_query_string() . "\n");
 
-var_dump($test->get_route_resolution());
+print_r($test->get_route_resolution());
 
 // newline(2);
 
-print_r($_SERVER['REQUEST_URI']);
+print_r($_SERVER['REQUEST_URI'] ?? null);
 
 // newline(2);
 

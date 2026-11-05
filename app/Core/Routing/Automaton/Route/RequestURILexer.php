@@ -39,20 +39,57 @@ final class RequestURILexer extends RouterLexer {
     private ?RouteResolution $route_resolution = null;
 
     /**
-     * Analiza la URI durante su instancia
+     * Constructor privado. Inicializa el enrutador resolviendo la URI según el entorno de ejecución:
+     *
+     * - **CLI** (`PHP_SAPI === 'cli'`): la ruta se obtiene de las opciones `-r` o `--route` (véase `get_options()`).
+     * - **Servidor web**: se usa `$_SERVER['REQUEST_URI']`, o `/` si no está definida.
+     *
+     * Se declara privado de forma intencional: la instancia se crea a través del punto de entrada de la clase,
+     * tanto para peticiones HTTP como para ejecución por terminal.
+     *
+     * Tras construir la clase padre, carga la resolución de rutas con `load_route_resolution()`.
      */
     private function __construct() {
         global $argv;
 
         parent::__construct(
             uri: PHP_SAPI === 'cli'
-                ? ($argv[1] ?? "/")
+                ? $this->get_options()
                 : ($_SERVER['REQUEST_URI'] ?? "/"),
             method: null,
             capture_query_string: true
         );
 
         $this->load_route_resolution();
+    }
+
+    /**
+     * Obtiene la ruta solicitada cuando la aplicación se ejecuta desde la línea de comandos (CLI).
+     *
+     * Lee las opciones `-r` o `--route` con `getopt()` y devuelve su valor.
+     * Si se indican ambas, tiene prioridad `-r`. Si no se indica ninguna, devuelve la ruta raíz `/`.
+     *
+     * Ejemplos de uso:
+     *
+     * ```bash
+     * php index.php -r /usuarios
+     * php index.php --route=/usuarios
+     * php index.php --route /usuarios
+     * ```
+     *
+     * Nota: en la forma corta, la sintaxis `-r=/usuarios` no es válida porque el valor incluiría el
+     * signo `=`. Use `-r /usuarios` o la forma larga.
+     *
+     * @return string|array Ruta solicitada. Si la opción se repite en la línea de comandos, `getopt()`
+     *                      devuelve un array.
+     */
+    private function get_options() {
+        $options = \getopt(
+            short_options: 'r:',
+            long_options: ["route:"]
+        );
+
+        return $options['r'] ?? $options['route'] ?? "/";
     }
 
     /**
