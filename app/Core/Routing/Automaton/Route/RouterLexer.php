@@ -137,6 +137,7 @@ abstract class RouterLexer implements LexerSymbolInterface {
         private readonly ?Methods $method = null,
         private readonly bool $capture_query_string = false
     ) {
+
         $this->uri = trim($uri);
         $this->size = \strlen($this->uri);
         $this->scanner();
@@ -274,8 +275,10 @@ abstract class RouterLexer implements LexerSymbolInterface {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$offset];
 
+
             if (self::REJECTED_BYTES[$byte] ?? false) {
                 $byte_value = self::SYMBOL_TO_BYTE[$byte];
+
                 throw new RouteException(
                     message: \vsprintf(
                         format: "Byte no válido (0x%02X), desplazamiento %d.",

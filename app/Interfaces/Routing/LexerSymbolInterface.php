@@ -970,15 +970,20 @@ interface LexerSymbolInterface {
      * en lugar de normalizarlo.
      *
      * Son bytes que RFC 3986 no admite sin codificar y que, además, pueden alterar el significado de la ruta
-     * o resultar peligrosos si se escriben sin escapar:
+     * o resultar peligrosos si se escriben sin escapar, o bytes que nunca aparecen en UTF-8 válido:
      *
-     *  - `\` (`0x5C`): separador de directorios en algunos sistemas.
+     *  - `NUL` (`0x00`): no es válido en rutas del sistema de archivos.
      *  - `"` (`0x22`), `<` (`0x3C`) y `>` (`0x3E`): delimitadores de HTML.
-     *  - `^` (`0x5E`), `` ` `` (`0x60`), `{` (`0x7B`), `|` (`0x7C`) y `}` (`0x7D`).
+     *  - `\` (`0x5C`): separador de directorios en algunos sistemas.
+     *  - `^` (`0x5E`), `` ` `` (`0x60`) y `|` (`0x7C`).
+     *  - `0xC0` y `0xC1`: nunca son válidos en UTF-8 (solo codificarían secuencias sobrelargas).
+     *  - `0xF5` a `0xFF`: nunca son válidos en UTF-8.
      *
-     * No incluye los controles («0x00» a «0x1F»), el espacio («0x20») ni «DEL» («0x7F»), que se sustituyen
-     * por «_», ni los bytes «0x80» a «0xFF» (secuencias UTF-8).
-     * 
+     * Las llaves `{` (`0x7B`) y `}` (`0x7D`) no se rechazan: pasan como cualquier otro byte.
+     *
+     * No incluye los controles «0x01» a «0x1F», el espacio («0x20») ni «DEL» («0x7F»), que se sustituyen
+     * por «_», ni el resto de bytes «0x80» a «0xFF» (secuencias UTF-8 válidas).
+     *
      * Tampoco se decodifican las secuencias «%XX»: «%5c» llega como texto literal y no se rechaza.
      *
      * Las claves son símbolos de un byte, igual que en {@see self::SYMBOL_TO_BYTE}, y se
@@ -1000,9 +1005,7 @@ interface LexerSymbolInterface {
         "\x5c" => true,
         "\x5e" => true,
         "\x60" => true,
-        "\x7b" => true,
         "\x7c" => true,
-        "\x7d" => true,
         "\xc0" => true,
         "\xc1" => true,
         "\xf5" => true,
