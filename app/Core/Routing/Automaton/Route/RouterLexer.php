@@ -168,10 +168,6 @@ abstract class RouterLexer implements LexerSymbolInterface {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$this->offset];
 
-            if ($byte === "\x25") {
-                $this->decode_percent($this->offset);
-            }
-
             if (self::REJECTED_BYTES[$byte] ?? false) {
                 $byte_value = self::SYMBOL_TO_BYTE[$byte];
 
@@ -265,6 +261,7 @@ abstract class RouterLexer implements LexerSymbolInterface {
             "method" => $this->method
         ];
 
+        print_r($this->decoded_bytes);
         $this->decoded_bytes = [];
 
         if (!$this->has_param && $tokentype === TokenType::PARAM) {
@@ -295,6 +292,7 @@ abstract class RouterLexer implements LexerSymbolInterface {
 
             if ($byte === "\x25") {
                 $this->decode_percent($offset);
+                continue;
             }
 
             if (self::REJECTED_BYTES[$byte] ?? false) {
@@ -447,5 +445,44 @@ abstract class RouterLexer implements LexerSymbolInterface {
      * @return void
      */
     private function decode_percent(int &$offset): void {
+
+        /** @var non-empty-string|null $high_symbol */
+        $high_symbol = $this->uri[$offset + 1] ?? null;
+
+        /** @var non-empty-string|null $low_symbol */
+        $low_symbol = $this->uri[$offset + 2] ?? null;
+
+        if ($high_symbol === null || $low_symbol === null) {
+            $offset++;
+            return;
+        }
+
+        /** @var int $high_byte */
+        $high_byte = self::SYMBOL_TO_BYTE[$high_symbol];
+
+        if ($high_byte >= 0x41 && $high_byte <= 0x46) {
+            $high_byte += 0x20;
+        }
+
+        /** @var int $low_byte */
+        $low_byte = self::SYMBOL_TO_BYTE[$low_symbol];
+
+        if ($low_byte >= 0x41 && $low_byte <= 0x46) {
+            $low_byte += 0x20;
+        }
+
+        /** @var int|null $encoded_byte */
+        $encoded_byte = self::PERCENT_ENCODING_MAP["%" . self::BYTE_TO_SYMBOL[$high_byte] . self::BYTE_TO_SYMBOL[$low_byte]] ?? null;
+
+        if ($encoded_byte === null) {
+            $offset++;
+            return;
+        }
+
+        /** @var non-empty-string $encoded_symbol */
+        $encoded_symbol = self::BYTE_TO_SYMBOL[$encoded_byte];
+
+        $this->decoded_bytes[$offset] = self::ESCAPE_SEQUENCES[$encoded_symbol] ?? $encoded_symbol;
+        $offset += 3;
     }
 }

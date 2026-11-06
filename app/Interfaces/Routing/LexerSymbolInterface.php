@@ -1020,4 +1020,40 @@ interface LexerSymbolInterface {
         "\xfe" => true,
         "\xff" => true,
     ];
+
+    /**
+     * Secuencias de escape para bytes decodificados desde `%XX`.
+     *
+     * Solo contiene los bytes que necesitan escape; el resto se guarda tal cual.
+     * Las claves son símbolos de un byte, igual que en {@see self::SYMBOL_TO_BYTE}, y se
+     * consultan con `self::ESCAPE_SEQUENCES[$symbol] ?? $symbol`.
+     *
+     *  - `/` (`0x2F`) se escapa como `\/`.
+     *  - `\` (`0x5C`) se escapa como `\\`.
+     *
+     * @var array<string,string>
+     */
+    /**
+     * Bytes decodificados desde `%XX` que se sustituyen o se escapan antes de guardarse.
+     *
+     * Solo contiene los bytes que reciben tratamiento; cualquier otro se guarda tal cual.
+     * Las claves son símbolos de un byte, igual que en {@see self::SYMBOL_TO_BYTE}, y se
+     * consultan con `self::ESCAPE_SEQUENCES[$symbol] ?? $symbol`.
+     *
+     *  - `NUL` (`0x00`), `LF` (`0x0A`) y `0xC0` se sustituyen por `_` (`0x5F`).
+     *  - `/` (`0x2F`) se escapa como `\/` y `\` (`0x5C`) como `\\`, de modo que un separador
+     *    decodificado nunca llega como un byte real y `\/` no es ambiguo.
+     *
+     * Aplica solo a bytes decodificados: los mismos bytes escritos crudos siguen el camino de
+     * {@see self::REJECTED_BYTES}.
+     *
+     * @var array<string,string>
+     */
+    public const ESCAPE_SEQUENCES = [
+        "\x00" => "\x5f",
+        "\x0a" => "\x5f",
+        "\xc0" => "\x5f",
+        "\x2f" => "\x5c\x2f",
+        "\x5c" => "\x5c\x5c",
+    ];
 }
