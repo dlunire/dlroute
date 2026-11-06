@@ -80,6 +80,17 @@ abstract class RouterLexer implements LexerSymbolInterface {
     private readonly int $size;
 
     /**
+     * Bytes decodificados del lexema en curso, un símbolo por posición.
+     *
+     * Cuando el cursor encuentra `%` (`\x25`), el sub-autómata decodifica el par
+     * hexadecimal y guarda aquí el byte resultante, ya escapado si es `/` o `\`.
+     * Se vuelca en el token al emitir el lexema y se vacía.
+     *
+     * @var array<int,string>
+     */
+    private array $decoded_bytes = [];
+
+    /**
      * Tokens capturados de la ruta.
      *
      * Cada entrada contiene:
@@ -156,6 +167,10 @@ abstract class RouterLexer implements LexerSymbolInterface {
         while ($this->offset < $this->size) {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$this->offset];
+
+            if ($byte === "\x25") {
+                $this->decode_percent($this->offset);
+            }
 
             if (self::REJECTED_BYTES[$byte] ?? false) {
                 $byte_value = self::SYMBOL_TO_BYTE[$byte];
@@ -242,12 +257,15 @@ abstract class RouterLexer implements LexerSymbolInterface {
 
         $this->tokens[] = [
             "lexeme" => $lexeme,
+            "decoded_lexeme" => join("", $this->decoded_bytes),
             "length" => $length,
             "optional" => $is_optional,
             "tokentype" => $tokentype,
             "offset" => $current_offset,
             "method" => $this->method
         ];
+
+        $this->decoded_bytes = [];
 
         if (!$this->has_param && $tokentype === TokenType::PARAM) {
             $this->has_param = true;
@@ -275,6 +293,9 @@ abstract class RouterLexer implements LexerSymbolInterface {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$offset];
 
+            if ($byte === "\x25") {
+                $this->decode_percent($offset);
+            }
 
             if (self::REJECTED_BYTES[$byte] ?? false) {
                 $byte_value = self::SYMBOL_TO_BYTE[$byte];
@@ -412,5 +433,19 @@ abstract class RouterLexer implements LexerSymbolInterface {
         return $this->query_string === '' || $this->query_string === null
             ? null
             : $this->query_string;
+    }
+
+    /**
+     * Decodifica en línea una secuencia `%XX` del lexema en curso.
+     *
+     * Lee los dos símbolos que siguen al `%` (`\x25`) a partir de `$offset`, los normaliza
+     * a minúscula y guarda el byte resultante en `$decoded_bytes`, escapado si es `/` o `\`.
+     * Actualiza `$offset` para que el escáner continúe después de la secuencia consumida.
+     * Si el par no es válido, deja el mensaje en el subtoken y el escaneo continúa.
+     *
+     * @param int $offset Posición del cursor, por referencia.
+     * @return void
+     */
+    private function decode_percent(int &$offset): void {
     }
 }
