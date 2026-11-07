@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Config\RealPath;
+use DLRoute\Core\Data\RouteData\ProcessedURI;
 use DLRoute\Core\Data\RouteData\RouteResolution;
 use DLRoute\Core\Routing\Automaton\QueryParams\QueryParamComposer;
 use DLRoute\Core\Routing\Automaton\Route\RouterLexer;
@@ -21,6 +22,20 @@ use DLRoute\Errors\RouteException;
  * @license AGPL-3.0-or-later
  */
 final class RequestURILexer extends RouterLexer {
+
+    /**
+     * Tokens de la URI sin la cadena de consultas
+     *
+     * @var array $uri_tokens;
+     */
+    private readonly array $uri_tokens;
+
+    /**
+     * Contiene la URI procesada de la petición (sea una HTTP o por CLI)
+     *
+     * @var ProcessedURI $processed_uri
+     */
+    private readonly ProcessedURI $processed_uri;
 
     /**
      * Instancia de clase
@@ -59,6 +74,8 @@ final class RequestURILexer extends RouterLexer {
             capture_query_string: true
         );
 
+        $this->uri_tokens = $this->get_tokens();
+        $this->build_processed_uri();
         $this->load_route_resolution();
     }
 
@@ -105,14 +122,25 @@ final class RequestURILexer extends RouterLexer {
      * @return string Ruta procesada, siempre con `/` inicial.
      */
     public function get_processed_route(): string {
-        /** Tokens de la URI */
-        $tokens = $this->get_tokens();
-
         /** @var string[] $buffer Lexemas de cada segmento de ruta */
         $buffer = [];
 
-        foreach ($tokens as $token) {
+        foreach ($this->uri_tokens as $token) {
             $buffer[] = $token['lexeme'];
+        }
+
+        return "/" . \join(
+            separator: "/",
+            array: $buffer
+        );
+    }
+
+    public function get_decoded_processed_route(): string {
+        /** @var string[] $buffer Lexemas de cada segmento de ruta */
+        $buffer = [];
+
+        foreach ($this->uri_tokens as $token) {
+            $buffer[] = $token['decoded_lexeme'];
         }
 
         return "/" . \join(
@@ -236,7 +264,14 @@ final class RequestURILexer extends RouterLexer {
             /** @var non-empty-string $segment */
             $segment = $token['lexeme'];
 
-            if ($segment === ".." || $segment === ".") {
+            $decoded_segment = $token['decoded_lexeme'];
+
+            if (
+                $segment === ".." ||
+                $decoded_segment === ".." ||
+                $segment === "." ||
+                $decoded_segment === "."
+            ) {
                 throw new RouteException(
                     message: "El segmento de directorio '{$segment}' no está permitido",
                     code: 403
@@ -270,7 +305,7 @@ final class RequestURILexer extends RouterLexer {
         );
 
         $this->route_resolution = new RouteResolution(
-            uri: $this->get_processed_uri(),
+            uri: $this->processed_uri,
             dir: "/" . join(separator: "/", array: $dir_segments),
             route: "/" . join(separator: "/", array: $route_segments),
             query_string: $query_string,
@@ -310,5 +345,50 @@ final class RequestURILexer extends RouterLexer {
         }
 
         return self::$instance;
+    }
+
+    # MÉTODOS PRIVADOS
+
+    /**
+     * Construye la URI procesada en sus dos formas, en una sola iteración sobre los tokens.
+     *
+     * Une con `/` los `lexeme` y los `decoded_lexeme` de cada token, antepone la barra inicial y
+     * guarda el resultado en {@see self::$processed_uri} como un {@see ProcessedURI}.
+     *
+     * Si no hay tokens, ambas formas son `/`.
+     *
+     * @return void
+     */
+    private function build_processed_uri(): void {
+        /** @var non-empty-string[] $uri_buffer Lexemas de cada segmento de ruta */
+        $uri_buffer = [];
+
+        /** @var non-empty-string[] $uri_decoded_buffer */
+        $uri_decoded_buffer = [];
+
+        /** @var string $querystring */
+        $querystring = $this->get_query_string() !== null
+            ? "?" . $this->get_query_string()
+            : '';
+
+        foreach ($this->uri_tokens as $token) {
+            $uri_buffer[] = $token['lexeme'];
+            $uri_decoded_buffer[] = $token['decoded_lexeme'];
+        }
+
+        $uri = "/" . \join(
+            separator: "/",
+            array: $uri_buffer
+        ) . $querystring;
+
+        $decoded_uri = "/" . \join(
+            separator: "/",
+            array: $uri_decoded_buffer
+        ) . $querystring;
+
+        $this->processed_uri = new ProcessedURI(
+            uri: $uri,
+            decoded_uri: $decoded_uri
+        );
     }
 }

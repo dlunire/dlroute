@@ -90,6 +90,8 @@ abstract class RouterLexer implements LexerSymbolInterface {
      */
     private array $decoded_bytes = [];
 
+    private int $count_decoded_bytes = 0;
+
     /**
      * Tokens capturados de la ruta.
      *
@@ -249,11 +251,19 @@ abstract class RouterLexer implements LexerSymbolInterface {
          * 
          * @var TokenType $tokentype
          */
-        $tokentype = $this->get_tokentype($lexeme, $length);
+        $tokentype = $this->get_tokentype(
+            lexeme: $lexeme,
+            length: $length
+        );
 
         $this->tokens[] = [
             "lexeme" => $lexeme,
-            "decoded_lexeme" => join("", $this->decoded_bytes),
+
+            "decoded_lexeme" => $this->build_decoded_lexeme(
+                lexeme: $lexeme,
+                length: $length
+            ),
+
             "length" => $length,
             "optional" => $is_optional,
             "tokentype" => $tokentype,
@@ -261,8 +271,8 @@ abstract class RouterLexer implements LexerSymbolInterface {
             "method" => $this->method
         ];
 
-        print_r($this->decoded_bytes);
         $this->decoded_bytes = [];
+        $this->count_decoded_bytes = 0;
 
         if (!$this->has_param && $tokentype === TokenType::PARAM) {
             $this->has_param = true;
@@ -434,12 +444,20 @@ abstract class RouterLexer implements LexerSymbolInterface {
     }
 
     /**
-     * Decodifica en línea una secuencia `%XX` del lexema en curso.
+     * Decodifica una secuencia `%XX` en la posición del cursor.
      *
-     * Lee los dos símbolos que siguen al `%` (`\x25`) a partir de `$offset`, los normaliza
-     * a minúscula y guarda el byte resultante en `$decoded_bytes`, escapado si es `/` o `\`.
-     * Actualiza `$offset` para que el escáner continúe después de la secuencia consumida.
-     * Si el par no es válido, deja el mensaje en el subtoken y el escaneo continúa.
+     * Se invoca con `$offset` en el `%` (`\x25`). Lee los dos símbolos siguientes y, si son
+     * hexadecimales, normaliza `A-F` a minúscula (+0x20) para consultar
+     * {@see self::PERCENT_ENCODING_MAP}. El símbolo resultante pasa por
+     * {@see self::ESCAPE_SEQUENCES} y se guarda en `$decoded_bytes`, indexado por la posición
+     * del `%` en la URI, para poder reconstruir el lexema sin recorrerlo.
+     *
+     * - Par válido: guarda el byte decodificado (o su sustitución o escape) y avanza el cursor
+     *   3 posiciones, saltando `%XX`.
+     * - Par incompleto (fin de la entrada) o inexistente en el mapa: no guarda nada y avanza
+     *   una posición. El `%` queda como dato crudo en el lexema.
+     *
+     * No lanza excepciones.
      *
      * @param int $offset Posición del cursor, por referencia.
      * @return void
@@ -482,7 +500,62 @@ abstract class RouterLexer implements LexerSymbolInterface {
         /** @var non-empty-string $encoded_symbol */
         $encoded_symbol = self::BYTE_TO_SYMBOL[$encoded_byte];
 
-        $this->decoded_bytes[$offset] = self::ESCAPE_SEQUENCES[$encoded_symbol] ?? $encoded_symbol;
+        $this->count_decoded_bytes++;
+        $this->decoded_bytes["%{$high_symbol}{$low_symbol}|{$this->count_decoded_bytes}"] = self::ESCAPE_SEQUENCES[$encoded_symbol] ?? $encoded_symbol;
         $offset += 3;
+    }
+
+    /**
+     * Construye el lexema decodificado a partir del lexema original.
+     *
+     * Si el lexema no tuvo secuencias `%XX` válidas, lo devuelve tal cual, sin copiarlo ni
+     * iterarlo. Si las tuvo, une los tramos originales del lexema con los bytes decodificados de
+     * cada `%XX`, sin volver a recorrerlo byte a byte.
+     *
+     * @param string $lexeme Lexema original, sin decodificar.
+     * @return string Lexema decodificado.
+     */
+    private function build_decoded_lexeme(string $lexeme, int $length): string {
+        if ($this->count_decoded_bytes < 1) {
+            return $lexeme;
+        }
+
+        /** @var non-empty-string[] $buffer */
+        $buffer = [];
+
+        /** @var int $count */
+        $count = 1;
+
+        for ($index = 0; $index < $length; ++$index) {
+            /** @var non-empty-string $symbol */
+            $symbol = $lexeme[$index];
+
+            if ($symbol === "\x25") {
+                /** @var non-empty-string|null $high_symbol */
+                $high_symbol = $lexeme[$index + 1] ?? null;
+    
+                /** @var non-empty-string|null $low_symbol */
+                $low_symbol = $lexeme[$index + 2] ?? null;
+    
+                $decoded_symbol = ($high_symbol !== null && $low_symbol !== null)
+                    ? $this->decoded_bytes["{$symbol}{$high_symbol}{$low_symbol}|{$count}"] ?? null
+                    : null;
+    
+                if ($decoded_symbol !== null) {
+                    $index += 2;
+                    $count++;
+                    $buffer[] = $decoded_symbol;
+    
+                    continue;
+                }
+            }
+
+            $buffer[] = $symbol;
+        }
+
+        return \join(
+            separator: "",
+            array: $buffer
+        );
     }
 }

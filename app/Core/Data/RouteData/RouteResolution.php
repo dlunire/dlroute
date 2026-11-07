@@ -9,16 +9,12 @@ use DLRoute\Core\Data\QueryParamValue;
 /**
  * Representa el resultado de la resolución de una URI de petición.
  *
- * Transporta la información estructurada obtenida durante el análisis y la resolución de una URI,
- * estableciendo la correspondencia entre la URI procesada, el directorio base identificado, la ruta
- * lógica resultante y los datos asociados a la cadena de consulta.
+ * La URI se conserva en dos formas dentro de un {@see ProcessedURI}: la original, tal como llegó,
+ * y la decodificada, que genera el analizador léxico en la misma pasada con la que recorre la URI.
+ * La ruta lógica se conserva solo en su forma original. La codificación solo aplica a lo que llega
+ * por HTTP o a las rutas escritas por el cliente de la aplicación.
  *
- * Esta estructura permite conservar los resultados de la resolución para su reutilización en las
- * distintas etapas del procesamiento de rutas, evitando iteraciones adicionales sobre los tokens
- * del analizador y facilitando el acceso a la información de la solicitud.
- *
- * Los valores se establecen durante la construcción del objeto y permanecen inmutables durante
- * su ciclo de vida.
+ * Los valores se establecen en la construcción y permanecen inmutables.
  *
  * @package DLRoute\Core\Data\RouteData
  * @version 1.0.0
@@ -31,24 +27,17 @@ final class RouteResolution {
     /**
      * Construye una nueva representación del resultado de resolución de la URI.
      *
-     * Inicializa la instancia con la URI procesada, el directorio base identificado durante la
-     * resolución, la ruta lógica resultante, la cadena de consulta original y los valores de los
-     * parámetros de consulta asociados.
-     *
-     * La URI puede incluir la cadena de consulta cuando corresponda. El directorio y la ruta lógica
-     * se representan mediante separadores `/` y comienzan desde la raíz lógica (`/`).
-     *
-     * La cadena de consulta se conserva por separado cuando está disponible, mientras que los
-     * parámetros de consulta se proporcionan como un arreglo de instancias de {@see QueryParamValue}.
-     *
-     * @param string $uri URI procesada, incluyendo la cadena de consulta cuando corresponda.
-     * @param string $dir Directorio base identificado durante la resolución de los segmentos de la URI.
-     * @param string $route Ruta lógica reconstruida a partir de los segmentos correspondientes de la URI.
+     * @param ProcessedURI $uri URI procesada en su forma original y decodificada. La cadena de consulta, cuando existe, va sin decodificar en ambas.
+     * @param string $dir Directorio del sistema operativo sobre el que se construyen los directorios lógicos de la ruta base. No depende de la codificación.
+     * @param string $route Ruta lógica sin decodificar.
      * @param string|null $query_string Cadena de consulta original, sin el delimitador `?`, o null si no existe.
      * @param QueryParamValue[] $query_param_values Valores de los parámetros de consulta asociados a la resolución.
      */
     public function __construct(
-        public readonly string $uri = "/",
+        public readonly ProcessedURI $uri = new ProcessedURI(
+            uri: "/",
+            decoded_uri: "/"
+        ),
         public readonly string $dir = "/",
         public readonly string $route = "/",
         public readonly ?string $query_string = null,
