@@ -79,6 +79,8 @@ final class RequestURILexer extends RouterLexer {
         $this->load_route_resolution();
     }
 
+    # MÉTODOS PÚBLICOS
+    
     /**
      * Devuelve la ruta reconstruida a partir de los lexemas de los tokens.
      *
