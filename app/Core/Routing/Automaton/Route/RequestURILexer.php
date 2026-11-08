@@ -15,7 +15,7 @@ use DLRoute\Errors\RouteException;
  * Analizador léxico para la URI de una petición entrante.
  *
  * Extiende `RouterLexer` para tokenizar la URI solicitada y reconstruir
- * una ruta procesada a partir de los lexemas obtenidos.
+ * una ruta procesada a part    ir de los lexemas obtenidos.
  *
  * @package DLRoute\Core\Routing\Automaton\Route
  * @version 1.0.0
@@ -77,35 +77,6 @@ final class RequestURILexer extends RouterLexer {
         $this->uri_tokens = $this->get_tokens();
         $this->build_processed_uri();
         $this->load_route_resolution();
-    }
-
-    /**
-     * Obtiene la ruta solicitada cuando la aplicación se ejecuta desde la línea de comandos (CLI).
-     *
-     * Lee las opciones `-r` o `--route` con `getopt()` y devuelve su valor.
-     * Si se indican ambas, tiene prioridad `-r`. Si no se indica ninguna, devuelve la ruta raíz `/`.
-     *
-     * Ejemplos de uso:
-     *
-     * ```bash
-     * php index.php -r /usuarios
-     * php index.php --route=/usuarios
-     * php index.php --route /usuarios
-     * ```
-     *
-     * Nota: en la forma corta, la sintaxis `-r=/usuarios` no es válida porque el valor incluiría el
-     * signo `=`. Use `-r /usuarios` o la forma larga.
-     *
-     * @return string|array Ruta solicitada. Si la opción se repite en la línea de comandos, `getopt()`
-     *                      devuelve un array.
-     */
-    private function get_options() {
-        $options = \getopt(
-            short_options: 'r:',
-            long_options: ["route:"]
-        );
-
-        return $options['r'] ?? $options['route'] ?? "/";
     }
 
     /**
@@ -198,6 +169,84 @@ final class RequestURILexer extends RouterLexer {
      */
     public function get_route(): string {
         return $this->route_resolution->route;
+    }
+
+    /**
+     * Obtiene la resolución de la ruta de la solicitud.
+     *
+     * Devuelve la instancia de {@see RouteResolution} que contiene la información obtenida durante el
+     * proceso de resolución, incluyendo los segmentos correspondientes al directorio físico y a la
+     * ruta lógica.
+     *
+     * @return RouteResolution Resolución de la ruta de la solicitud.
+     */
+    public function get_route_resolution(): RouteResolution {
+        return $this->route_resolution;
+    }
+
+    /**
+     * Obtiene la instancia única del analizador léxico de la URI de petición.
+     *
+     * Implementa el patrón Singleton mediante inicialización diferida (Lazy Initialization). Si todavía
+     * no existe una instancia de la clase, la construye y la almacena para su reutilización durante el
+     * ciclo de vida de la aplicación.
+     *
+     * Las llamadas posteriores devuelven la instancia previamente construida, evitando nuevas inicializaciones
+     * y análisis repetidos de la URI.
+     *
+     * @return static Instancia única de RequestURILexer.
+     */
+    public static function from(): static {
+        if (!(static::$instance instanceof static)) {
+            static::$instance = new static;
+        }
+
+        return self::$instance;
+    }
+
+    # MÉTODOS PRIVADOS
+
+    /**
+     * Construye la URI procesada en sus dos formas, en una sola iteración sobre los tokens.
+     *
+     * Une con `/` los `lexeme` y los `decoded_lexeme` de cada token, antepone la barra inicial y
+     * guarda el resultado en {@see self::$processed_uri} como un {@see ProcessedURI}.
+     *
+     * Si no hay tokens, ambas formas son `/`.
+     *
+     * @return void
+     */
+    private function build_processed_uri(): void {
+        /** @var non-empty-string[] $uri_buffer Lexemas de cada segmento de ruta */
+        $uri_buffer = [];
+
+        /** @var non-empty-string[] $uri_decoded_buffer */
+        $uri_decoded_buffer = [];
+
+        /** @var string $querystring */
+        $querystring = $this->get_query_string() !== null
+            ? "?" . $this->get_query_string()
+            : '';
+
+        foreach ($this->uri_tokens as $token) {
+            $uri_buffer[] = $token['lexeme'];
+            $uri_decoded_buffer[] = $token['decoded_lexeme'];
+        }
+
+        $uri = "/" . \join(
+            separator: "/",
+            array: $uri_buffer
+        ) . $querystring;
+
+        $decoded_uri = "/" . \join(
+            separator: "/",
+            array: $uri_decoded_buffer
+        ) . $querystring;
+
+        $this->processed_uri = new ProcessedURI(
+            uri: $uri,
+            decoded_uri: $decoded_uri
+        );
     }
 
     /**
@@ -315,80 +364,31 @@ final class RequestURILexer extends RouterLexer {
     }
 
     /**
-     * Obtiene la resolución de la ruta de la solicitud.
+     * Obtiene la ruta solicitada cuando la aplicación se ejecuta desde la línea de comandos (CLI).
      *
-     * Devuelve la instancia de {@see RouteResolution} que contiene la información obtenida durante el
-     * proceso de resolución, incluyendo los segmentos correspondientes al directorio físico y a la
-     * ruta lógica.
+     * Lee las opciones `-r` o `--route` con `getopt()` y devuelve su valor.
+     * Si se indican ambas, tiene prioridad `-r`. Si no se indica ninguna, devuelve la ruta raíz `/`.
      *
-     * @return RouteResolution Resolución de la ruta de la solicitud.
+     * Ejemplos de uso:
+     *
+     * ```bash
+     * php index.php -r /usuarios
+     * php index.php --route=/usuarios
+     * php index.php --route /usuarios
+     * ```
+     *
+     * Nota: en la forma corta, la sintaxis `-r=/usuarios` no es válida porque el valor incluiría el
+     * signo `=`. Use `-r /usuarios` o la forma larga.
+     *
+     * @return string|array Ruta solicitada. Si la opción se repite en la línea de comandos, `getopt()`
+     *                      devuelve un array.
      */
-    public function get_route_resolution(): RouteResolution {
-        return $this->route_resolution;
-    }
-
-    /**
-     * Obtiene la instancia única del analizador léxico de la URI de petición.
-     *
-     * Implementa el patrón Singleton mediante inicialización diferida (Lazy Initialization). Si todavía
-     * no existe una instancia de la clase, la construye y la almacena para su reutilización durante el
-     * ciclo de vida de la aplicación.
-     *
-     * Las llamadas posteriores devuelven la instancia previamente construida, evitando nuevas inicializaciones
-     * y análisis repetidos de la URI.
-     *
-     * @return static Instancia única de RequestURILexer.
-     */
-    public static function from(): static {
-        if (!(static::$instance instanceof static)) {
-            static::$instance = new static;
-        }
-
-        return self::$instance;
-    }
-
-    # MÉTODOS PRIVADOS
-
-    /**
-     * Construye la URI procesada en sus dos formas, en una sola iteración sobre los tokens.
-     *
-     * Une con `/` los `lexeme` y los `decoded_lexeme` de cada token, antepone la barra inicial y
-     * guarda el resultado en {@see self::$processed_uri} como un {@see ProcessedURI}.
-     *
-     * Si no hay tokens, ambas formas son `/`.
-     *
-     * @return void
-     */
-    private function build_processed_uri(): void {
-        /** @var non-empty-string[] $uri_buffer Lexemas de cada segmento de ruta */
-        $uri_buffer = [];
-
-        /** @var non-empty-string[] $uri_decoded_buffer */
-        $uri_decoded_buffer = [];
-
-        /** @var string $querystring */
-        $querystring = $this->get_query_string() !== null
-            ? "?" . $this->get_query_string()
-            : '';
-
-        foreach ($this->uri_tokens as $token) {
-            $uri_buffer[] = $token['lexeme'];
-            $uri_decoded_buffer[] = $token['decoded_lexeme'];
-        }
-
-        $uri = "/" . \join(
-            separator: "/",
-            array: $uri_buffer
-        ) . $querystring;
-
-        $decoded_uri = "/" . \join(
-            separator: "/",
-            array: $uri_decoded_buffer
-        ) . $querystring;
-
-        $this->processed_uri = new ProcessedURI(
-            uri: $uri,
-            decoded_uri: $decoded_uri
+    private function get_options() {
+        $options = \getopt(
+            short_options: 'r:',
+            long_options: ["route:"]
         );
+
+        return $options['r'] ?? $options['route'] ?? "/";
     }
 }
