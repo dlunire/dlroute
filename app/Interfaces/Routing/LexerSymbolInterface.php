@@ -963,42 +963,62 @@ interface LexerSymbolInterface {
     ];
 
     /**
-     * Bytes que provocan el rechazo de la petición con una excepción.
+     * Tabla de bytes individuales no permitidos durante el análisis léxico.
      *
-     * Se evalúan sobre los segmentos de la ruta y sobre los nombres de los parámetros del querystring,
-     * no sobre los valores, que llegan crudos. Si aparece alguno, el analizador lanza una `RouteException`
-     * en lugar de normalizarlo.
+     * Cada clave representa un byte expresado mediante su secuencia hexadecimal y asociado a un valor
+     * booleano que permite su consulta directa.
      *
-     * Son bytes que RFC 3986 no admite sin codificar y que, además, pueden alterar el significado de la ruta
-     * o resultar peligrosos si se escriben sin escapar, o bytes que nunca aparecen en UTF-8 válido:
+     * La tabla contempla:
+     * - Bytes de control C0 (0x00–0x1F).
+     * - Espacio literal (0x20).
+     * - Caracteres incompatibles con la sintaxis admitida para segmentos URI.
+     * - DEL (0x7F).
+     * - Bytes que no pueden iniciar secuencias UTF-8 válidas.
      *
-     *  - `NUL` (`0x00`): no es válido en rutas del sistema de archivos.
-     *  - `"` (`0x22`), `<` (`0x3C`) y `>` (`0x3E`): delimitadores de HTML.
-     *  - `\` (`0x5C`): separador de directorios en algunos sistemas.
-     *  - `^` (`0x5E`), `` ` `` (`0x60`) y `|` (`0x7C`).
-     *  - `0xC0` y `0xC1`: nunca son válidos en UTF-8 (solo codificarían secuencias sobrelargas).
-     *  - `0xF5` a `0xFF`: nunca son válidos en UTF-8.
+     * La validación se realiza individualmente sobre cada byte, antes de la construcción y evaluación
+     * semántica de los segmentos.
      *
-     * Las llaves `{` (`0x7B`) y `}` (`0x7D`) no se rechazan: pasan como cualquier otro byte.
+     * Los delimitadores estructurales de la URI se procesan mediante las transiciones correspondientes
+     * del autómata y no forman parte de esta tabla.
      *
-     * No incluye los controles «0x01» a «0x1F», el espacio («0x20») ni «DEL» («0x7F»), que se sustituyen
-     * por «_», ni el resto de bytes «0x80» a «0xFF» (secuencias UTF-8 válidas).
-     *
-     * Tampoco se decodifican las secuencias «%XX»: «%5c» llega como texto literal y no se rechaza.
-     *
-     * Las claves son símbolos de un byte, igual que en {@see self::SYMBOL_TO_BYTE}, y se
-     * consultan con `self::REJECTED_BYTES[$byte] ?? false`:
-     *
-     * ```php
-     * if (self::REJECTED_BYTES[$byte] ?? false) {
-     *     throw new RouteException(message: "...", code: 403);
-     * }
-     * ```
-     *
-     * @var array<string,true>
+     * @var array<string, true>
      */
     public const REJECTED_BYTES = [
         "\x00" => true,
+
+        "\x01" => true,
+        "\x02" => true,
+        "\x03" => true,
+        "\x04" => true,
+        "\x05" => true,
+        "\x06" => true,
+        "\x07" => true,
+        "\x08" => true,
+        "\x09" => true,
+        "\x0a" => true,
+        "\x0b" => true,
+        "\x0c" => true,
+        "\x0d" => true,
+        "\x0e" => true,
+        "\x0f" => true,
+        "\x10" => true,
+        "\x11" => true,
+        "\x12" => true,
+        "\x13" => true,
+        "\x14" => true,
+        "\x15" => true,
+        "\x16" => true,
+        "\x17" => true,
+        "\x18" => true,
+        "\x19" => true,
+        "\x1a" => true,
+        "\x1b" => true,
+        "\x1c" => true,
+        "\x1d" => true,
+        "\x1e" => true,
+        "\x1f" => true,
+
+        "\x20" => true,
         "\x22" => true,
         "\x3c" => true,
         "\x3e" => true,
@@ -1006,8 +1026,11 @@ interface LexerSymbolInterface {
         "\x5e" => true,
         "\x60" => true,
         "\x7c" => true,
+        "\x7f" => true,
+
         "\xc0" => true,
         "\xc1" => true,
+
         "\xf5" => true,
         "\xf6" => true,
         "\xf7" => true,
@@ -1052,8 +1075,33 @@ interface LexerSymbolInterface {
     public const ESCAPE_SEQUENCES = [
         "\x00" => "\x5f",
         "\x0a" => "\x5f",
+        "\x09" => "\x5f",
+        "\x24" => "\x5c\x24",
         "\xc0" => "\x5f",
         "\x2f" => "\x5c\x2f",
         "\x5c" => "\x5c\x5c",
+    ];
+
+    /**
+     * Tabla de lexemas completos no permitidos durante el análisis semántico.
+     *
+     * Cada clave representa un segmento que debe rechazarse por su significado o por una política preventiva
+     * de seguridad.
+     *
+     * Se contemplan:
+     * - "."   : segmento asociado a la navegación al directorio actual.
+     * - ".."  : segmento asociado a la navegación al directorio padre.
+     * - "..;" : segmento rechazado preventivamente para evitar interpretaciones
+     *           alternativas en componentes que procesen posteriormente la URI.
+     *
+     * La comparación se realiza sobre el lexema completo, tanto en su representación original como en su
+     * representación decodificada.
+     *
+     * @var array<string, true>
+     */
+    public const REJECTED_LEXEME = [
+        "\x2e" => true,
+        "\x2e\x2e" => true,
+        "\x2e\x2e\x3b" => true,
     ];
 }

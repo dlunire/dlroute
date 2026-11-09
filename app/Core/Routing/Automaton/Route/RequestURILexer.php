@@ -80,69 +80,6 @@ final class RequestURILexer extends RouterLexer {
     }
 
     # MÉTODOS PÚBLICOS
-    
-    /**
-     * Devuelve la ruta reconstruida a partir de los lexemas de los tokens.
-     *
-     * Recorre los tokens generados por el lexer, concatena sus lexemas
-     * separados por `/` y antepone una barra inicial.
-     *
-     * Ejemplo: una URI con los lexemas `api`, `users` y `42` produce
-     * `/api/users/42`.
-     *
-     * Si no hay tokens, devuelve `/`.
-     *
-     * @return string Ruta procesada, siempre con `/` inicial.
-     */
-    public function get_processed_route(): string {
-        /** @var string[] $buffer Lexemas de cada segmento de ruta */
-        $buffer = [];
-
-        foreach ($this->uri_tokens as $token) {
-            $buffer[] = $token['lexeme'];
-        }
-
-        return "/" . \join(
-            separator: "/",
-            array: $buffer
-        );
-    }
-
-    public function get_decoded_processed_route(): string {
-        /** @var string[] $buffer Lexemas de cada segmento de ruta */
-        $buffer = [];
-
-        foreach ($this->uri_tokens as $token) {
-            $buffer[] = $token['decoded_lexeme'];
-        }
-
-        return "/" . \join(
-            separator: "/",
-            array: $buffer
-        );
-    }
-
-    /**
-     * Devuelve la URI procesada por el autómata.
-     *
-     * Es la ruta reconstruida ({@see RequestURILexer::get_processed_route()}) seguida, si hay una cadena
-     * de consulta no vacía, del símbolo `?` y de esa cadena sin procesar ni decodificar. Si no hay cadena
-     * de consulta, o está vacía (`/users?`), devuelve solo la ruta.
-     *
-     * Ejemplo: `//users//42?page=2` produce `/users/42?page=2`.
-     *
-     * @return non-empty-string URI procesada, siempre con `/` inicial.
-     */
-    public function get_processed_uri(): string {
-        /** @var non-empty-string|null $query_string */
-        $query_string = $this->get_query_string();
-
-        return $this->get_processed_route() . (
-            $query_string === null
-            ? ''
-            : "?{$query_string}"
-        );
-    }
 
     /**
      * Devuelve el directorio lógico base de ejecución de la aplicación, determinado durante el proceso de
@@ -315,14 +252,10 @@ final class RequestURILexer extends RouterLexer {
             /** @var non-empty-string $segment */
             $segment = $token['lexeme'];
 
+            /** @var non-empty-string $decoded_segment */
             $decoded_segment = $token['decoded_lexeme'];
 
-            if (
-                $segment === ".." ||
-                $decoded_segment === ".." ||
-                $segment === "." ||
-                $decoded_segment === "."
-            ) {
+            if (self::REJECTED_LEXEME[$segment] ?? self::REJECTED_LEXEME[$decoded_segment] ?? false) {
                 throw new RouteException(
                     message: "El segmento de directorio '{$segment}' no está permitido",
                     code: 403

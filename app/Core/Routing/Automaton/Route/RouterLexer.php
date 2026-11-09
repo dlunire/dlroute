@@ -170,6 +170,11 @@ abstract class RouterLexer implements LexerSymbolInterface {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$this->offset];
 
+            if ($byte === "\x00") {
+                echo "Valor nulo acá";
+                exit;
+            }
+
             if (self::REJECTED_BYTES[$byte] ?? false) {
                 $byte_value = self::SYMBOL_TO_BYTE[$byte];
 
@@ -271,8 +276,8 @@ abstract class RouterLexer implements LexerSymbolInterface {
             "method" => $this->method
         ];
 
-        $this->decoded_bytes = [];
         $this->count_decoded_bytes = 0;
+        $this->decoded_bytes = [];
 
         if (!$this->has_param && $tokentype === TokenType::PARAM) {
             $this->has_param = true;

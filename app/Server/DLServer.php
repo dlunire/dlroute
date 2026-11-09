@@ -37,28 +37,9 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
     use Domain, IPAddress, PortCandidate;
 
     public static function get_uri(): string {
-        return self::get_processed_uri(
-            uri: $_SERVER['REQUEST_URI'] ?? "/"
+        $request = RequestURILexer::from(
+            
         );
-    }
-
-    /**
-     * Procesa una URI mediante el autómata léxico de `RequestURILexer`.
-     *
-     * Obtiene la instancia reutilizable del lexer mediante `from()`, evitando instanciamientos innecesarios
-     * durante el procesamiento de la petición.
-     * 
-     * Habilita la captura de la cadena de consulta y devuelve la URI procesada conforme a las reglas
-     * léxicas implementadas.
-     *
-     * @param non-empty-string $uri URI original de la petición HTTP.
-     *
-     * @return string URI procesada por el autómata léxico.
-     */
-    private static function get_processed_uri(string $uri): string {
-        $request = RequestURILexer::from();
-
-        return $request->get_processed_uri();
     }
 
     public static function get_hostname(): string {

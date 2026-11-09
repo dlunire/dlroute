@@ -105,14 +105,6 @@ $test = RequestURILexer::from();
 
 print_r($test->get_route_resolution());
 
-// newline(2);
-
-print_r($_SERVER['REQUEST_URI'] ?? null);
-
-echo "\n" . $test->get_uri() . "\n";
-
-// newline(2);
-
-// print_r($test->get_query_string());
+// echo "\n" . $test->get_uri() . "\n";
 
 DLRoute::execute();
