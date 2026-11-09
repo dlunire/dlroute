@@ -1074,6 +1074,8 @@ interface LexerSymbolInterface {
      */
     public const ESCAPE_SEQUENCES = [
         "\x00" => "\x5f",
+        "\x07" => "\x5f",
+        "\x14" => "\x5f",
         "\x0a" => "\x5f",
         "\x09" => "\x5f",
         "\x24" => "\x5c\x24",
