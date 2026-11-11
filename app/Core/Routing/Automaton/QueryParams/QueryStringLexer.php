@@ -155,6 +155,13 @@ abstract class QueryStringLexer implements LexerSymbolInterface {
     protected int $token_count = 0;
 
     /**
+     * Secuencia de bytes escapados con la metadata de reemplazo
+     *
+     * @var array $escaped_bytes
+     */
+    protected array $escaped_bytes = [];
+
+    /**
      * Inicializa el analizador léxico del querystring.
      *
      * Orquesta la secuencia de análisis en dos fases:
@@ -268,6 +275,9 @@ abstract class QueryStringLexer implements LexerSymbolInterface {
         while ($this->offset < $this->size) {
             /** @var non-empty-string $byte */
             $byte = $this->querystring[$this->offset];
+
+            /** @var non-empty-string|null $escaped_secuence_byte */
+            $escaped_secuence_byte = self::ESCAPE_SEQUENCES[$byte] ?? null; 
 
             if (
                 (

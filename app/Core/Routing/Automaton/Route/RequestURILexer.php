@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DLRoute\Core\Routing\Automaton\Route;
 
+use DLRoute\Enums\Methods;
 use DLRoute\Config\RealPath;
 use DLRoute\Core\Data\RouteData\ProcessedURI;
 use DLRoute\Core\Data\RouteData\RouteResolution;
@@ -26,7 +27,7 @@ final class RequestURILexer extends RouterLexer {
     /**
      * Tokens de la URI sin la cadena de consultas
      *
-     * @var array $uri_tokens;
+     * @var array<int, array{lexeme: string, decoded_lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int, method: Methods}>
      */
     private readonly array $uri_tokens;
 

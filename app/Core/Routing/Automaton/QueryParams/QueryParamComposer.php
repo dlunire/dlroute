@@ -29,6 +29,7 @@ namespace DLRoute\Core\Routing\Automaton\QueryParams;
 
 use DLRoute\Core\Data\QueryParam;
 use DLRoute\Core\Data\QueryParamValue;
+use DLRoute\Errors\RouteException;
 
 /**
  * Compone los tokens léxicos del querystring en pares estructurados `nombre → valor`.
@@ -182,6 +183,13 @@ final class QueryParamComposer extends QueryStringLexer {
         if ($next_token instanceof QueryParam) {
             /** @var string $lexeme */
             $lexeme = \trim(\urldecode($next_token->lexeme));
+
+            if (self::REJECTED_LEXEME[$lexeme] ?? false) {
+                throw new RouteException(
+                    message: "El lexema '{$lexeme}' no está permitido en la cadena de consulta",
+                    code: 403
+                );
+            }
 
             $value = $lexeme === ''
                 ? null

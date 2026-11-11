@@ -96,13 +96,15 @@ abstract class RouterLexer implements LexerSymbolInterface {
      * Tokens capturados de la ruta.
      *
      * Cada entrada contiene:
-     * - `lexeme`    — Segmento extraído de la URI.
-     * - `length`    — Longitud del lexema.
-     * - `optional`  — indica si el parámetro es opcional.
-     * - `tokentype` — clasificación del segmento ({@see TokenType}).
-     * - `offset`    — Posición del cursor durante la emisión del token.
+     * - `lexeme`           — Segmento extraído de la URI.
+     * - `decoded_lexeme`   - Segmento de ruta decodificado.
+     * - `length`           — Longitud del lexema.
+     * - `optional`         — Indica si el parámetro es opcional.
+     * - `tokentype`        — Clasificación del segmento ({@see TokenType}).
+     * - `offset`           — Posición del cursor durante la emisión del token.
+     * - `method`           - Opcional. Método de la petición
      *
-     * @var array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int, method: Methods}>
+     * @var array<int, array{lexeme: string, decoded_lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int, method: Methods}>
      */
     private array $tokens = [];
 
@@ -405,7 +407,7 @@ abstract class RouterLexer implements LexerSymbolInterface {
     /**
      * Devuelve todos los tokens capturados durante el análisis léxico.
      *
-     * @return array<int, array{lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int, method: Methods}> Lista de tokens producidos por {@see scanner()}.
+     * @return array<int, array{lexeme: string, decoded_lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int, method: Methods}>
      */
     public function get_tokens(): array {
         return $this->tokens;

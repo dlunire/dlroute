@@ -1020,6 +1020,7 @@ interface LexerSymbolInterface {
 
         "\x20" => true,
         "\x22" => true,
+        "\x3b" => true,
         "\x3c" => true,
         "\x3e" => true,
         "\x5c" => true,
@@ -1073,15 +1074,23 @@ interface LexerSymbolInterface {
      * @var array<string,string>
      */
     public const ESCAPE_SEQUENCES = [
+        // Controles → "_"
         "\x00" => "\x5f",
         "\x07" => "\x5f",
-        "\x14" => "\x5f",
-        "\x0a" => "\x5f",
         "\x09" => "\x5f",
-        "\x24" => "\x5c\x24",
+        "\x0a" => "\x5f",
+        "\x0d" => "\x5f",
+        "\x1b" => "\x5f",
+        "\x7f" => "\x5f",
+        // Nunca válidos en UTF-8
         "\xc0" => "\x5f",
-        "\x2f" => "\x5c\x2f",
-        "\x5c" => "\x5c\x5c",
+        "\xc1" => "\x5f",
+        // Delimitadores
+        "\x24" => "\x5c\x24",       // $ → \$
+        "\x3f" => "\x5c\x3f",       // ? → \?
+        "\x23" => "\x5c\x23",       // # → \#
+        "\x2f" => "\x5c\x5c\x2f",   // / → \\/
+        "\x5c" => "\x5f",           // \ → _
     ];
 
     /**
