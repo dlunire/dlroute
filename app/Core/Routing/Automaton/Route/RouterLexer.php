@@ -172,9 +172,16 @@ abstract class RouterLexer implements LexerSymbolInterface {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$this->offset];
 
-            if ($byte === "\x00") {
-                echo "Valor nulo acá";
-                exit;
+            if (self::REJECTED_BYTES[$byte] ?? false) {
+                $byte_value = self::SYMBOL_TO_BYTE[$byte];
+
+                throw new RouteException(
+                    message: \vsprintf(
+                        format: "Byte no válido (0x%02X), desplazamiento %d.",
+                        values: [$byte_value, $this->offset]
+                    ),
+                    code: 403
+                );
             }
 
             if (self::REJECTED_BYTES[$byte] ?? false) {
@@ -540,19 +547,19 @@ abstract class RouterLexer implements LexerSymbolInterface {
             if ($symbol === "\x25") {
                 /** @var non-empty-string|null $high_symbol */
                 $high_symbol = $lexeme[$index + 1] ?? null;
-    
+
                 /** @var non-empty-string|null $low_symbol */
                 $low_symbol = $lexeme[$index + 2] ?? null;
-    
+
                 $decoded_symbol = ($high_symbol !== null && $low_symbol !== null)
                     ? $this->decoded_bytes["{$symbol}{$high_symbol}{$low_symbol}|{$count}"] ?? null
                     : null;
-    
+
                 if ($decoded_symbol !== null) {
                     $index += 2;
                     $count++;
                     $buffer[] = $decoded_symbol;
-    
+
                     continue;
                 }
             }

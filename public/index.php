@@ -1,110 +1,67 @@
 <?php
 
-use DLRoute\Core\Auth\AuthApps;
 use DLRoute\Core\Routing\Automaton\Route\RequestURILexer;
 
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+
 /**
- * DLUnire
- * Copyright (C) 2026 David E Luna M
- *
- * Operando bajo el establecimiento de comercio "DLUnire",
- * NIT 700551569-1, matrícula mercantil Nº 10007069
- * (matrícula mercantil personal Nº 10007068).
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public
- * License along with this program. If not, see
- * <https://www.gnu.org/licenses/>.
+ * Configuración del benchmark.
  */
+$iterations = 10000;
+$warmup_iterations = 100;
 
-session_start();
+/**
+ * Primer análisis.
+ *
+ * Mide la construcción inicial del singleton y el procesamiento
+ * de la URI por primera vez.
+ */
+$start_time = hrtime(true);
 
-ini_set('display_errors', 1);
+$request = RequestURILexer::from();
 
-use DLRoute\Requests\DLRoute;
-// use DLRoute\Server\DLServer;
-// use DLRoute\Test\AuthController;
+$first_analysis_time = hrtime(true) - $start_time;
 
-// error_log('ENTRY: ' . __FILE__);
-// error_log('REALPATH: ' . (realpath(__FILE__) ?: 'false'));
-// error_log('SCRIPT_FILENAME: ' . ($_SERVER['SCRIPT_FILENAME'] ?? ''));
-// error_log('REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? ''));
-
-include dirname(__DIR__)
-    . DIRECTORY_SEPARATOR
-    . "vendor"
-    . DIRECTORY_SEPARATOR
-    . "autoload.php";
-
-
-header("Content-type: text/plain; charset=utf-8", true, 200);
-/** @var AuthApps $auth */
-$auth = new AuthApps();
-
-// DLRoute::post('/algo', function() {
-//     return ["status" => "Ok"];
-// });
-
-// DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
-// DLRoute::get('/profile/{a?}/{b?}/{c?}/{d?}', fn () => ["status" => "Ok"]);
-
-// DLRoute::get('/////////f////dd', fn() => "Test");
-
-// DLRoute::get('/profile/{a?}/{b?}/{c?}', fn () => ["status" => "Ok"]);
-
-// # Definición de rutas de pruebas para el controlador
-// DLRoute::get('/profile/{algo?}', [AuthController::class, 'profile'])->filter_by_type([
-//     "algo" => "integer"
-// ]);
-
-// $auth->require_auth(function () {
-//     DLRoute::get('/profile/{auth}', [AuthController::class, 'profile_with_auth'])->filter_by_type([
-//         "auth" => "integer"
-//     ]);
-// });
-
-// # Inicio de sesión de prueba:
-// DLRoute::post('/login', [AuthController::class, 'auth']);
-
-// # Cerrar una sesión de prueba:
-// DLRoute::delete("/logout", [AuthController::class, 'logout']);
-
-// $value = [
-//     "base_url" => DLServer::get_base_url(),
-//     "dir" => DLServer::get_dir()
-// ];
-
-// DLServer::get_dir();
-
-function newline(int $steps = 1): void {
-    if ($steps < 1) {
-        $steps = 1;
-    }
-
-    for ($index = 0; $index < $steps; ++$index) {
-        echo "\n";
-    }
+/**
+ * Calentamiento.
+ *
+ * Ejecuta accesos adicionales al singleton antes de la medición.
+ */
+for ($i = 0; $i < $warmup_iterations; ++$i) {
+    $request = RequestURILexer::from();
 }
 
-$test = RequestURILexer::from();
+/**
+ * Benchmark de reutilización.
+ */
+$total_time = 0;
 
-// print_r("dir: " . $test->get_dir() . "\n");
-// print_r("route: " . $test->get_route() . "\n");
-// print_r("uri: " . $test->get_uri() . "\n");
-// print_r("processed_uri: " . $test->get_processed_uri() . "\n");
-// print_r("processed_uri: " . $test->get_query_string() . "\n");
+for ($i = 0; $i < $iterations; ++$i) {
+    $start_time = hrtime(true);
 
-print_r($test->get_route_resolution());
+    $request = RequestURILexer::from();
 
-// echo "\n" . $test->get_uri() . "\n";
+    $total_time += hrtime(true) - $start_time;
+}
 
-DLRoute::execute();
+/**
+ * Resultados.
+ */
+printf(
+    "Motor: DLRoute (Automaton)\n" .
+        "Iteraciones: %d\n" .
+        "Calentamiento: %d\n\n" .
+        "=== PRIMER ANÁLISIS ===\n" .
+        "Tiempo: %.6f ms\n\n" .
+        "=== REUTILIZACIÓN DEL SINGLETON ===\n" .
+        "Tiempo acumulado: %.6f ms\n" .
+        "Tiempo promedio: %.6f ms\n",
+    $iterations,
+    $warmup_iterations,
+    $first_analysis_time / 1_000_000,
+    $total_time / 1_000_000,
+    ($total_time / $iterations) / 1_000_000
+);
+
+
+print_r($request->get_route_resolution());
