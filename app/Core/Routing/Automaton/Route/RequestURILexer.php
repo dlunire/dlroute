@@ -65,7 +65,7 @@ final class RequestURILexer extends RouterLexer {
      *
      * Tras construir la clase padre, carga la resolución de rutas con `load_route_resolution()`.
      */
-    public function __construct() {
+    private function __construct() {
 
         parent::__construct(
             uri: PHP_SAPI === 'cli'
@@ -300,31 +300,52 @@ final class RequestURILexer extends RouterLexer {
     }
 
     /**
-     * Obtiene la ruta solicitada cuando la aplicación se ejecuta desde la línea de comandos (CLI).
+     * Obtiene la ruta solicitada desde los argumentos de la línea de comandos.
      *
-     * Lee las opciones `-r` o `--route` con `getopt()` y devuelve su valor.
-     * Si se indican ambas, tiene prioridad `-r`. Si no se indica ninguna, devuelve la ruta raíz `/`.
+     * Formas válidas (equivalentes):
+     * - `-r <ruta>`
+     * - `-r=<ruta>`
+     * - `--route <ruta>`
+     * - `--route=<ruta>`
      *
-     * Ejemplos de uso:
+     * Si se indican la corta y la larga a la vez, tiene prioridad `-r`. Si no se indica ninguna, devuelve
+     * la ruta raíz (`/`).
      *
-     * ```bash
-     * php index.php -r /usuarios
-     * php index.php --route=/usuarios
-     * php index.php --route /usuarios
-     * ```
+     * La ruta se devuelve tal como llega, sin decodificar: un espacio literal debe enviarse como `%20`, que es
+     * la forma que espera el lexer y la que se compara contra las rutas registradas.
      *
-     * Nota: en la forma corta, la sintaxis `-r=/usuarios` no es válida porque el valor incluiría el
-     * signo `=`. Use `-r /usuarios` o la forma larga.
+     * @return string Ruta recibida por CLI, o `/` por defecto.
      *
-     * @return string|array Ruta solicitada. Si la opción se repite en la línea de comandos, `getopt()`
-     *                      devuelve un array.
+     * @example dlroute -r ciencias-computacionales
+     * @example dlroute --route=Ciencias%20computacionales
+     * @example dlroute --route Ciencias%20computacionales
      */
-    private function get_options() {
+    private function get_options(): string {
         $options = \getopt(
             short_options: 'r:',
             long_options: ["route:"]
         );
 
         return $options['r'] ?? $options['route'] ?? "/";
+    }
+
+    # MÉTODOS ESTÁTICOS
+
+    /**
+     * Crea una nueva instancia del analizador léxico de la URI de petición.
+     *
+     * A diferencia de {@see self::from()}, este método no reutiliza ni guarda la instancia única: cada
+     * llamada construye un objeto nuevo y vuelve a analizar la URI (la de `$_SERVER['REQUEST_URI']` en un
+     * servidor web, o la de `-r`/`--route` por CLI) y a resolver su ruta contra el sistema de archivos.
+     * La instancia devuelta es independiente y no sustituye a la almacenada por `from()`.
+     *
+     * Para el uso habitual durante una petición, prefiera {@see self::from()}, que evita repetir el análisis.
+     *
+     * @return static Nueva instancia de RequestURILexer.
+     *
+     * @throws RouteException Si la URI contiene bytes no válidos o segmentos `.` o `..` (código 403).
+     */
+    public static function new(): static {
+        return new static();
     }
 }
