@@ -5,7 +5,7 @@ APP_NAME_RUNTIME: string = "DLUnire Core"
 APP_ENV: string = 'production'
 
 /**
- * Configuración del pool de conexiones a base de datos.
+ * Configuración del pool de conexiones a base de datos.+
  */
 BASE_CONNECTIONS: integer = 50
 MAX_CONNECTIONS: integer = BASE_CONNECTIONS * 2
@@ -20,6 +20,14 @@ HEALTH_CHECK_OK: boolean = BASE_CONNECTIONS < MAX_CONNECTIONS
  */
 INSTANCE_UUID: uuid = 7b4e3f12-98ab-4cd2-b0ef-56789abcdef0
 CONTACT_EMAIL: email = support@dlunire.dev
+
+/** 
+ * Esta puede ser una ruta donde se puede utilizar un archivo binario como tabla
+ * de traducción de dominios registrados.
+ * 
+ * Por ejemplo, la cabecera tiene información para saber dónde leer.
+ */
+DOMAIN_REGISTER: string = "/register/"
 
 /**
  * Tiempo máximo de espera por petición saliente, en milisegundos.
