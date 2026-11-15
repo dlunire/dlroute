@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace DLRoute\Interfaces;
 
+use DLRoute\Errors\RouteException;
+
 /**
  * Procesa los datos capturados en la variable superglobal `$_SERVER`
  * 
@@ -45,14 +47,6 @@ interface ServerInterface {
      * @return string
      */
     public static function get_uri(): string;
-
-    /**
-     * Devuelve el nombre de host, bien sea, el que se ha determinado o el que se 
-     * impuso por el desarrollador en el entorno de ejecución.
-     *
-     * @return string
-     */
-    public static function get_hostname(): string;
 
     /**
      * Devuelve el método de solicitud asociado a la ejecución actual.
@@ -75,13 +69,6 @@ interface ServerInterface {
     public static function get_ipaddress(): string;
 
     /**
-     * Devuelve el nombre del script que se está ejecutando.
-     *
-     * @return string
-     */
-    public static function get_script_filename(): string;
-
-    /**
      * Devuelve el agente de usuario del cliente de la petición.
      *
      * @return string
@@ -102,7 +89,7 @@ interface ServerInterface {
      *
      * @return string
      */
-    public static function get_http_host(): string;
+    public static function get_base_url(): string;
 
     /**
      * Determina si el método del protocolo HTTP es `QUERY`. Este 
@@ -162,17 +149,44 @@ interface ServerInterface {
     public static function is_delete(): bool;
 
     /**
-     * Devuelve la ruta lógica registrada por el desarrollador. No la que devuelve el
-     * sistema por medio de `$_SERVER` de forma directa.
+     * Devuelve la ruta lógica de la petición actual, enviada por el cliente HTTP o por la terminal
+     * mediante el parámetro `-r` o `--route`.
      *
-     * @return string
+     * Delega en {@see RequestURILexer::get_route()}. El analizador léxico separa la URI en dos partes:
+     * el directorio base (los segmentos iniciales que existen como directorios físicos desde el punto
+     * de entrada) y la ruta lógica, que es la que devuelve este método.
+     *
+     * La ruta devuelta:
+     *
+     * - Comienza siempre con `/`.
+     * - No incluye el directorio base ni la cadena de consulta.
+     * - No está decodificada: `%20` se conserva tal como llegó. Para la forma decodificada, use
+     *   {@see RequestURILexer::get_decoded_uri()}.
+     *
+     * Usa la instancia única de {@see RequestURILexer::from()}, por lo que la URI se analiza una sola vez
+     * durante la ejecución.
+     *
+     * @return non-empty-string Ruta lógica de la petición actual.
+     *
+     * @throws RouteException Con código 403, si la URI contiene un byte no permitido o un segmento `.` o
+     *                        `..`. Se lanza en la primera llamada, cuando se construye el analizador.
      */
     public static function get_route(): string;
 
     /**
-     * Devuelve el script actual de ejecución.
+     * Devuelve el directorio de ejecución o punto de entrada de la aplicación.
      *
      * @return string
      */
-    public static function get_script_name(): string;
+    public static function get_dir(): string;
+
+    /**
+     * Valor que identifica la ejecución desde la interfaz de línea de comandos (CLI).
+     *
+     * Coincide con el valor que toma `PHP_SAPI` cuando PHP se ejecuta desde la terminal. Se usa como
+     * valor por defecto en los contextos donde no existe un dato de petición HTTP.
+     *
+     * @var non-empty-string
+     */
+    public const CLI = 'cli';
 }

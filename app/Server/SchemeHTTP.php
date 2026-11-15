@@ -49,20 +49,26 @@ trait SchemeHTTP {
     ];
 
     /**
-     * Aquí, encontrar el esquema sí es determinista. En el caso de que se ejecute en 
-     * modo CLI no hay esquema protocolo HTTP disponible, sin embargo, se devolverá 
-     * `http` por defecto, incluso, si se ejecuta desde una CLI.
-     * 
-     * El objetivo buscado con esto es facilitar las pruebas automatizadas para simular
-     * un host para una petición HTTP simulada.
+     * Determina el esquema de la petición actual.
      *
-     * @return non-empty-string
+     * En la terminal (`PHP_SAPI === 'cli'`) no existe un esquema HTTP, y devuelve `cli` sin consultar
+     * `$_SERVER`. Así se distingue una ejecución por terminal de una petición HTTP.
+     *
+     * En cualquier otro contexto devuelve `https` si alguna de las claves de {@see self::SCHEME_KEYS}
+     * (`HTTP_X_FORWARDED_PROTO`, `REQUEST_SCHEME` o `HTTPS`) existe en `$_SERVER` con un valor que
+     * {@see self::is_likely_https()} reconozca: `on`, `1`, `true` o `https`, sin distinguir mayúsculas
+     * ni espacios en los extremos. Las claves se comprueban en ese orden. Si ninguna lo cumple, devuelve
+     * `http`.
+     *
+     * @return non-empty-string `cli`, `http` o `https`.
      */
     private static function determine_scheme() {
+        if (PHP_SAPI === 'cli') return PHP_SAPI;
 
         foreach (self::SCHEME_KEYS as $key) {
-            if (!\array_key_exists($key, $_SERVER))
+            if ($_SERVER[$key] ?? null) {
                 continue;
+            }
 
             /** @var mixed $value */
             $value = $_SERVER[$key];
@@ -96,13 +102,18 @@ trait SchemeHTTP {
     }
 
     /**
-     * Devuelve el Scheme adecuado para el contexto. El esquema devuelto será
-     * siempre `https` o `http`, siempre que el contexto lo permita.
-     * 
-     * **Nota:** si se ejecuta desde un desde un CLI el esquema devuelto será `http`
-     * con el objeto de permitir simular las pruebas automatizadas en `hosts` simulados.
+     * Devuelve el esquema del contexto actual.
      *
-     * @return string
+     * Delega en {@see self::determine_scheme()}:
+     *
+     * - En la terminal (CLI), devuelve `cli`: no existe un esquema HTTP.
+     * - En una petición HTTP, devuelve `https` si `$_SERVER` indica una conexión segura y `http` en
+     *   cualquier otro caso.
+     *
+     * Por tanto, el valor devuelto no siempre es `http` o `https`. Quien use este método para armar una
+     * URL debe tener en cuenta el caso `cli`.
+     *
+     * @return non-empty-string `cli`, `http` o `https`.
      */
     public static function get_scheme(): string {
         return self::determine_scheme();

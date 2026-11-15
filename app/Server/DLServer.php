@@ -29,21 +29,16 @@ namespace DLRoute\Server;
 
 use DLRoute\Config\RealPath;
 use DLRoute\Core\Routing\Automaton\Route\RequestURILexer;
+use DLRoute\Enums\Methods;
+use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\Routing\LexerSymbolInterface;
 use DLRoute\Interfaces\ServerInterface;
-use DLRoute\Routes\RouteDebugger;
 
 class DLServer implements ServerInterface, LexerSymbolInterface {
     use Domain, IPAddress, PortCandidate;
 
     public static function get_uri(): string {
-        $request = RequestURILexer::from(
-            
-        );
-    }
-
-    public static function get_hostname(): string {
-        return self::get_host();
+        return RequestURILexer::from()->get_uri();
     }
 
     public static function get_method(): string {
@@ -68,17 +63,15 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
             }
         }
 
-        return $method;
-    }
-
-    public static function get_script_filename(): string {
-        $script_filename = "";
-
-        if (\array_key_exists("SCRIPT_FILENAME", $_SERVER)) {
-            $script_filename = $_SERVER["SCRIPT_FILENAME"];
+        if (\is_string($http_method)) {
+            $method = $http_method;
         }
 
-        return trim($script_filename);
+        if (Methods::tryFrom($method) === null) {
+            throw new RouteException("El método HTTP «{$method}» no está permitido. Métodos permitidos: QUERY, GET, HEAD, OPTIONS, POST, PUT, PATCH, DELETE.", 405);
+        }
+
+        return $method;
     }
 
     public static function get_ipaddress(): string {
@@ -96,8 +89,15 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
     }
 
     public static function get_document_root(): string {
-        $realpath = RealPath::from();
-        return trim($realpath->get_document_root());
+        return RealPath::from()->get_document_root();
+    }
+
+    public function get_entry_point(): string {
+        return RealPath::from()->get_entry_point();
+    }
+
+    public function get_entry_point_file(): string {
+        return RealPath::from()->get_entry_point_file();
     }
 
     public static function is_query(): bool {
@@ -132,126 +132,39 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         return self::get_method() === "DELETE";
     }
 
-    public static function get_http_host(): string {
+    public static function get_base_url(): string {
         /** @var string $http_host */
         $http_host = self::get_host();
 
         /** @var string $scheme */
         $scheme = self::get_scheme();
 
-        /** @var int $port */
-        $port = self::get_port();
+        /** @var non-empty-string $dir */
+        $dir = self::get_dir();
+
+        /** @var string $port */
+        $port = SELF::HIDDEN_PORT[self::get_port()] ?? false
+            ? ""
+            : ":" . self::get_port();
 
         /** @var string $host */
-        $host = "{$scheme}://{$http_host}";
+        $host = "{$scheme}://{$http_host}{$port}";
+
+        if ($dir !== self::SLASH) {
+            $host = $dir[0] === self::SLASH
+                ? "{$host}{$dir}"
+                : "{$host}/{$dir}";
+        }
 
         return $host;
     }
 
-    /**
-     * Devuelve el software del servidor (en el caso de que sea posible).
-     *
-     * @return string|null
-     */
-    public static function get_server_software(): ?string {
-        return $_SERVER["SERVER_SOFTWARE"] ?? null;
-    }
-
     public static function get_route(): string {
-        /**
-         * URI de la aplicación.
-         *
-         * @var string
-         */
-        $uri = self::get_uri();
-
-        /** @var int $uri_length */
-        $uri_length = \strlen($uri);
-
-        /** @var int $offset */
-        $offset = \strlen(self::get_script_dir()) - 1;
-
-        /** @var non-empty-string $route */
-        $route = \substr($uri, $offset, $uri_length);
-
-        self::remove_duplicate_slash($route);
-
-        return "/" . \trim($route, "/");
+        return RequestURILexer::from()->get_route();
     }
 
-    /**
-     * Elimina barras diagonales duplicadas y normaliza la estructura de la URI.
-     * 
-     * Este método actúa como un analizador léxico básico que fragmenta la entrada mediante el delimitador
-     * SLASH. Durante el recorrido, filtra vacíos, decodifica entidades URL y aplica un trim, reconstruyendo
-     * la cadena final con un formato canónico (un solo separador entre tokens).
-     *
-     * @param string $input Referencia a la URI original; será sobrescrita con
-     *                      la versión normalizada.
-     * @return void
-     */
-    public static function remove_duplicate_slash(string &$input): void {
-        $request = RequestURILexer::from();
-        $input = $request->get_processed_route();
-    }
-
-    public static function get_script_name(): string {
-        return $_SERVER['SCRIPT_NAME'] ?? "/";
-    }
-
-    /**
-     * Devuelve el directorio principal de ejecución
-     *
-     * @return string
-     */
-    public static function get_script_dir(): string {
-        /**
-         * Archivo principal de ejecución de la aplicación.
-         *
-         * @var string $file
-         */
-        $file = self::get_script_name();
-        
-        /**
-         * Directorio principal de ejecución.
-         *
-         * @var string
-         */
-        return dirname($file);
-    }
-
-    /**
-     * Devuelve la URL base de la aplicación.
-     *
-     * @return string
-     */
-    public static function get_base_url(): string {
-        /**
-         * Ruta del host de ejecución de la aplicación.
-         *
-         * @var non-empty-string $host
-         */
-        $host = self::get_http_host();
-
-        /**
-         * Directorio base de ejecución de la aplicación.
-         *
-         * @var non-empty-string $basedir
-         */
-        $basedir = self::get_script_dir();
-
-        /** @var non-empty-string $base_url */
-        $base_url = trim("{$host}{$basedir}", "/");
-
-        return $base_url;
-    }
-
-    /**
-     * Devuelve el directorio de ejecución o punto de entrada de la aplicación.
-     *
-     * @return string
-     */
+    /** @inheritDoc */
     public static function get_dir(): string {
-        return self::get_script_dir();
+        return RequestURILexer::from()->get_dir();
     }
 }

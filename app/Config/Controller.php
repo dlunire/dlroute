@@ -163,7 +163,7 @@ abstract class Controller {
      * @return string
      */
     protected function get_host(): string {
-        return DLServer::get_http_host();
+        return DLServer::get_base_url();
     }
 
     /**

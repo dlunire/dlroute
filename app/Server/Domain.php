@@ -65,13 +65,24 @@ trait Domain {
     ];
 
     /**
-     * Permite determinar el Host o dominio utilizado durante la petición. Si el host no se
-     * encuentra, lanzará una excepción de tipo DomainException
+     * Determina el host o dominio de la petición actual.
      *
-     * @return string
-     * @throws DomainException;
+     * No lanza excepciones. Si no es posible determinar el host, devuelve `null`; es lo que ocurre al
+     * ejecutar desde la terminal (CLI), donde no existe un host de petición.
+     *
+     * Orden de resolución:
+     *
+     * 1. Si el host externo es obligatorio (`$required`), se devuelve ese valor y no se consulta `$_SERVER`.
+     * 2. En otro caso, se recorren en orden las claves de {@see self::KEYS} (`HTTP_X_FORWARDED_HOST`,
+     *    `HTTP_HOST` y `SERVER_NAME`) y se toma la primera cuyo valor sea una cadena no vacía, sin los
+     *    espacios de los extremos.
+     * 3. Si ninguna clave sirve, se usa el host externo opcional, si fue establecido con
+     *    {@see self::set_external_host()}.
+     * 4. Si tampoco existe, devuelve `null`.
+     *
+     * @return non-empty-string|null Host determinado, o `null` si no se pudo determinar.
      */
-    private static function determine_host(): string {
+    private static function determine_host(): ?string {
         if (self::$required) {
             return self::get_external_host();
         }
@@ -84,9 +95,9 @@ trait Domain {
             $domain = self::get_value($_SERVER[$key] ?? null);
             if (\is_string($domain)) break;
         }
-        
+
         if ($domain === null && self::get_external_host() === null) {
-            throw new DomainException("No se pudo determinar el dominio");
+            return null;
         }
 
         return $domain ?? self::get_external_host();
@@ -143,11 +154,41 @@ trait Domain {
     }
 
     /**
-     * Devuelve el host previamente determinado internamente.
+     * Devuelve el host de la aplicación.
      *
-     * @return string
+     * Orden de resolución:
+     *
+     * 1. El host que determina {@see self::determine_host()}: el host externo obligatorio, o el de la
+     *    petición (`HTTP_X_FORWARDED_HOST`, `HTTP_HOST` o `SERVER_NAME`), o el host externo opcional.
+     * 2. Si no hay ninguno (por ejemplo, en la terminal), el nombre de la máquina que devuelve
+     *    `gethostname()`.
+     * 3. Si `gethostname()` falla o devuelve una cadena vacía o solo espacios, el valor de `$hostname`.
+     *
+     * Si `$hostname` está vacío o solo tiene espacios, se sustituye por `dlunire`, de modo que el
+     * resultado nunca es una cadena vacía.
+     *
+     * En la terminal (CLI), el resultado del paso 2 es el nombre de la máquina, no el dominio de la
+     * aplicación, y no se usa DNS inverso para inferirlo. Para fijar el dominio, use
+     * {@see self::set_external_host()}.
+     *
+     * @param string $hostname Valor de último recurso, usado solo cuando `gethostname()` no devuelve un
+     *                         nombre utilizable. Si está vacío o solo tiene espacios, se usa `dlunire`.
+     *                         Por defecto: `dlunire`.
+     * @return non-empty-string Host determinado.
      */
-    public static function get_host(): string {
-        return self::determine_host();
+    public static function get_host(string $hostname = "dlunire"): string {
+        /** @var string|false $inner_hostname */
+        $inner_hostname = \gethostname();
+
+        if (\trim($hostname) === '') {
+            $hostname = 'dlunire';
+        }
+
+        $host = self::determine_host() ?? ($inner_hostname === false || \trim($inner_hostname) === ''
+            ? $hostname
+            : $inner_hostname
+        );
+
+        return $host;
     }
 }

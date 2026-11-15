@@ -1115,4 +1115,20 @@ interface LexerSymbolInterface {
         "\x2e\x2e" => true,
         "\x2e\x2e\x3b" => true,
     ];
+
+    /**
+     * Puertos que no se muestran al construir una URL.
+     *
+     * Contiene los puertos predeterminados de los protocolos HTTP (`80`) y HTTPS (`443`). Se consulta
+     * por clave con `self::HIDDEN_PORT[$port] ?? false`: si devuelve `true`, el puerto se omite.
+     *
+     * Las claves son enteros. PHP también normaliza a entero una cadena numérica decimal usada como
+     * clave, así que `self::HIDDEN_PORT["80"]` y `self::HIDDEN_PORT[80]` dan el mismo resultado.
+     *
+     * @var array<int,true>
+     */
+    public const HIDDEN_PORT = [
+        80 => true,
+        443 => true
+    ];
 }
