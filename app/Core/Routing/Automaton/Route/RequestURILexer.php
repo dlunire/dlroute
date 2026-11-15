@@ -125,6 +125,32 @@ final class RequestURILexer extends RouterLexer {
         return $this->route_resolution;
     }
 
+    #[Override]
+    public function get_uri(): string {
+        return $this->processed_uri->uri;
+    }
+
+    /**
+     * Devuelve la URI de la petición con los segmentos de ruta decodificados.
+     *
+     * Es la forma decodificada de {@see self::get_uri()}: se construye en
+     * {@see self::build_processed_uri()} uniendo con `/` el `decoded_lexeme` de cada token, con la barra
+     * inicial antepuesta. Si no hay tokens, devuelve `/`.
+     *
+     * Si la petición incluye cadena de consultas, se agrega al final con `?`, igual que en
+     * {@see self::get_uri()}.
+     *
+     * La resolución de la ruta (`get_dir()` y `get_route()`) no usa esta forma: trabaja con los `lexeme`
+     * tal como llegan, sin decodificar. Esta URI sirve para quien necesite leer la ruta ya decodificada.
+     *
+     * @return string URI de la petición con los segmentos decodificados.
+     *
+     * @see self::get_uri() Misma URI, sin decodificar.
+     */
+    public function get_decoded_uri(): string {
+        return $this->processed_uri->decoded_uri;
+    }
+
     /**
      * Obtiene la instancia única del analizador léxico de la URI de petición.
      *
