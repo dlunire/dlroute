@@ -11,6 +11,7 @@ use DLRoute\Core\Data\RouteData\RouteResolution;
 use DLRoute\Core\Routing\Automaton\QueryParams\QueryParamComposer;
 use DLRoute\Core\Routing\Automaton\Route\RouterLexer;
 use DLRoute\Errors\RouteException;
+use Override;
 
 /**
  * Analizador léxico para la URI de una petición entrante.
@@ -347,5 +348,10 @@ final class RequestURILexer extends RouterLexer {
      */
     public static function new(): static {
         return new static();
+    }
+
+    #[Override]
+    public function get_tokens(): array {
+        return parent::get_tokens();
     }
 }
