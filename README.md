@@ -8,11 +8,23 @@ No se limita a asociar una URI con un controlador. El motor analiza rutas y par�
 composer require dlunire/dlroute
 ```
 
-Requiere **PHP 8.2+** y puede utilizarse en proyectos PHP existentes, con o sin framework.
+Requiere **PHP 8.3+** y puede utilizarse en proyectos PHP existentes, con o sin framework.
 
 ---
 
-## Inicio rápido
+> [!IMPORTANT]
+> **Versión 3 en desarrollo (rama `dev-automaton`).**
+> DLRoute v3 reescribe el núcleo como un pipeline de autómatas finitos. Hoy están implementados el análisis
+> léxico de la petición (HTTP y CLI), el de las rutas registradas y el de la cadena de consulta. **Todavía no
+> están implementados el registro de rutas ni su despacho.** La documentación de v3 está en
+> [`docs/v3/`](docs/v3/README.md) y se amplía capítulo a capítulo.
+>
+> El **Inicio rápido** de este README y el tutorial de [`docs/tutorial/`](docs/tutorial/README.md) describen la
+> API de la **v2.x**, que sigue siendo válida. Para fijarla: `composer require dlunire/dlroute:^2.0`.
+
+---
+
+## Inicio rápido (v2.x)
 
 DLRoute está diseñado para que una aplicación pueda comenzar a utilizar el sistema de enrutamiento sin necesidad de configurar previamente Apache, Nginx u otro servidor web.
 
