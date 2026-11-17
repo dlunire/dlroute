@@ -356,7 +356,7 @@ final class RequestURILexer extends RouterLexer {
         return $options['r'] ?? $options['route'] ?? "/";
     }
 
-    # MÉTODOS ESTÁTICOS
+    # MÉTODOS PÚBLICOS ESTÁTICOS
 
     /**
      * Crea una nueva instancia del analizador léxico de la URI de petición.

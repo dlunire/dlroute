@@ -66,7 +66,7 @@ trait SchemeHTTP {
         if (PHP_SAPI === 'cli') return PHP_SAPI;
 
         foreach (self::SCHEME_KEYS as $key) {
-            if ($_SERVER[$key] ?? null) {
+            if (($_SERVER[$key] ?? null) === null) {
                 continue;
             }
 

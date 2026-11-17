@@ -41,6 +41,16 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         return RequestURILexer::from()->get_uri();
     }
 
+    /**
+     * Obtiene la URI decodificada mediante el analizador léxico de solicitudes.
+     *
+     * @return non-empty-string URI decodificada.
+     */
+    public static function get_decoded_uri(): string {
+        return RequestURILexer::from()->get_decoded_uri();
+    }
+
+    /** {@inheritDoc} */
     public static function get_method(): string {
         /**
          * Método de solicitud capturado durante la ejecución.
@@ -56,18 +66,16 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         $http_method = $_SERVER['REQUEST_METHOD'] ?? NULL;
 
         if (\is_string($http_method)) {
-            $http_method = \trim($http_method);
-
-            if ($http_method !== '') {
-                return \strtoupper($http_method);
-            }
-        }
-
-        if (\is_string($http_method)) {
             $method = $http_method;
         }
 
-        if (Methods::tryFrom($method) === null) {
+        # Es posible que esta excepción nunca se lance, pero se implementa por si de alguna forma
+        # se cuela un "método" vacío.
+        if (\trim($method) === '') {
+            throw new RouteException("No hay método definido", 400);
+        }
+
+        if (Methods::tryFrom(value: $method) === null) {
             throw new RouteException("El método HTTP «{$method}» no está permitido. Métodos permitidos: QUERY, GET, HEAD, OPTIONS, POST, PUT, PATCH, DELETE.", 405);
         }
 

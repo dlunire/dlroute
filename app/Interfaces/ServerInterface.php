@@ -49,15 +49,23 @@ interface ServerInterface {
     public static function get_uri(): string;
 
     /**
-     * Devuelve el método de solicitud asociado a la ejecución actual.
+     * Obtiene y valida el método de la solicitud actual.
      *
-     * Cuando la aplicación se ejecuta mediante HTTP, obtiene el método registrado por el servidor
-     * en `$_SERVER["REQUEST_METHOD"]`. Si no existe este valor, asume el contexto de ejecución `CLI`.
+     * Recupera el método HTTP desde `$_SERVER['REQUEST_METHOD']`. Cuando no existe un
+     * método HTTP disponible en el entorno de ejecución, utiliza `CLI` como valor
+     * predeterminado.
      *
-     * El resultado se devuelve en mayúsculas y sin espacios externos.
+     * Comprueba que el método no esté vacío y que corresponda a uno de los métodos
+     * definidos en el enumerador {@see Methods}. La validación respeta estrictamente
+     * la capitalización original, sin aplicar conversiones ni normalizaciones.
      *
-     * @return string Nombre del método de solicitud o `CLI` cuando la ejecución no dispone
-     *                de un método HTTP.
+     * DLRoute requiere que los métodos se expresen en mayúsculas, tanto para los métodos
+     * estandarizados como para los métodos personalizados admitidos por el enrutador.
+     *
+     * @return non-empty-string Método de solicitud validado.
+     *
+     * @throws RouteException Si no hay un método definido (400) o si el método no está
+     *                        permitido (405).
      */
     public static function get_method(): string;
 
