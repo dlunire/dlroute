@@ -175,6 +175,7 @@ abstract class RouterLexer implements LexerSymbolInterface {
             if (self::REJECTED_BYTES[$byte] ?? false) {
                 $byte_value = self::SYMBOL_TO_BYTE[$byte];
 
+
                 throw new RouteException(
                     message: \vsprintf(
                         format: "Byte no válido (0x%02X), desplazamiento %d.",
@@ -314,6 +315,7 @@ abstract class RouterLexer implements LexerSymbolInterface {
             /** @var non-empty-string $byte */
             $byte = $this->uri[$offset];
 
+
             if ($byte === "\x25") {
                 $this->decode_percent($offset);
                 continue;
@@ -359,10 +361,12 @@ abstract class RouterLexer implements LexerSymbolInterface {
                 $bracket_open = false;
 
                 throw new RouteException(\sprintf(
-                    "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). En su lugar, se recibió «%s». Los parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.Ruta definida: «%s»",
-                    $offset,
-                    $fragment,
-                    $this->uri
+                    format: "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). En su lugar, se recibió «%s». Los parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.Ruta definida: «%s»",
+                    values: [
+                        $offset,
+                        $fragment,
+                        $this->uri
+                    ]
                 ));
             }
 

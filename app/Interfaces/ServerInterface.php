@@ -157,6 +157,16 @@ interface ServerInterface {
     public static function is_delete(): bool;
 
     /**
+     * Determina si el entorno de ejecución corresponde al modo CLI de PHP.
+     *
+     * Compara la interfaz de ejecución actual (`PHP_SAPI`) con la constante {@see self::CLI}
+     * para identificar si el código se está ejecutando desde la interfaz de línea de comandos.
+     *
+     * @return bool `true` si la ejecución corresponde al entorno CLI; `false` en caso contrario.
+     */
+    public static function is_cli(): bool;
+
+    /**
      * Devuelve la ruta lógica de la petición actual, enviada por el cliente HTTP o por la terminal
      * mediante el parámetro `-r` o `--route`.
      *

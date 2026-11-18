@@ -33,6 +33,13 @@ final class RequestURILexer extends RouterLexer {
     private readonly array $uri_tokens;
 
     /**
+     * Tokens de la ruta HTTP.
+     *
+     * @var array<int, array{lexeme: string, decoded_lexeme: string, length: int, optional: boolean, tokentype: TokenType, offset: int, method: Methods}>
+     */
+    private readonly array $route_tokens;
+
+    /**
      * Contiene la URI procesada de la petición (sea una HTTP o por CLI)
      *
      * @var ProcessedURI $processed_uri
@@ -316,6 +323,8 @@ final class RequestURILexer extends RouterLexer {
             query_string: $query_string
         );
 
+        $this->route_tokens = $route_segments;
+
         $this->route_resolution = new RouteResolution(
             uri: $this->processed_uri,
             dir: "/" . join(separator: "/", array: $dir_segments),
@@ -379,5 +388,26 @@ final class RequestURILexer extends RouterLexer {
     #[Override]
     public function get_tokens(): array {
         return parent::get_tokens();
+    }
+
+    /**
+     * Devuelve los tokens obtenidos durante el análisis léxico de la ruta solicitada por el cliente
+     * mediante HTTP o la interfaz de línea de* comandos (CLI).
+     *
+     * Cada elemento del arreglo representa un token e incluye su lexema original, su representación
+     * decodificada, información de longitud, opcionalidad, tipo y posición dentro de la secuencia analizada.
+     *
+     * @return array<int, array{
+     *     lexeme: string,
+     *     decoded_lexeme: string,
+     *     length: int,
+     *     optional: bool,
+     *     tokentype: TokenType,
+     *     offset: int,
+     *     method: Methods
+     * }> Secuencia de tokens de la ruta solicitada.
+     */
+    public function get_route_tokens(): array {
+        return $this->route_tokens;
     }
 }

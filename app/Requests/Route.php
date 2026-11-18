@@ -30,7 +30,7 @@ use DLRoute\Core\Data\RouteData\RouteContext;
 use DLRoute\Core\Data\RouteData\RouteController;
 use DLRoute\Core\Data\RouteData\RouteMimeType;
 use DLRoute\Core\Data\RouteData\RouteParam;
-use DLRoute\Core\Routing\Automaton\Route\RequestRouteLexer;
+use DLRoute\Core\Routing\Automaton\Route\RouteMatcher;
 use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Enums\Methods;
 use DLRoute\Errors\UnauthorizedException;
@@ -60,7 +60,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
      *
      * @return void
      */
-    protected static function request(string $route, callable|array|string $controller, RequestRouteLexer $request,  Methods $method, array $vars, ?string $mimetype = null): void {
+    protected static function request(string $route, callable|array|string $controller, RouteMatcher $request,  Methods $method, array $vars, ?string $mimetype = null): void {
 
         /**
          * Indica si la ruta requiere ser autenticada.
@@ -80,21 +80,19 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
          */
         $route_to_register = self::$route_identity->value . "{$method->value}|" . $route;
 
-        self::$matched_route = self::$route_identity->value . "{$method->value}|{$request->get_matched_route()}";
+        // self::$matched_route = self::$route_identity->value . "{$method->value}|{$request->get_matched_route()}";
 
         // print_r(self::$matched_route . "\n");
 
         # Esto que está aquí es nuevo:
-        $route_controller = new RouteController(
-            controller: $controller,
-            method: $method->value,
-            required_auth: static::$mark_routes_authenticated,
-            params: new RouteParam($request->get_params_values()),
-            mimetype: $mimetype,
-            vars: $vars
-        );
-
-        self::$routes[$route_to_register] = $route_controller;
+        // $route_controller = new RouteController(
+        //     controller: $controller,
+        //     method: $method->value,
+        //     required_auth: static::$mark_routes_authenticated,
+        //     params: new RouteParam($request->get_params_values()),
+        //     mimetype: $mimetype,
+        //     vars: $vars
+        // );
     }
 
     /**

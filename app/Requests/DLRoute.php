@@ -26,7 +26,7 @@
 namespace DLRoute\Requests;
 
 use DLRoute\Core\Data\RouteHandler;
-use DLRoute\Core\Routing\Automaton\Route\RequestRouteLexer;
+use DLRoute\Core\Routing\Automaton\Route\RouteMatcher;
 use DLRoute\Core\Routing\Automaton\Route\RouteGenerator;
 use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Enums\Methods;
@@ -53,10 +53,8 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::QUERY);
 
-        /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer(
-            route_tokens: $routes->get_tokens()
-        );
+        /** @var RouteMatcher $params */
+        $params = RouteMatcher::new($routes->get_tokens());
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -70,17 +68,15 @@ final class DLRoute extends Route implements RouteInterface {
             );
         });
 
-        return self::get_instance();
+        return self::from();
     }
 
     public static function get(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::GET);
 
-        /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer(
-            route_tokens: $routes->get_tokens()
-        );
+        /** @var RouteMatcher $params */
+        $params = RouteMatcher::new($routes->get_tokens());
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -95,17 +91,15 @@ final class DLRoute extends Route implements RouteInterface {
             );
         });
 
-        return self::get_instance();
+        return self::from();
     }
 
     public static function head(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::HEAD);
 
-        /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer(
-            route_tokens: $routes->get_tokens()
-        );
+        /** @var RouteMatcher $params */
+        $params = RouteMatcher::new($routes->get_tokens());
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -119,17 +113,15 @@ final class DLRoute extends Route implements RouteInterface {
             );
         });
 
-        return self::get_instance();
+        return self::from();
     }
 
     public static function post(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::POST);
 
-        /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer(
-            route_tokens: $routes->get_tokens()
-        );
+        /** @var RouteMatcher $params */
+        $params = RouteMatcher::new($routes->get_tokens());
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -143,17 +135,15 @@ final class DLRoute extends Route implements RouteInterface {
             );
         });
 
-        return self::get_instance();
+        return self::from();
     }
 
     public static function put(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::PUT);
 
-        /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer(
-            route_tokens: $routes->get_tokens()
-        );
+        /** @var RouteMatcher $params */
+        $params = RouteMatcher::new($routes->get_tokens());
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -167,17 +157,15 @@ final class DLRoute extends Route implements RouteInterface {
             );
         });
 
-        return self::get_instance();
+        return self::from();
     }
 
     public static function patch(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::PATCH);
 
-        /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer(
-            route_tokens: $routes->get_tokens()
-        );
+        /** @var RouteMatcher $params */
+        $params = RouteMatcher::new($routes->get_tokens());
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -191,20 +179,18 @@ final class DLRoute extends Route implements RouteInterface {
             );
         });
 
-        return self::get_instance();
+        return self::from();
     }
 
     public static function delete(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::DELETE);
 
-        /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer(
-            route_tokens: $routes->get_tokens()
-        );
-
-        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $routes) {
             self::$route = $route;
+
+            /** @var RouteMatcher $params */
+            $params = RouteMatcher::new($routes->get_tokens());
             self::request(
                 route: $route,
                 controller: $controller,
@@ -215,17 +201,15 @@ final class DLRoute extends Route implements RouteInterface {
             );
         });
 
-        return self::get_instance();
+        return self::from();
     }
 
     public static function options(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::OPTIONS);
 
-        /** @var RequestRouteLexer $params */
-        $params = new RequestRouteLexer(
-            route_tokens: $routes->get_tokens()
-        );
+        /** @var RouteMatcher $params */
+        $params = RouteMatcher::new($routes->get_tokens());
 
         $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
             self::$route = $route;
@@ -239,7 +223,7 @@ final class DLRoute extends Route implements RouteInterface {
             );
         });
 
-        return self::get_instance();
+        return self::from();
     }
 
     public static function match(array $methods, RouteHandler $route): void {
@@ -289,85 +273,9 @@ final class DLRoute extends Route implements RouteInterface {
      * @return void
      */
     public static function execute(): void {
-
-        $params = [];
-
-        /**
-         * Instancia de esta clase.
-         * 
-         * @var self
-         */
-        $instance = self::$instance;
-
-        if ($instance === null) {
-            self::run();
-        }
-
-        /**
-         * Filtros creados por el usuario desarrollador.
-         * 
-         * @var array
-         */
-        $filters = $instance->get_filters();
-
-        /**
-         * Método HTTP actual de ejecución
-         * 
-         * @var string
-         */
-        $method = DLServer::get_method();
-
-        /**
-         * Ruta HTTP actual de ejecución.
-         * 
-         * @var string
-         */
-        $route = DLServer::get_route();
-
-        /** @var non-empty-string $route_with_required_authentication */
-        $route_with_required_authentication = RouteIdentity::PRIVATE->value . $route;
-
-        /**
-         * Ruta actualmente registrada con parámetros
-         * 
-         * @var string|null $registered_current_route
-         */
-        $registered_current_route = self::$is_valid_session
-            ? self::$current_param[$route_with_required_authentication] ?? null
-            : self::$current_param[$route] ?? null;
-
-        if ($registered_current_route === null) {
-            $registered_current_route = self::$current_param[$route] ?? null;
-        }
-
-        if ($params === null) {
-            self::run();
-        }
-
-        if ($registered_current_route === null) {
-            self::run();
-        }
-
-        if (!\array_key_exists($method, $filters)) {
-            self::run();
-        }
-
-        if (!\array_key_exists($registered_current_route, $filters[$method])) {
-            self::run();
-        }
-
-        /**
-         * Filtros actuales
-         * 
-         * @var array
-         */
-        $current_filters = $filters[$method][$registered_current_route];
-
-        $instance->filter_param($current_filters, (object) $params);
-        self::run();
     }
 
-    private static function get_instance(): self {
+    private static function from(): self {
         if (!(self::$instance instanceof self)) {
             self::$instance = new self;
         }

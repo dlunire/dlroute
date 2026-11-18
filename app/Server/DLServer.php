@@ -87,12 +87,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
     }
 
     public static function get_user_agent(): string {
-        $user_agent = "";
-
-        if (\array_key_exists("HTTP_USER_AGENT", $_SERVER)) {
-            $user_agent = $_SERVER["HTTP_USER_AGENT"];
-        }
-
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? \php_uname();
         return $user_agent;
     }
 
@@ -138,6 +133,10 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
 
     public static function is_delete(): bool {
         return self::get_method() === "DELETE";
+    }
+
+    public static function is_cli(): bool {
+        return PHP_SAPI === self::CLI;
     }
 
     public static function get_base_url(): string {
