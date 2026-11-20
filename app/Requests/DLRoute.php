@@ -53,11 +53,12 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::QUERY);
 
-        /** @var RouteMatcher $params */
-        $params = RouteMatcher::new($routes->get_tokens());
-
-        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $routes) {
+            /** @var RouteMatcher $params */
             self::$route = $route;
+
+            $params = RouteMatcher::new($routes->get_tokens());
+
             self::request(
                 route: $route,
                 controller: $controller,
@@ -75,11 +76,14 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::GET);
 
-        /** @var RouteMatcher $params */
-        $params = RouteMatcher::new($routes->get_tokens());
+        print_r($routes->get_route_segments());
 
-        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
+        /** @var RouteMatcher $params */
+
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype, $routes) {
             self::$route = $route;
+
+            $params = RouteMatcher::new($routes->get_tokens());
 
             self::request(
                 route: $route,

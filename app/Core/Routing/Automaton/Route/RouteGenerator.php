@@ -64,6 +64,13 @@ final class RouteGenerator extends RouterLexer {
     private array $routes = [];
 
     /**
+     * Segmentos de ruta. Todavía en fase experimental.
+     *
+     * @var array
+     */
+    private array $route_segments = [];
+
+    /**
      * Inicializa el generador con la URI a procesar.
      *
      * Invoca al analizador léxico del padre para tokenizar la URI,
@@ -118,7 +125,12 @@ final class RouteGenerator extends RouterLexer {
             $this->remove_param($lexeme, $length);
 
             if ($optional && $tokentype === TokenType::PARAM) {
-                $this->routes[] = self::SLASH . implode(self::SLASH, $buffer);
+                $this->routes[] = self::SLASH . implode(
+                    separator: self::SLASH,
+                    array: $buffer
+                );
+
+                $this->route_segments[] = $buffer;
             }
 
             $this->validate_lexeme($lexeme, $offset);
@@ -126,7 +138,11 @@ final class RouteGenerator extends RouterLexer {
             $buffer[] = $lexeme;
         }
 
-        $this->routes[] = self::SLASH . implode(self::SLASH, $buffer);
+        $this->route_segments[] = $buffer;
+        $this->routes[] = self::SLASH . implode(
+            separator: self::SLASH,
+            array: $buffer
+        );
     }
 
     /**
@@ -194,13 +210,20 @@ final class RouteGenerator extends RouterLexer {
         /** @var non-empty-string|null $current_route */
         $current_route = $this->routes[0] ?? null;
 
-        if (DLServer::get_route() === $current_route && DLServer::get_route() === "/") {
-            $callback($this->routes[0]);
+        /** @var non-empty-string $request_route  */
+        $request_route = DLServer::get_route();
+
+        if ($request_route === $current_route && $request_route === "/") {
+            $callback($this->routes[0], $this->route_segments);
             return;
         }
 
         foreach ($this->routes as $route) {
-            $callback($route);
+            $callback($route, $this->route_segments);
         }
+    }
+
+    public function get_route_segments(): array {
+        return $this->route_segments;
     }
 }

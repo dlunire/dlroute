@@ -7,7 +7,7 @@ namespace DLRoute\Core\Routing\Automaton\Route;
 use DLRoute\Core\Routing\Automaton\Route\RequestURILexer;
 use DLRoute\Core\Routing\Automaton\Route\TokenType as RouteTokenType;
 use DLRoute\Enums\Methods;
-
+use DLRoute\Requests\DLOutput;
 
 /**
  * Analizador léxico de la ruta solicitada.
@@ -96,27 +96,24 @@ final class RouteMatcher {
         /** @var array $segments Segmento de rutas */
         $segments = [];
 
-        $tokens = $this->tokens;
         $route_tokens = $this->route_tokens;
-
-        // TODO: por ahora se mantiene esta estructura condicional como tal.
-        if ($quantity_route_tokens !== $quantity_tokens) {
-            // return;
-        }
 
         foreach ($this->tokens as $key => $token) {
             $route_lexeme = $route_tokens[$key] ?? null;
             $lexeme = $token['lexeme'];
 
-            if ($route_lexeme === null || ($route_lexeme !== $lexeme && $token['tokentype'] !== RouteTokenType::PARAM)) {
+            if ($route_lexeme !== $lexeme && $token['tokentype'] === RouteTokenType::TEXT_PLAIN) {
                 break;
             }
 
-            $segments[] = $route_lexeme;
+            $segments[$token['lexeme']] = $route_lexeme;
         }
 
-        echo "Segmentos: ";
-        print_r($segments);
-        echo PHP_EOL;
+        // echo "Segmentos de rutas que coinciden: \n";
+        // echo DLOutput::to_json(
+        //     content: $segments,
+        //     pretty: true
+        // );
+        // echo PHP_EOL;
     }
 }

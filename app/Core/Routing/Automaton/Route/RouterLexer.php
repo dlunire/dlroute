@@ -52,7 +52,7 @@ use DLRoute\Interfaces\Routing\LexerSymbolInterface;
  * @package DLRoute\Core\Routing\Automaton
  *
  * @version v1.0.6 (release)
- * @author David E Luna M <davidlunamontilla@gmail.com>
+ * @author David E Luna M <info@dlunire.dev>
  * @copyright (c) 2026 David E Luna M
  * @license AGPL-3.0 license
  */
@@ -360,7 +360,7 @@ abstract class RouterLexer implements LexerSymbolInterface {
                 $fragment = \substr($this->uri, $offset, $this->size - $offset);
                 $bracket_open = false;
 
-                throw new RouteException(\sprintf(
+                throw new RouteException(\vsprintf(
                     format: "Se esperaba una llave de cierre (}) después del símbolo «?» (posición %d). En su lugar, se recibió «%s». Los parámetros opcionales deben tener el formato → «{parametro?}» en la definición de rutas.Ruta definida: «%s»",
                     values: [
                         $offset,

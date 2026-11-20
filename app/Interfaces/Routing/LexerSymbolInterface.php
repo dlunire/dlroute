@@ -1113,7 +1113,9 @@ interface LexerSymbolInterface {
     public const REJECTED_LEXEME = [
         "\x2e" => true,
         "\x2e\x2e" => true,
+        "\x2e\x2e\x2e" => true,
         "\x2e\x2e\x3b" => true,
+        "\x2e\x2e\x2e\x3b" => true,
     ];
 
     /**
