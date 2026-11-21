@@ -66,7 +66,7 @@ final class RouteGenerator extends RouterLexer {
     /**
      * Segmentos de ruta. Todavía en fase experimental.
      *
-     * @var array
+     * @var array<int, non-empty-string[]> $route_segments
      */
     private array $route_segments = [];
 
@@ -102,6 +102,8 @@ final class RouteGenerator extends RouterLexer {
         /** @var array $buffer */
         $buffer = [];
 
+        $route_segments = [];
+
         foreach ($tokens as $token) {
             /** @var non-empty-string $lexeme */
             $lexeme = \strval($token['lexeme']);
@@ -130,19 +132,26 @@ final class RouteGenerator extends RouterLexer {
                     array: $buffer
                 );
 
-                $this->route_segments[] = $buffer;
+                $this->route_segments[] = $route_segments;
             }
 
             $this->validate_lexeme($lexeme, $offset);
 
             $buffer[] = $lexeme;
+            $route_segments[] = [
+                "lexeme" => $buffer,
+                "type" => TokenType::TEXT_PLAIN,
+                "optionl" => false
+            ];
         }
 
-        $this->route_segments[] = $buffer;
+        $this->route_segments[] = $route_segments;
         $this->routes[] = self::SLASH . implode(
             separator: self::SLASH,
             array: $buffer
         );
+
+        print_r($this->route_segments);
     }
 
     /**

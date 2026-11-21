@@ -62,7 +62,7 @@ final class DLRoute extends Route implements RouteInterface {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: RouteMatcher::new(tokens: $route_segments),
+                request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::QUERY,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -80,7 +80,7 @@ final class DLRoute extends Route implements RouteInterface {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: RouteMatcher::new(tokens: $route_segments),
+                request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::GET,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -98,7 +98,7 @@ final class DLRoute extends Route implements RouteInterface {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: RouteMatcher::new(tokens: $route_tokens),
+                request: RouteMatcher::new(route_segments: $route_tokens),
                 method: Methods::HEAD,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -116,7 +116,7 @@ final class DLRoute extends Route implements RouteInterface {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: RouteMatcher::new(tokens: $route_segments),
+                request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::POST,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -134,7 +134,7 @@ final class DLRoute extends Route implements RouteInterface {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: RouteMatcher::new(tokens: $route_segments),
+                request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::PUT,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -152,7 +152,7 @@ final class DLRoute extends Route implements RouteInterface {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: RouteMatcher::new(tokens: $route_segments),
+                request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::PATCH,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -166,11 +166,11 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::DELETE);
 
-        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
+        $routes->load_routes(callback: function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: RouteMatcher::new(tokens: $route_segments),
+                request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::DELETE,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -188,7 +188,7 @@ final class DLRoute extends Route implements RouteInterface {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: RouteMatcher::new(tokens: $route_segments),
+                request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::OPTIONS,
                 vars: $varnames,
                 mimetype: $mimetype

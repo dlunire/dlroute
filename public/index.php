@@ -18,10 +18,12 @@ echo "\nURL Base: " . DLServer::get_base_url();
 echo PHP_EOL;
 
 try {
-    DLRoute::get('/products/{name?}/{id?}', fn () => ["status" => "Ok"]);
+    DLRoute::get(
+        route: '/products/{name?}/{id}',
+        controller: fn() => ["status" => "Ok"]
+    );
 } catch (RouteException $error) {
     echo $error->getMessage();
 } finally {
     echo "Finalmente, no hay nada que mostrar\n";
 }
-    

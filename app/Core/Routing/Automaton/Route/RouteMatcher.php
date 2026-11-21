@@ -41,45 +41,24 @@ final class RouteMatcher {
      *
      * El constructor es privado para centralizar la creación de instancias mediante {@see self::new()}.
      *
-     * @param array<int, array{
-     *      lexeme: string,
-     *      decoded_lexeme: string,
-     *      length: int,
-     *      optional: bool,
-     *      tokentype: RouteTokenType,
-     *      offset: int,
-     *      method: Methods
-     * }> $tokens Tokens de la ruta a registrar, capturados durante el análisis léxico de su
+     * @param array<int, nom-empty-string> $route_segments Tokens de la ruta a registrar, capturados durante el análisis léxico de su
      *                      definición.
      */
     private function __construct(
-        private readonly array $tokens = [],
+        private readonly array $route_segments = [],
     ) {
         $this->route_tokens = RequestURILexer::from()->get_route_tokens();
         $this->load_data();
     }
 
     /**
-     * Crea una nueva instancia de RequestRouteLexer.
+     * Crea una instancia de {@see self}
      *
-     * Este método proporciona un punto de construcción alternativo mediante una llamada estática, evitando
-     * depender de la sintaxis de instanciación directa de objetos sin paréntesis, disponible en versiones
-     * recientes de PHP.
-     *
-     * @param array<int, array{
-     *      lexeme: string,
-     *      decoded_lexeme: string,
-     *      length: int,
-     *      optional: bool,
-     *      tokentype: RouteTokenType,
-     *      offset: int,
-     *      method: Methods
-     * }> $tokens
-     *
-     * @return static Nueva instancia de RequestRouteLexer.
+     * @param array $route_segments Segmentos de rutas que permitirán 
+     * @return static
      */
-    public static function new(array $tokens): static {
-        return new static(tokens: $tokens);
+    public static function new(array $route_segments): static {
+        return new static(route_segments: $route_segments);
     }
 
     private function load_data(): void {
@@ -88,7 +67,7 @@ final class RouteMatcher {
         $quantity_route_tokens = \count($this->route_tokens);
 
         /** @var integer $quantity_tokens */
-        $quantity_tokens = \count($this->tokens);
+        $quantity_tokens = \count($this->route_segments);
 
         /** @var array $params */
         $params = [];
@@ -98,9 +77,12 @@ final class RouteMatcher {
 
         $route_tokens = $this->route_tokens;
 
-        foreach ($this->tokens as $key => $token) {
+        foreach ($this->route_segments as $key => $token) {
             $route_lexeme = $route_tokens[$key] ?? null;
-            $lexeme = $token['lexeme'];
+            // $lexeme = $token['lexeme'];
+
+            // echo "LEXEME: {$token}\n";
+            continue;
 
             if ($route_lexeme !== $lexeme && $token['tokentype'] === RouteTokenType::TEXT_PLAIN) {
                 break;
@@ -108,12 +90,5 @@ final class RouteMatcher {
 
             $segments[$token['lexeme']] = $route_lexeme;
         }
-
-        // echo "Segmentos de rutas que coinciden: \n";
-        // echo DLOutput::to_json(
-        //     content: $segments,
-        //     pretty: true
-        // );
-        // echo PHP_EOL;
     }
 }
