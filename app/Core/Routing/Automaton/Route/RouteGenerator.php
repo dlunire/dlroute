@@ -218,11 +218,16 @@ final class RouteGenerator extends RouterLexer {
             return;
         }
 
-        foreach ($this->routes as $route) {
-            $callback($route, $this->route_segments);
+        foreach ($this->routes as $key => $route) {
+            $callback($route, $this->route_segments[$key]);
         }
     }
 
+    /**
+     * Devuelve los segmetos de rutas previamente registrados
+     *
+     * @return array
+     */
     public function get_route_segments(): array {
         return $this->route_segments;
     }

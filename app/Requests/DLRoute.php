@@ -47,22 +47,22 @@ use DLRoute\Server\DLServer;
  * @license AGPL-3.0 license
  */
 final class DLRoute extends Route implements RouteInterface {
+    /**
+     * Instancia de DLRoute
+     *
+     * @var self|null $instance
+     */
     private static ?self $instance = null;
 
     public static function query(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::QUERY);
 
-        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $routes) {
-            /** @var RouteMatcher $params */
-            self::$route = $route;
-
-            $params = RouteMatcher::new($routes->get_tokens());
-
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype, $routes) {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: $params,
+                request: RouteMatcher::new(tokens: $route_segments),
                 method: Methods::QUERY,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -76,19 +76,11 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::GET);
 
-        print_r($routes->get_route_segments());
-
-        /** @var RouteMatcher $params */
-
-        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype, $routes) {
-            self::$route = $route;
-
-            $params = RouteMatcher::new($routes->get_tokens());
-
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: $params,
+                request: RouteMatcher::new(tokens: $route_segments),
                 method: Methods::GET,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -102,15 +94,11 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::HEAD);
 
-        /** @var RouteMatcher $params */
-        $params = RouteMatcher::new($routes->get_tokens());
-
-        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
-            self::$route = $route;
+        $routes->load_routes(function (string $route, array $route_tokens) use ($controller, $varnames, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: $params,
+                request: RouteMatcher::new(tokens: $route_tokens),
                 method: Methods::HEAD,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -124,15 +112,11 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::POST);
 
-        /** @var RouteMatcher $params */
-        $params = RouteMatcher::new($routes->get_tokens());
-
-        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
-            self::$route = $route;
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: $params,
+                request: RouteMatcher::new(tokens: $route_segments),
                 method: Methods::POST,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -146,15 +130,11 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::PUT);
 
-        /** @var RouteMatcher $params */
-        $params = RouteMatcher::new($routes->get_tokens());
-
-        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
-            self::$route = $route;
+        $routes->load_routes(function (string $route, $route_segments) use ($controller, $varnames, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: $params,
+                request: RouteMatcher::new(tokens: $route_segments),
                 method: Methods::PUT,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -168,15 +148,11 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::PATCH);
 
-        /** @var RouteMatcher $params */
-        $params = RouteMatcher::new($routes->get_tokens());
-
-        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
-            self::$route = $route;
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: $params,
+                request: RouteMatcher::new(tokens: $route_segments),
                 method: Methods::PATCH,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -190,15 +166,11 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::DELETE);
 
-        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $routes) {
-            self::$route = $route;
-
-            /** @var RouteMatcher $params */
-            $params = RouteMatcher::new($routes->get_tokens());
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: $params,
+                request: RouteMatcher::new(tokens: $route_segments),
                 method: Methods::DELETE,
                 vars: $varnames,
                 mimetype: $mimetype
@@ -212,15 +184,11 @@ final class DLRoute extends Route implements RouteInterface {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::OPTIONS);
 
-        /** @var RouteMatcher $params */
-        $params = RouteMatcher::new($routes->get_tokens());
-
-        $routes->load_routes(function (string $route) use ($controller, $varnames, $mimetype, $params) {
-            self::$route = $route;
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
-                request: $params,
+                request: RouteMatcher::new(tokens: $route_segments),
                 method: Methods::OPTIONS,
                 vars: $varnames,
                 mimetype: $mimetype
