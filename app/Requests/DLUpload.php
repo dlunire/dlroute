@@ -26,7 +26,6 @@
 namespace DLRoute\Requests;
 
 use DLRoute\Config\FileInfo;
-use DLRoute\Routes\RouteDebugger;
 use DLRoute\Server\DLServer;
 use DLRoute\Traits\ImageTrait;
 use finfo;
@@ -108,7 +107,7 @@ trait DLUpload {
      * @return void
      */
     public function set_basedir(string $basedir): void {
-        $this->basedir = RouteDebugger::clear_route($basedir);
+        $this->basedir = $basedir;
     }
 
     /**
@@ -742,7 +741,6 @@ trait DLUpload {
          * @var string
          */
         $basedir = "{$root}/{$this->basedir}";
-        $basedir = RouteDebugger::clear_route($basedir);
 
         /**
          * Año actual del servidor.
@@ -820,7 +818,7 @@ trait DLUpload {
 
             move_uploaded_file($file->tmp_name, $absolute_file);
 
-            if (!file_exists($absolute_file) || !(FileInfo::is_image($absolute_file))) {
+            if (!\file_exists($absolute_file) || !(FileInfo::is_image($absolute_file))) {
                 $file->set_thumbnail(null);
                 continue;
             }
@@ -845,7 +843,7 @@ trait DLUpload {
              */
             $image_file = $this->format_image($file->target_file, $file->type);
 
-            if (is_null($image_file)) {
+            if ($image_file === null) {
                 continue;
             }
 
@@ -1385,7 +1383,7 @@ trait DLUpload {
          */
         $relative_path = "{$this->basedir}/{$dir_by_date}";
 
-        return RouteDebugger::trim_slash($relative_path);
+        return $relative_path;
     }
 
     /**

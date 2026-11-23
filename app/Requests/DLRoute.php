@@ -54,17 +54,16 @@ final class DLRoute extends Route implements RouteInterface {
      */
     private static ?self $instance = null;
 
-    public static function query(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType {
+    public static function query(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::QUERY);
 
-        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype, $routes) {
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype, $routes) {
             self::request(
                 route: $route,
                 controller: $controller,
                 request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::QUERY,
-                vars: $varnames,
                 mimetype: $mimetype
             );
         });
@@ -72,17 +71,16 @@ final class DLRoute extends Route implements RouteInterface {
         return self::from();
     }
 
-    public static function get(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType {
+    public static function get(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::GET);
 
-        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
                 request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::GET,
-                vars: $varnames,
                 mimetype: $mimetype
             );
         });
@@ -90,17 +88,16 @@ final class DLRoute extends Route implements RouteInterface {
         return self::from();
     }
 
-    public static function head(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+    public static function head(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::HEAD);
 
-        $routes->load_routes(function (string $route, array $route_tokens) use ($controller, $varnames, $mimetype) {
+        $routes->load_routes(function (string $route, array $route_tokens) use ($controller, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
                 request: RouteMatcher::new(route_segments: $route_tokens),
                 method: Methods::HEAD,
-                vars: $varnames,
                 mimetype: $mimetype
             );
         });
@@ -108,17 +105,16 @@ final class DLRoute extends Route implements RouteInterface {
         return self::from();
     }
 
-    public static function post(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+    public static function post(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::POST);
 
-        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
                 request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::POST,
-                vars: $varnames,
                 mimetype: $mimetype
             );
         });
@@ -126,17 +122,16 @@ final class DLRoute extends Route implements RouteInterface {
         return self::from();
     }
 
-    public static function put(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+    public static function put(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::PUT);
 
-        $routes->load_routes(function (string $route, $route_segments) use ($controller, $varnames, $mimetype) {
+        $routes->load_routes(function (string $route, $route_segments) use ($controller, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
                 request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::PUT,
-                vars: $varnames,
                 mimetype: $mimetype
             );
         });
@@ -144,17 +139,16 @@ final class DLRoute extends Route implements RouteInterface {
         return self::from();
     }
 
-    public static function patch(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+    public static function patch(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::PATCH);
 
-        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
                 request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::PATCH,
-                vars: $varnames,
                 mimetype: $mimetype
             );
         });
@@ -162,17 +156,16 @@ final class DLRoute extends Route implements RouteInterface {
         return self::from();
     }
 
-    public static function delete(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+    public static function delete(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::DELETE);
 
-        $routes->load_routes(callback: function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
+        $routes->load_routes(callback: function (string $route, array $route_segments) use ($controller, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
                 request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::DELETE,
-                vars: $varnames,
                 mimetype: $mimetype
             );
         });
@@ -180,17 +173,16 @@ final class DLRoute extends Route implements RouteInterface {
         return self::from();
     }
 
-    public static function options(string $route, callable|array|string $controller, array|object $varnames = [], ?string $mimetype = null): DLParamValueType {
+    public static function options(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::OPTIONS);
 
-        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $varnames, $mimetype) {
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
             self::request(
                 route: $route,
                 controller: $controller,
                 request: RouteMatcher::new(route_segments: $route_segments),
                 method: Methods::OPTIONS,
-                vars: $varnames,
                 mimetype: $mimetype
             );
         });
@@ -253,14 +245,5 @@ final class DLRoute extends Route implements RouteInterface {
         }
 
         return self::$instance;
-    }
-
-    /**
-     * Devuelve las rutas registrada del método actual enviado por el cliente HTTP
-     *
-     * @return array
-     */
-    public static function get_routes(): array {
-        return self::$routes;
     }
 }

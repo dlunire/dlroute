@@ -33,41 +33,28 @@ final class RouteController {
      *
      * @var string
      */
-    public readonly string $http_method;
+    public readonly string $method;
 
     /**
      * Construye el contexto resuelto de una petición HTTP.
      *
      * @param string $controller Namespace completo de la clase controladora resuelta
      * para esta petición.
-     * @param string $method Nombre del método del controlador a invocar.
+     * @param string $fn Nombre del método del controlador a invocar.
      * @param bool $required_auth Indica si la ruta resuelta exigía una sesión válida
      * para llegar a este controlador.
-     * @param RouteParam $params Parámetros dinámicos capturados de la ruta, con sus
+     * @param RouteContext $params Parámetros dinámicos capturados de la ruta, con sus
      * valores ya extraídos de la URI de la petición.
      * 
-     * @param array<string, mixed> $vars Variables que serán tomadas por el motor de plantillas, sean las DLUnire
      * o las de otro framework PHP.
      */
     public function __construct(
         public readonly mixed $controller,
-        public readonly string $method,
+        public readonly ?string $fn,
         public readonly bool $required_auth,
-        public readonly RouteParam $params,
-        public readonly ?string $mimetype = null,
-        public readonly array $vars = []
+        public readonly RouteContext $params,
+        public readonly ?string $mimetype = null
     ) {
-        $this->http_method = DLServer::get_method();
+        $this->method = DLServer::get_method();
     }
 }
-// {
-//     "AUTH-POST-/profile/1200": {
-//         "controller": "DLRoute\Test\AuthController",
-//         "method": "profile_with_auth",
-//         "http_method": "POST",
-//         "required_auth": true,
-//         "params": {
-//             "test": 1200
-//         }
-//     }
-// }

@@ -70,11 +70,10 @@ interface RouteInterface {
      *
      * @param string $route Patrón de URI que se comparará con las solicitudes entrantes.
      * @param callable|array|string $controller Controlador encargado de manejar la solicitud. Puede ser un callback o controlador.
-     * @param array<string,mixed> $varnames Opcional. Permite implementar variables en el motor de plantillas.
      * @param string|null $mimetype Opcional. Permite establecer el tipo MIME de respuesta al cliente.
      * @return DLParamValueType
      */
-    public static function query(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType;
+    public static function query(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType;
 
     /**
      * Define una ruta para manejar solicitudes HTTP GET.
@@ -88,7 +87,6 @@ interface RouteInterface {
      *
      * @param string $route El patrón de URI que se comparará con las solicitudes entrantes.
      * @param callable|array|string $controller El callback o controlador encargado de manejar la solicitud.
-     * @param array<string,mixed> $varnames Opcional. Permite implementar variables en el motor de plantillas.
      * @param ?string $mimetype Opcional. Permite establecer el tipo MIME de respuesta al cliente.
      * 
      * @return DLParamValueType
@@ -110,7 +108,7 @@ interface RouteInterface {
      * En el ejemplo anterior, cuando se realiza una solicitud GET a '/usuario/123', se invocará el método 'mostrar'
      * de la clase 'ControladorUsuario' para manejar la solicitud.
      */
-    public static function get(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType;
+    public static function get(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType;
 
     /**
      * Define una ruta para manejar solicitudes `HTTP HEAD`.
@@ -124,11 +122,10 @@ interface RouteInterface {
      * 
      * @param string $route Patrón URI que se comparará con las solicitudes entrantes
      * @param callable|array|string $controller `callback` o controlador encargado de manejar la solicitud
-     * @param array<string,mixed> $varnames Permite implementar datos adicionales al controlador.
      * @param mixed $mimetype Permite establecer el tipo MIME de respuesta al cliente.
      * @return DLParamValueType
      */
-    public static function head(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType;
+    public static function head(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType;
 
 
     /**
@@ -143,7 +140,6 @@ interface RouteInterface {
      *
      * @param string $route El patrón de URI que se comparará con las solicitudes entrantes.
      * @param callable|array|string $controller El callback o controlador encargado de manejar la solicitud.
-     * @param array<string,mixed> $varnames Opcional. Permite implementar variables en el motor de plantillas.
      * @param ?string $mimetype Opcional. Permite establecer el tipo MIME de respuesta al cliente.
      * 
      * @return DLParamValueType
@@ -165,7 +161,7 @@ interface RouteInterface {
      * En el ejemplo anterior, cuando se realiza una solicitud POST a '/user/create', se invocará el método
      * 'mostrar' de la clase 'ControladorUsuario' para manejar la solicitud.
      */
-    public static function post(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType;
+    public static function post(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType;
 
     /**
      * Define una ruta para manejar solicitudes HTTP PUT.
@@ -179,7 +175,6 @@ interface RouteInterface {
      *
      * @param string $route El patrón de URI que se comparará con las solicitudes entrantes.
      * @param callable|array|string $controller El callback o controlador encargado de manejar la solicitud.
-     * @param array<string,mixed> $varnames Opcional. Permite implementar variables en el motor de plantillas.
      * @param ?string $mimetype Opcional. Permite establecer el tipo MIME de respuesta al cliente.
      * 
      * @return DLParamValueType
@@ -201,7 +196,7 @@ interface RouteInterface {
      * En el ejemplo anterior, cuando se realiza una solicitud PUT a '/user/update/{uuid}', se invocará el método
      * 'mostrar' de la clase 'ControladorUsuario' para manejar la solicitud.
      */
-    public static function put(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType;
+    public static function put(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType;
 
     /**
      * Define una ruta para manejar solicitudes HTTP PATCH. El objetivo es llevar a cabo actualizaciones
@@ -216,7 +211,6 @@ interface RouteInterface {
      *
      * @param string $route El patrón de URI que se comparará con las solicitudes entrantes.
      * @param callable|array|string $controller El callback o controlador encargado de manejar la solicitud.
-     * @param array<string,mixed> $varnames Opcional. Permite implementar variables en el motor de plantillas.
      * @param ?string $mimetype Opcional. Permite establecer el tipo MIME de respuesta al cliente.
      * 
      * @return DLParamValueType
@@ -238,7 +232,7 @@ interface RouteInterface {
      * En el ejemplo anterior, cuando se realiza una solicitud PATCH a '/user/update/{uuid}', se invocará el
      * método 'mostrar' de la clase 'ControladorUsuario' para manejar la solicitud.
      */
-    public static function patch(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType;
+    public static function patch(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType;
 
     /**
      * Define una ruta para manejar solicitudes HTTP DELETE.
@@ -252,7 +246,6 @@ interface RouteInterface {
      *
      * @param string $route El patrón de URI que se comparará con las solicitudes entrantes.
      * @param callable|array|string $controller El callback o controlador encargado de manejar la solicitud.
-     * @param array<string,mixed> $varnames Opcional. Permite implementar variables en el motor de plantillas.
      * @param ?string $mimetype Opcional. Permite establecer el tipo MIME que será devuelto al cliente.
      * 
      * @return DLParamValueType
@@ -274,7 +267,7 @@ interface RouteInterface {
      * En el ejemplo anterior, cuando se realiza una solicitud DELETE a '/user/delete/{uuid}', se invocará el
      * método 'mostrar' de la clase 'ControladorUsuario' para manejar la solicitud.
      */
-    public static function delete(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType;
+    public static function delete(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType;
 
     /**
      * Define una ruta para manejar solicitudes `HTTP OPTIONS`.
@@ -288,11 +281,10 @@ interface RouteInterface {
      * 
      * @param string $route Patrón URI que se comparará con las solicitudes entrantes
      * @param callable|array|string $controller `callback` o controlador encargado de manejar la solicitud
-     * @param array<string,mixed> $varnames Opcional. Permite implementar nombre de variables en el motor de plantillas.
      * @param mixed $mimetype Permite establecer el tipo MIME de respuesta al cliente.
      * @return DLParamValueType
      */
-    public static function options(string $route, callable|array|string $controller, array $varnames = [], ?string $mimetype = null): DLParamValueType;
+    public static function options(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType;
 
     /**
      * Registra de forma masiva múltiples métodos HTTP para una misma ruta de petición.

@@ -109,6 +109,6 @@ final class RouteParam {
      * @return static Nueva instancia con los parámetros recibidos.
      */
     public static function new(array $fields = []): static {
-        return new static($fields);
+        return new static(fields: $fields);
     }
 }

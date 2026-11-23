@@ -25,6 +25,7 @@
 
 namespace DLRoute\Requests;
 
+use DLRoute\Core\Data\RouteData\RouteContext;
 use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Routes\RouteDebugger;
 
@@ -57,56 +58,16 @@ trait RouteParams {
     protected static bool $is_valid_session = false;
 
     /**
-     * Captura la ruta con parámetro actual
+     * Rutas registradas por el usuario o desarrollador. Incluye la identidad de la ruta.
      *
      * @var array
-     */
-    protected static array $current_param = [];
-
-    /**
-     * Ruta actual capturada de la petición. Es una ruta con identidad contextual
-     *
-     * @var non-empty-string $http_route
-     */
-    protected static string $context_current_route = "/";
-
-    /**
-     * Ruta actual capturada. No tiene contexto de autenticación.
-     *
-     * @var string
-     */
-    protected static string $public_current_route = "/";
-
-    /**
-     * Almacenamiento de rutas
-     *
-     * @var array $routes
      */
     protected static array $routes = [];
 
     /**
-     * Variables globales para el controlador.
+     * Contexto de la ruta lista para ser utilizada por el despachador.
      *
-     * @var array|object
+     * @var RouteContext
      */
-    protected static array|object $vars = [];
-
-    /**
-     * Almacena los tipos MIME asociados a las rutas registradas.
-     *
-     * Las claves corresponden a la identidad interna de cada ruta y los valores
-     * representan el tipo MIME que debe utilizarse al generar la respuesta.
-     *
-     * @var array<string, string|null>
-     */
-    protected static array $mime_types = [];
-
-
-    /**
-     * Ruta con la que hará match para la búsqueda del controlador. Esto es para ser utilizado
-     * por el dispachador cuando se hace una solicitud.
-     *
-     * @var string|null
-     */
-    protected static ?string $matched_route = null;
+    protected static RouteContext $route_context;
 }
