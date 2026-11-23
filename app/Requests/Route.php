@@ -85,7 +85,6 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
         # Esto que está aquí es nuevo:
         $route_controller = new RouteController(
             controller: $controller,
-            fn: null,
             required_auth: static::$mark_routes_authenticated,
             params: self::$route_context,
             mimetype: $mimetype

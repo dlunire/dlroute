@@ -40,7 +40,6 @@ final class RouteController {
      *
      * @param string $controller Namespace completo de la clase controladora resuelta
      * para esta petición.
-     * @param string $fn Nombre del método del controlador a invocar.
      * @param bool $required_auth Indica si la ruta resuelta exigía una sesión válida
      * para llegar a este controlador.
      * @param RouteContext $params Parámetros dinámicos capturados de la ruta, con sus
@@ -50,7 +49,6 @@ final class RouteController {
      */
     public function __construct(
         public readonly mixed $controller,
-        public readonly ?string $fn,
         public readonly bool $required_auth,
         public readonly RouteContext $params,
         public readonly ?string $mimetype = null
