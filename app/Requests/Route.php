@@ -26,7 +26,7 @@
 namespace DLRoute\Requests;
 
 use DLAuth\Data\SessionData;
-use DLRoute\Core\Data\RouteData\RouteContext;
+use DLRoute\Core\Data\RouteData\ControllerContext;
 use DLRoute\Core\Data\RouteData\RouteController;
 use DLRoute\Core\Data\RouteData\RouteMimeType;
 use DLRoute\Core\Data\RouteData\RouteParam;
@@ -166,13 +166,13 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
      *
      * Si no existe un controlador correspondiente al contexto de autenticación actual, devuelve null.
      *
-     * @param RouteContext $controller_context Contexto de controladores de la ruta.
+     * @param ControllerContext $controller_context Contexto de controladores de la ruta.
      * @return mixed Controlador correspondiente al contexto de autenticación actual o null si no existe.
      *
      * @throws UnauthorizedException Si la ruta requiere autenticación y no existe
      * una sesión válida.
      */
-    private static function get_validated_controller_context(RouteContext $controller_context): mixed {
+    private static function get_validated_controller_context(ControllerContext $controller_context): mixed {
         /** @var non-empty-string $current_route */
         $current_route = static::$public_current_route;
 
@@ -226,9 +226,9 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
      * Si el método HTTP o la ruta no se encuentran registrados, devuelve un `RouteContext` sin
      * controladores asociados.
      *
-     * @return RouteContext Contexto con los controladores público y privado asociados a la ruta.
+     * @return ControllerContext Contexto con los controladores público y privado asociados a la ruta.
      */
-    protected static function get_controller(): RouteContext {
+    protected static function get_controller(): ControllerContext {
 
         /**
          * Método HTTP actual.
@@ -245,13 +245,13 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
         $routes = self::$routes[$method] ?? null;
 
         if (!\is_array($routes)) {
-            return new RouteContext(
+            return new ControllerContext(
                 private_controller: null,
                 public_controller: null
             );
         }
 
-        $controller =  new RouteContext(
+        $controller =  new ControllerContext(
             private_controller: $routes[static::$context_current_route] ?? null,
             public_controller: $routes[self::$public_current_route] ?? null
         );

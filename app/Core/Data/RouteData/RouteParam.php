@@ -7,20 +7,27 @@ namespace DLRoute\Core\Data\RouteData;
 use DLRoute\Errors\RouteException;
 
 /**
- * Representa los parámetros de una ruta resueltos por el enrutador.
+ * Representa los parámetros capturados durante la resolución de una ruta.
  *
- * Sustituye al uso de `stdClass` (`(object) [...]`) para exponer los parámetros capturados de una ruta a los
- * controladores, ofreciendo un tipo específico que permite verificar su procedencia mediante `instanceof`, en
- * lugar de aceptar cualquier `object` sin garantía de origen.
+ * Encapsula una colección de objetos {@see Param}, indexados por el nombre de cada parámetro,
+ * y permite consultarlos mediante acceso a propiedades virtuales.
  *
- * El acceso a un campo no definido devuelve `null` en lugar de lanzar una excepción, preservando el mismo
- * comportamiento que ya tenían los controladores existentes al leer parámetros opcionales mediante
- * `$params->campo ?? null`.
+ * La instancia se crea exclusivamente mediante la fábrica estática {@see RouteParam::new()},
+ * ya que el constructor es privado.
  *
- * Los campos se cargan una única vez durante la construcción. Cualquier intento de asignar una propiedad
- * nueva o existente sobre la instancia, ya sea un campo declarado en `$fields` o una propiedad dinámica ajena
- * a él, es rechazado mediante `RouteException`, garantizando que la instancia permanezca inmutable después de
- * construida.
+ * Implementa los métodos mágicos {@see __get()} y {@see __set()} para proporcionar una interfaz
+ * de acceso controlado a los parámetros:
+ *
+ * - La lectura devuelve siempre una instancia de {@see Param}. Si el parámetro existe, se devuelve
+ *   el objeto asociado; si no existe, se devuelve un {@see Param} vacío, con `name`, `value` y
+ *   `decoded_value` en `null`. Quien consulta nunca recibe `null` y no necesita comprobar la
+ *   existencia del parámetro antes de acceder a él.
+ * - La escritura está restringida y produce una {@see RouteException}, evitando que los
+ *   parámetros capturados sean modificados mediante asignaciones externas.
+ *
+ * Sustituye el uso de `stdClass` para representar los parámetros de una ruta, proporcionando
+ * un tipo específico que permite verificar su procedencia mediante `instanceof` y mantener
+ * una representación tipada de los datos capturados.
  *
  * @package DLRoute\Core\Data\RouteData
  * @author David Eduardo Luna Montilla <info@dlunire.dev>
@@ -30,43 +37,78 @@ use DLRoute\Errors\RouteException;
 final class RouteParam {
 
     /**
-     * Construye los parámetros de una ruta a partir de los campos ya resueltos
-     * por el enrutador.
+     * Construye una instancia con los parámetros capturados por el enrutador.
      *
-     * @param array<string, mixed> $fields Campos a ser cargados, indexados por nombre de
-     * parámetro.
+     * El constructor es privado: para crear una instancia se debe usar {@see RouteParam::new()}.
+     *
+     * Los campos se reciben indexados por el nombre de cada parámetro y contienen
+     * instancias de {@see Param}. La colección se establece durante la construcción
+     * y no puede reasignarse posteriormente.
+     *
+     * @param array<string, Param> $fields Parámetros capturados, indexados por nombre.
      */
-    public function __construct(private readonly array $fields = []) {
+    private function __construct(
+        private readonly array $fields = []
+    ) {
     }
 
     /**
-     * Impide la asignación de cualquier propiedad sobre la instancia.
+     * Impide la asignación de propiedades sobre la instancia.
      *
-     * `RouteParam` es inmutable una vez construida: los parámetros de la ruta
-     * ya vienen resueltos por el enrutador en el momento de la instanciación,
-     * por lo que no existe un caso legítimo para modificarlos después.
+     * Este método intercepta los intentos de escritura mediante el acceso a propiedades
+     * virtuales, rechazando cualquier modificación de los parámetros almacenados.
      *
-     * @param string $name Nombre de la propiedad que se intentó asignar.
-     * @param mixed $value Valor que se intentó asignar.
+     * @param string $name Nombre de la propiedad que se intenta modificar.
+     * @param mixed $value Valor que se intenta asignar.
+     *
      * @return never
      *
-     * @throws RouteException Siempre que se invoque este método.
+     * @throws RouteException Siempre que se intenta asignar una propiedad.
      */
     public function __set(string $name, mixed $value): never {
-        throw new RouteException("No está permitido escribir propiedades nuevas", 500);
+        throw new RouteException(
+            message: "No está permitido escribir propiedades nuevas.",
+            code: 500
+        );
     }
 
     /**
-     * Devuelve el valor de un parámetro por nombre.
+     * Recupera un parámetro mediante su nombre.
      *
-     * Si el parámetro solicitado no fue capturado por el enrutador, devuelve
-     * `null` en lugar de lanzar una excepción o una advertencia, permitiendo su
-     * uso directo en parámetros opcionales (por ejemplo, `$params->id ?? null`).
+     * Busca el parámetro solicitado en la colección de campos y devuelve su instancia
+     * {@see Param}. Si el nombre no existe, devuelve un {@see Param} vacío (con `name`,
+     * `value` y `decoded_value` en `null`) en lugar de `null`.
      *
-     * @param string $name Nombre del parámetro a consultar.
-     * @return mixed Valor del parámetro, o `null` si no fue definido.
+     * Este comportamiento permite consultar parámetros opcionales sin provocar excepciones
+     * ni advertencias por claves inexistentes, y sin comprobar su existencia previamente.
+     *
+     * @param string $name Nombre del parámetro que se desea consultar.
+     *
+     * @return Param Instancia del parámetro capturado, o un {@see Param} vacío si no existe.
      */
-    public function __get(string $name): mixed {
-        return $this->fields[$name] ?? null;
+    public function __get(string $name): Param {
+        /** @var Param|null $param */
+        $param = $this->fields[$name] ?? null;
+
+        return $param instanceof Param
+            ? $param
+            : Param::new(
+                name: null,
+                value: null,
+                decoded_value: null
+            );
+    }
+
+    /**
+     * Crea una instancia con los parámetros capturados por el enrutador.
+     *
+     * Es el único punto de creación público, dado que el constructor es privado.
+     *
+     * @param array<string, Param> $fields Parámetros capturados, indexados por nombre.
+     *
+     * @return static Nueva instancia con los parámetros recibidos.
+     */
+    public static function new(array $fields = []): static {
+        return new static($fields);
     }
 }
