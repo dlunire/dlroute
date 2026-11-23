@@ -63,10 +63,21 @@ final class RouteGenerator extends RouterLexer {
      */
     private array $routes = [];
 
+                //     "lexeme" => $lexeme,
+                // "type" => $tokentype,
+                // "is_optional" => $optional,
+                // "offset" => $token['offset'],
+                // "uri" => $uri
     /**
      * Segmentos de ruta. Todavía en fase experimental.
      *
-     * @var array<int, non-empty-string[]> $route_segments
+     * @var array<int, array<int, array{
+     *      lexeme: non-empty-string,
+     *      type: TokenType,
+     *      is_optional: boolean,
+     *      offset: int,
+     *      uri: non-empty-string
+     * }>> $route_segments
      */
     private array $route_segments = [];
 
@@ -102,7 +113,25 @@ final class RouteGenerator extends RouterLexer {
         /** @var array $buffer */
         $buffer = [];
 
+        /**
+         * Segmentos de ruta.
+         * 
+         * @var array{
+         *      lexeme: non-empty-string,
+         *      type: TokenType,
+         *      is_optional: boolean,
+         *      offset: int,
+         *      uri: non-empty-string
+         * } $route_segments
+         */ 
         $route_segments = [];
+
+        /** @var non-empty-string $uri */
+        $uri = $this->get_uri();
+
+        if (\trim($uri) === '') {
+            $uri = "/";
+        }
 
         foreach ($tokens as $token) {
             /** @var non-empty-string $lexeme */
@@ -139,9 +168,11 @@ final class RouteGenerator extends RouterLexer {
 
             $buffer[] = $lexeme;
             $route_segments[] = [
-                "lexeme" => $buffer,
-                "type" => TokenType::TEXT_PLAIN,
-                "optionl" => false
+                "lexeme" => $lexeme,
+                "type" => $tokentype,
+                "is_optional" => $optional,
+                "offset" => $token['offset'],
+                "uri" => $uri
             ];
         }
 
@@ -150,8 +181,6 @@ final class RouteGenerator extends RouterLexer {
             separator: self::SLASH,
             array: $buffer
         );
-
-        print_r($this->route_segments);
     }
 
     /**
@@ -171,7 +200,7 @@ final class RouteGenerator extends RouterLexer {
         // Verifica si el lexema corresponde exactamente a una estructura de parámetro vacía "{}"
         if (($lexeme[0] ?? null) === self::BRACKET_OPEN && ($lexeme[1] ?? null) === self::BRACKET_CLOSE) {
             throw new RouteException(
-                "La sintaxis de la ruta es incorrecta. Un parámetro dinámico no puede estar vacío en la posición «{$offset}». Sintaxis detectada: «{?}»"
+                message: "La sintaxis de la ruta es incorrecta. Un parámetro dinámico no puede estar vacío en la posición «{$offset}». Sintaxis detectada: «{?}»"
             );
         }
     }

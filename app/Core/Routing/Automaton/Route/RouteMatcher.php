@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace DLRoute\Core\Routing\Automaton\Route;
 
+use DLRoute\Core\Data\RouteData\Param;
 use DLRoute\Core\Routing\Automaton\Route\RequestURILexer;
-use DLRoute\Core\Routing\Automaton\Route\TokenType as RouteTokenType;
-use DLRoute\Enums\Methods;
-use DLRoute\Requests\DLOutput;
+use DLRoute\Core\Routing\Automaton\Route\TokenType;
+use DLRoute\Errors\RouteException;
 
 /**
  * Analizador léxico de la ruta solicitada.
@@ -29,9 +29,11 @@ final class RouteMatcher {
      *
      * Se obtienen una sola vez al construir la instancia, mediante {@see RequestURILexer::get_route_tokens()}.
      *
-     * @var non-empty-string[] $route_tokens
+     * @var array<int, array{lexeme: non-empty-string, decoded_lexeme: non-empty-string}> $route_tokens_data
      */
-    private readonly array $route_tokens;
+    private readonly array $route_tokens_data;
+
+    private readonly ?array $matchet_route;
 
     /**
      * Construye una instancia de RequestRouteLexer.
@@ -40,14 +42,20 @@ final class RouteMatcher {
      * enviada por el cliente HTTP o la CLI.
      *
      * El constructor es privado para centralizar la creación de instancias mediante {@see self::new()}.
-     *
-     * @param array<int, nom-empty-string> $route_segments Tokens de la ruta a registrar, capturados durante el análisis léxico de su
+     * 
+     * @param array<int, array{
+     *      lexeme: non-empty-string,
+     *      type: TokenType,
+     *      is_optional: boolean,
+     *      offset: int,
+     *      uri: non-empty-string
+     * }> $route_segments Tokens de la ruta a registrar, capturados durante el análisis léxico de su
      *                      definición.
      */
     private function __construct(
         private readonly array $route_segments = [],
     ) {
-        $this->route_tokens = RequestURILexer::from()->get_route_tokens();
+        $this->route_tokens_data = RequestURILexer::from()->get_route_data();
         $this->load_data();
     }
 
@@ -64,7 +72,7 @@ final class RouteMatcher {
     private function load_data(): void {
 
         /** @var integer $quantity_route_tokens */
-        $quantity_route_tokens = \count($this->route_tokens);
+        $quantity_route_tokens = \count($this->route_tokens_data);
 
         /** @var integer $quantity_tokens */
         $quantity_tokens = \count($this->route_segments);
@@ -72,23 +80,69 @@ final class RouteMatcher {
         /** @var array $params */
         $params = [];
 
-        /** @var array $segments Segmento de rutas */
-        $segments = [];
+        /** @var array $registered_route_segments Segmento de rutas registradas */
+        $registered_route_segments = [];
 
-        $route_tokens = $this->route_tokens;
+        /** @var array $route_segments */
+        $route_segments = [];
+
+        /** @var array $params */
+        $params = [];
+
+        if ($quantity_route_tokens !== $quantity_tokens) {
+            $this->matchet_route = null;
+            return;
+        }
+
+        /** @var int $segments_quantity */
+        $segments_quantity = 0;
 
         foreach ($this->route_segments as $key => $token) {
-            $route_lexeme = $route_tokens[$key] ?? null;
-            // $lexeme = $token['lexeme'];
+            /** @var Param $route_lexeme */
+            $route_lexeme = Param::new(...$this->route_tokens_data[$key]);
 
-            // echo "LEXEME: {$token}\n";
-            continue;
+            /** @var TokenType $toketype */
+            $tokentype = $token['type'];
 
-            if ($route_lexeme !== $lexeme && $token['tokentype'] === RouteTokenType::TEXT_PLAIN) {
+            /** @var non-empty-string $lexeme */
+            $lexeme = $token['lexeme'];
+
+            if ($route_lexeme->lexeme !== $lexeme && $tokentype === TokenType::TEXT_PLAIN) {
                 break;
             }
 
-            $segments[$token['lexeme']] = $route_lexeme;
+            $registered_route_segments[] = $lexeme;
+
+            /** @var non-empty-string $param_name */
+            $param_name = $tokentype === TokenType::PARAM
+                ? \trim(string: $lexeme, characters: '{}')
+                : $lexeme;
+
+            if (($params[$param_name] ?? null) !== null) {
+                throw new RouteException(
+                    message: "El parámetro '{$param_name}' está duplicado en la posición «{$token['offset']}» de la ruta «{$token['uri']}».",
+                    code: 500
+                );
+            }
+
+            $segments_quantity++;
+            if ($tokentype !== TokenType::PARAM) continue;
+            $params[$param_name] = $route_lexeme;
         }
+
+        if ($segments_quantity !== $quantity_tokens) {
+            $this->matchet_route = null;
+            return;
+        };
+
+        $this->matchet_route = [
+            "route" => RequestURILexer::from()->get_route(),
+            "registered_route" => "/" . join(array: $registered_route_segments, separator: "/"),
+            "params" => $params
+        ];
+
+        echo PHP_EOL;
+        echo "ROUTE:  ";
+        print_r($this->matchet_route);
     }
 }

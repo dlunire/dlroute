@@ -54,6 +54,13 @@ final class RequestURILexer extends RouterLexer {
     private static ?self $instance = null;
 
     /**
+     * Datos de los segmentos de ruta
+     *
+     * @var array<int, array{lexeme: string, decoded_lexeme: string}> $route_data
+     */
+    private readonly array $route_data;
+
+    /**
      * Resultado de la resolución de la URI de la petición.
      *
      * Permanece en `null` mientras no se haya completado la resolución.
@@ -280,6 +287,9 @@ final class RequestURILexer extends RouterLexer {
         /** @var non-empty-string[] $route_segments */
         $route_segments = [];
 
+        /** @var array<int, array{lexeme: string, decoded_lexeme: string}> $route_data */
+        $route_data = [];
+
         /** @var boolean $resolve_dir */
         $resolve_dir = true;
 
@@ -313,6 +323,11 @@ final class RequestURILexer extends RouterLexer {
             }
 
             $route_segments[] = $segment;
+
+            $route_data[] = [
+                "lexeme" => $segment,
+                "decoded_lexeme" => $token['decoded_lexeme']
+            ];
         }
 
         /** @var non-empty-string|null $query_string */
@@ -324,6 +339,7 @@ final class RequestURILexer extends RouterLexer {
         );
 
         $this->route_tokens = $route_segments;
+        $this->route_data = $route_data;
 
         $this->route_resolution = new RouteResolution(
             uri: $this->processed_uri,
@@ -397,17 +413,18 @@ final class RequestURILexer extends RouterLexer {
      * Cada elemento del arreglo representa un token e incluye su lexema original, su representación
      * decodificada, información de longitud, opcionalidad, tipo y posición dentro de la secuencia analizada.
      *
-     * @return array<int, array{
-     *     lexeme: string,
-     *     decoded_lexeme: string,
-     *     length: int,
-     *     optional: bool,
-     *     tokentype: TokenType,
-     *     offset: int,
-     *     method: Methods
-     * }> Secuencia de tokens de la ruta solicitada.
+     * @return non-empty-string[] Secuencia de tokens de la ruta solicitada.
      */
     public function get_route_tokens(): array {
         return $this->route_tokens;
+    }
+
+    /**
+     * Devuelve los segmentos de rutas codificada y decodificada.
+     *
+     * @return array<int, array{lexeme: non-empty-string, decoded_lexeme: non-empty-string}>
+     */
+    public function get_route_data(): array {
+        return $this->route_data;
     }
 }
