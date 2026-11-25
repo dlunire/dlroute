@@ -75,11 +75,6 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
          */
         $route_to_register = self::$route_identity->value . "{$method->value}|" . $route;
 
-        // print_r("ROUTE - " . $request->get_context()->registered_route . "\n");
-        // print_r("ROUTE - " . "{$route_to_register} → " . ($context->registered_route ?? 'NULL') . "\n");
-
-        print_r($route_to_register . "\n");
-
         # Esto que está aquí es nuevo:
         $route_controller = new RouteController(
             controller: $controller,
@@ -87,6 +82,13 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
             params: self::$route_context,
             mimetype: $mimetype
         );
+
+        // TODO: La clave de registro es: <Identity>|<Method>|<Route> y el controlador
+        // contiene toda la metadata. Por lo tanto, quito este TODO en cuanto haya terminado
+        // de escribir el despachador de la ruta.
+        self::$routes[$route_to_register] = $route_controller;
+
+        print_r($route_to_register . PHP_EOL);
     }
 
     /**

@@ -28,7 +28,6 @@ namespace DLRoute\Requests;
 use DLRoute\Core\Data\RouteHandler;
 use DLRoute\Core\Routing\Automaton\Route\RouteMatcher;
 use DLRoute\Core\Routing\Automaton\Route\RouteGenerator;
-use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\RouteInterface;

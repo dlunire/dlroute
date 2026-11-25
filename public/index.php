@@ -17,7 +17,7 @@ try {
     //     route: '/api/v1/products///////////////////{page}/{rows?}',
     //     controller: fn() => ["status" => "Ok"]
     // );
-    DLRoute::cli(
+    DLRoute::query(
         route: '/products/{firstname?}/{lastname?}',
         controller: [TestController::class, 'index']
     );
