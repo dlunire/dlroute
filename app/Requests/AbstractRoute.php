@@ -150,7 +150,7 @@ abstract class AbstractRoute extends DLParamValueType implements RouteInterface,
             $value = (new $classname)?->{$method_name}(self::$route_context->params) ?? null;
 
             header(
-                header: "Content-type: " . ($mimetype !== null ? $mimetype : "application/json") . "charset=utf-8",
+                header: "Content-type: " . ($mimetype !== null ? $mimetype : "application/json") . "; charset=utf-8",
                 replace: true,
                 response_code: 200
             );
