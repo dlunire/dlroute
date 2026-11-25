@@ -22,11 +22,12 @@ try {
     Route::get(
         route: '/products/{firstname?}/{lastname?}',
         controller: [TestController::class, 'index'],
-        mimetype: 'text/plain'
+        mimetype: 'application/json'
     );
     Route::cli(
         route: '/products/{firstname?}/{lastname?}',
-        controller: [TestController::class, 'index']
+        controller: [TestController::class, 'index'],
+        mimetype: "application/json"
     );
 } catch (RouteException $error) {
     echo $error->getMessage();
