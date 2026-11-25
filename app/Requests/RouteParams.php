@@ -26,6 +26,7 @@
 namespace DLRoute\Requests;
 
 use DLRoute\Core\Data\RouteData\RouteContext;
+use DLRoute\Core\Data\RouteData\RouteController;
 use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Routes\RouteDebugger;
 
@@ -60,7 +61,7 @@ trait RouteParams {
     /**
      * Rutas registradas por el usuario o desarrollador. Incluye la identidad de la ruta.
      *
-     * @var array
+     * @var array<string, RouteController> $routes
      */
     protected static array $routes = [];
 

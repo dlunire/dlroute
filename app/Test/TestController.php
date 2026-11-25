@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace DLRoute\Test;
 
 use DLRoute\Config\Controller;
+use DLRoute\Core\Data\RouteData\RouteParam;
 
 /**
  * Es un controlador de prueba para verificar que el sistema
@@ -41,4 +42,16 @@ use DLRoute\Config\Controller;
  */
 final class TestController extends Controller {
    # Esta clase tiene el propósito de ser utilizada para pruebas
+
+   public function index(RouteParam $params): array {
+      return [
+         "status" => true,
+         "author" => "David E Luna M",
+         "params" => $params,
+         "decoded_firstname" => $params->firstname->decoded_value,
+         "decoded_lastname" => $params->lastname->decoded_value,
+         "firstname" => $params->firstname->value,
+         "lastname" => $params->lastname->value
+      ];
+   }
 }

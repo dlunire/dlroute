@@ -194,19 +194,25 @@ class DLOutput implements OutputInterface {
         header("Content-Type: application/json; charset=utf-8", true, 404);
 
         if (self::$personalize) {
-            echo self::to_json(self::$error_404, true);
+            echo self::to_json(
+                content: self::$error_404,
+                pretty: true
+            );
             exit;
         }
 
-        echo self::to_json([
-            "code" => 404,
-            "method" => DLServer::get_method(),
-            "message" => "La ruta solicitada no existe",
-            "route" => DLServer::get_route(),
-            "uri" => DLServer::get_uri(),
-            "timestamp" => date(DATE_ATOM),
-            "hint" => "Verifica si la ruta que ha vistado es correcta"
-        ], true);
+        echo self::to_json(
+            content: [
+                "code" => 404,
+                "method" => DLServer::get_method(),
+                "message" => "La ruta solicitada no existe",
+                "route" => DLServer::get_route(),
+                "uri" => DLServer::get_uri(),
+                "timestamp" => date(DATE_ATOM),
+                "hint" => "Verifica si la ruta que ha vistado es correcta"
+            ],
+            pretty: true
+        );
 
         exit;
     }

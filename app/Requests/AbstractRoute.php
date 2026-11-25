@@ -31,8 +31,10 @@ use DLRoute\Core\Data\RouteData\RouteController;
 use DLRoute\Core\Routing\Automaton\Route\RouteMatcher;
 use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
 use DLRoute\Enums\Methods;
+use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\RouteInterface;
 use DLRoute\Interfaces\Routing\LexerSymbolInterface;
+use DLRoute\Server\DLServer;
 
 abstract class AbstractRoute extends DLParamValueType implements RouteInterface, LexerSymbolInterface {
     use RouteParams;
@@ -55,7 +57,12 @@ abstract class AbstractRoute extends DLParamValueType implements RouteInterface,
      * @return void
      */
     protected static function request(string $route, callable|array|string $controller, RouteMatcher $request,  Methods $method, ?string $mimetype = null): void {
-        self::$route_context = $request->get_context();
+        /** @var RouteContext $route_context */
+        $route_context = $request->get_context();
+
+        if ($route_context->registered_route !== null) {
+            self::$route_context = $route_context;
+        }
 
         /**
          * Indica si la ruta requiere ser autenticada.
@@ -79,7 +86,7 @@ abstract class AbstractRoute extends DLParamValueType implements RouteInterface,
         $route_controller = new RouteController(
             controller: $controller,
             required_auth: static::$mark_routes_authenticated,
-            params: self::$route_context,
+            params: $route_context,
             mimetype: $mimetype
         );
 
@@ -87,8 +94,6 @@ abstract class AbstractRoute extends DLParamValueType implements RouteInterface,
         // contiene toda la metadata. Por lo tanto, quito este TODO en cuanto haya terminado
         // de escribir el despachador de la ruta.
         self::$routes[$route_to_register] = $route_controller;
-
-        print_r($route_to_register . PHP_EOL);
     }
 
     /**
@@ -110,6 +115,53 @@ abstract class AbstractRoute extends DLParamValueType implements RouteInterface,
      * @return void
      */
     public static function dispatch(): void {
+        if (!isset(self::$route_context)) {
+            DLOutput::not_found();
+        }
 
+        /** @var RouteController|null $route_controller */
+        $route_controller = self::$routes[(self::$is_valid_session
+            ? RouteIdentity::PRIVATE->value
+            : RouteIdentity::PUBLIC->value)
+            . DLServer::get_method() . "|"
+            . self::$route_context->registered_route] ?? null;
+
+        if (!($route_controller instanceof RouteController)) {
+            DLOutput::not_found();
+        }
+
+        // TODO: Esto que sigue por acá es una solución provisional que será modificada las próximas horas:
+
+        $controller = $route_controller->controller;
+
+        if (!\is_array($controller)) {
+            DLOutput::not_found();
+        }
+
+        $classname = $controller[0] ?? null;
+        $method_name = $controller[1] ?? null;
+
+        /** @var string|null $mimetype */
+        $mimetype = $route_controller->mimetype;
+
+        if (\class_exists($classname) && \method_exists($classname, $method_name)) {
+            
+            $value = (new $classname)?->{$method_name}(self::$route_context->params) ?? null;
+
+            header(
+                header: "Content-type: " . ($mimetype !== null ? $mimetype : "application/json") . "charset=utf-8",
+                replace: true,
+                response_code: 200
+            );
+
+            echo DLOutput::to_json(
+                content: $value,
+                pretty: true
+            );
+
+            exit;
+        } else {
+            throw new RouteException("El controlador no está definido");
+        }
     }
 }
