@@ -5,7 +5,8 @@ ini_set(
 );
 
 use DLRoute\Errors\RouteException;
-use DLRoute\Requests\DLRoute;
+use DLRoute\Requests\Route;
+use DLRoute\Requests\AbstractRoute;
 use DLRoute\Test\TestController;
 
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
@@ -17,7 +18,7 @@ try {
     //     route: '/api/v1/products///////////////////{page}/{rows?}',
     //     controller: fn() => ["status" => "Ok"]
     // );
-    DLRoute::query(
+    Route::query(
         route: '/products/{firstname?}/{lastname?}',
         controller: [TestController::class, 'index']
     );
@@ -27,3 +28,6 @@ try {
 } finally {
     echo "Finalmente, no hay más nada que mostrar\n";
 }
+
+
+AbstractRoute::dispatch();

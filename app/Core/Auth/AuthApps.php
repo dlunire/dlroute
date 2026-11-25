@@ -6,7 +6,7 @@ namespace DLRoute\Core\Auth;
 
 use DLAuth\Auth\DLAuth;
 use DLRoute\Interfaces\Routing\RouteAuth;
-use DLRoute\Requests\DLRoute;
+use DLRoute\Requests\Route;
 use Override;
 
 final class AuthApps extends DLAuth implements RouteAuth {
@@ -34,7 +34,7 @@ final class AuthApps extends DLAuth implements RouteAuth {
     public function require_auth(callable $fn): void {
         $auth = $this->get_session_data();
 
-        DLRoute::set_authentication_context(
+        Route::set_authentication_context(
             session: $auth,
             requires_authentication: true
         );
@@ -42,7 +42,7 @@ final class AuthApps extends DLAuth implements RouteAuth {
         try {
             $fn();
         } finally {
-            DLRoute::set_authentication_context(
+            Route::set_authentication_context(
                 session: $auth,
                 requires_authentication: false
             );

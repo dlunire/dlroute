@@ -25,84 +25,249 @@
 
 namespace DLRoute\Requests;
 
-use DLAuth\Data\SessionData;
-use DLRoute\Core\Data\RouteData\RouteContext;
-use DLRoute\Core\Data\RouteData\RouteController;
+use DLRoute\Core\Data\RouteHandler;
 use DLRoute\Core\Routing\Automaton\Route\RouteMatcher;
-use DLRoute\Core\Routing\Automaton\Route\RouteIdentity;
+use DLRoute\Core\Routing\Automaton\Route\RouteGenerator;
 use DLRoute\Enums\Methods;
+use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\RouteInterface;
-use DLRoute\Interfaces\Routing\LexerSymbolInterface;
+use DLRoute\Server\DLServer;
 
-abstract class Route extends DLParamValueType implements RouteInterface, LexerSymbolInterface {
-    use RouteParams;
+// TODO: pendiente por eliminar `self::$route = $route;` después de implementar el autómata.
 
+/**
+ * Define el sistema de enrutamiento del sistema.
+ * 
+ * @package DLRoute\Requests
+ * 
+ * @version v1.0.1
+ * @author David E Luna M <info@dlunire.dev>
+ * @copyright 2023 David E Luna M
+ * @license AGPL-3.0 license
+ */
+final class Route extends AbstractRoute implements RouteInterface {
     /**
-     * Registra una ruta y sus metadatos asociados en el autómata de enrutamiento.
+     * Instancia de DLRoute
      *
-     * Cuando el contexto de registro requiere autenticación, la identidad interna de la ruta se construye
-     * anteponiendo el identificador definido por {@see RouteType::AUTH}. Este identificador permite distinguir
-     * una ruta autenticada de una ruta pública con la misma URI.
-     *
-     * La identidad generada es exclusivamente interna y no modifica la URI expuesta al cliente.
-     *
-     * @param string $route URI de la ruta a registrar.
-     * @param callable|array|string $controller Controlador asociado a la ruta.
-     * @param Methods $method Método HTTP asociado a la ruta.
-     * @param non-empty-string|null $mimetype Tipo MIME de la respuesta,
-     * opcionalmente especificado para la ruta.
-     *
-     * @return void
+     * @var self|null $instance
      */
-    protected static function request(string $route, callable|array|string $controller, RouteMatcher $request,  Methods $method, ?string $mimetype = null): void {
-        self::$route_context = $request->get_context();
+    private static ?self $instance = null;
 
-        /**
-         * Indica si la ruta requiere ser autenticada.
-         * 
-         * @var boolean $require_auth
-         */
-        $require_auth = self::$mark_routes_authenticated;
+    public static function query(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route, Methods::QUERY);
 
-        self::$route_identity = $require_auth
-            ? RouteIdentity::PRIVATE
-            : RouteIdentity::PUBLIC;
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype, $routes) {
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: RouteMatcher::new(route_segments: $route_segments),
+                method: Methods::QUERY,
+                mimetype: $mimetype
+            );
+        });
 
-        /**
-         * Ruta final de registro
-         * 
-         * @var non-empty-string $route_to_register
-         */
-        $route_to_register = self::$route_identity->value . "{$method->value}|" . $route;
+        return self::from();
+    }
 
-        # Esto que está aquí es nuevo:
-        $route_controller = new RouteController(
-            controller: $controller,
-            required_auth: static::$mark_routes_authenticated,
-            params: self::$route_context,
-            mimetype: $mimetype
-        );
+    public static function get(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route, Methods::GET);
 
-        // TODO: La clave de registro es: <Identity>|<Method>|<Route> y el controlador
-        // contiene toda la metadata. Por lo tanto, quito este TODO en cuanto haya terminado
-        // de escribir el despachador de la ruta.
-        self::$routes[$route_to_register] = $route_controller;
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: RouteMatcher::new(route_segments: $route_segments),
+                method: Methods::GET,
+                mimetype: $mimetype
+            );
+        });
 
-        print_r($route_to_register . PHP_EOL);
+        return self::from();
+    }
+
+    public static function head(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route, Methods::HEAD);
+
+        $routes->load_routes(function (string $route, array $route_tokens) use ($controller, $mimetype) {
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: RouteMatcher::new(route_segments: $route_tokens),
+                method: Methods::HEAD,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::from();
+    }
+
+    public static function post(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route, Methods::POST);
+
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: RouteMatcher::new(route_segments: $route_segments),
+                method: Methods::POST,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::from();
+    }
+
+    public static function put(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route, Methods::PUT);
+
+        $routes->load_routes(function (string $route, $route_segments) use ($controller, $mimetype) {
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: RouteMatcher::new(route_segments: $route_segments),
+                method: Methods::PUT,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::from();
+    }
+
+    public static function patch(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route, Methods::PATCH);
+
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: RouteMatcher::new(route_segments: $route_segments),
+                method: Methods::PATCH,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::from();
+    }
+
+    public static function delete(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route, Methods::DELETE);
+
+        $routes->load_routes(callback: function (string $route, array $route_segments) use ($controller, $mimetype) {
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: RouteMatcher::new(route_segments: $route_segments),
+                method: Methods::DELETE,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::from();
+    }
+
+    public static function options(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route, Methods::OPTIONS);
+
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: RouteMatcher::new(route_segments: $route_segments),
+                method: Methods::OPTIONS,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::from();
     }
 
     /**
-     * Establece el contexto de autenticación de la ruta.
+     * Registra la ruta asociado a la interfaz de línea de comandos
      *
-     * @param SessionData $session Estado de la sesión actual
-     * @param boolean $requires_authentication Define si la ruta requiere autenticación
-     *
-     * @return void
+     * @param string $route Patrón URI que se comparará con las solicitudes entrantes.
+     * @param callable|array|string $controller `callback` o controlador encargado de manejar la solictud
+     * @param string|null $mimetype Permite establecer el mimetype de respuesta al cliente CLI
+     * @return DLParamValueType
      */
-    public static function set_authentication_context(SessionData $session, bool $requires_authentication): void {
-        static::$is_valid_session = $session->is_valid_session;
-        static::$mark_routes_authenticated = $requires_authentication;
+    public static function cli(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route, Methods::OPTIONS);
+
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: RouteMatcher::new(route_segments: $route_segments),
+                method: Methods::CLI,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::from();
     }
 
-    
+    public static function match(array $methods, RouteHandler $route): void {
+
+        if (\count($methods) < 1) {
+            throw new RouteException("Debe definir, al menos, un método HTTP", 500);
+        }
+
+        /**
+         * Filtros listos para ser utilizado para los métodos HTTP
+         * que comparten la misma ruta.
+         * 
+         * @var array<string,string> $filters
+         */
+        $filters = $route->handler_filters;
+
+        /**
+         * Devuelve la cantidad de tipos definidos en `RouteHandler::filter_by_type(...)`
+         * 
+         * @var int $quantity
+         */
+        $quantity = $route->get_quantity();
+
+        foreach ($methods as $method) {
+            if (!($method instanceof Methods)) {
+                /** @var non-empty-string $fragment */
+                $fragment = print_r($method, true);
+                throw new RouteException("DLRoute::match: Se esperaba «DLRoute\Enums\Methods» como elemento de «\$methods». En su lugar se recibió «{$fragment}»");
+            }
+
+            /** @var non-empty-string $method_name */
+            $method_name = \strtolower($method->value);
+
+            if ($quantity > 0) {
+                self::{$method_name}($route->uri, $route->controller, $route->data, $route->mime_type)
+                    ->filter_by_type($filters);
+                continue;
+            }
+
+            self::{$method_name}($route->uri, $route->controller, $route->data, $route->mime_type);
+        }
+    }
+
+    /**
+     * Corre el sistema de rutas.
+     * 
+     * @return void
+     */
+    public static function execute(): void {
+    }
+
+    private static function from(): self {
+        if (!(self::$instance instanceof self)) {
+            self::$instance = new self;
+        }
+
+        return self::$instance;
+    }
 }
