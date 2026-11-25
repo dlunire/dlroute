@@ -304,4 +304,14 @@ interface RouteInterface {
      * @see \DLRoute\Core\Data\RouteHandler
      */
     public static function match(array $methods, RouteHandler $route): void;
+
+    /**
+     * Identificador del entorno de ejecución correspondiente a la interfaz de línea de comandos (CLI).
+     *
+     * Permite identificar la ejecución del programa desde una terminal o mediante un proceso
+     * invocado por línea de comandos.
+     *
+     * @var string
+     */
+    public const TERMINAL = "cli";
 }

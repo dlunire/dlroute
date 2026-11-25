@@ -20,18 +20,21 @@ header(
 
 try {
     Route::get(
-        route: '/products/{firstname?}/{lastname?}',
-        controller: [TestController::class, 'index'],
+        route: '/persons/{firstname?}/{lastname?}',
+        controller: [TestController::class, 'persons'],
         mimetype: 'application/json'
     );
     Route::cli(
-        route: '/products/{firstname?}/{lastname?}',
-        controller: [TestController::class, 'index'],
-        mimetype: "application/json"
+        route: '/add/{domain?}algo',   // llave sin cerrar, a propósito
+        controller: [TestController::class, 'index']
     );
 } catch (RouteException $error) {
+    http_response_code(
+        response_code: $error->getCode()
+    );
     echo $error->getMessage();
     echo "\n\n";
+    exit;
 }
 
 

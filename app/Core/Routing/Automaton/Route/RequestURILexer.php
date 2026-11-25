@@ -81,7 +81,7 @@ final class RequestURILexer extends RouterLexer {
      * Tras construir la clase padre, carga la resolución de rutas con `load_route_resolution()`.
      */
     private function __construct() {
-
+        
         parent::__construct(
             uri: PHP_SAPI === 'cli'
                 ? $this->get_options()
@@ -179,7 +179,7 @@ final class RequestURILexer extends RouterLexer {
      */
     public static function from(): static {
         if (!(static::$instance instanceof static)) {
-            static::$instance = new static;
+            static::$instance = new static();
         }
 
         return self::$instance;

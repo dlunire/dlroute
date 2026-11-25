@@ -198,8 +198,19 @@ final class Route extends AbstractRoute implements RouteInterface {
      * @return DLParamValueType
      */
     public static function cli(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        if (PHP_SAPI !== self::TERMINAL && DLServer::get_method() === "CLI") {
+            throw new RouteException(
+                message: "El método «CLI» solo puede ejecutarse en la línea de comandos. Tampoco se permite registrar este método desde una petición HTTP.",
+                code: 403
+            );
+        }
+
         /** @var RouteGenerator $routes */
         $routes = new RouteGenerator($route, Methods::OPTIONS);
+
+        if (PHP_SAPI !== self::TERMINAL) {
+            return self::from();
+        }
 
         $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
             self::request(
@@ -253,14 +264,6 @@ final class Route extends AbstractRoute implements RouteInterface {
 
             self::{$method_name}($route->uri, $route->controller, $route->data, $route->mime_type);
         }
-    }
-
-    /**
-     * Corre el sistema de rutas.
-     * 
-     * @return void
-     */
-    public static function execute(): void {
     }
 
     private static function from(): self {
