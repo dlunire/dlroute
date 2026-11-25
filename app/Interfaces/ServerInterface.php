@@ -74,7 +74,7 @@ interface ServerInterface {
      *
      * @return string
      */
-    public static function get_ipaddress(): string;
+    public static function get_ipaddress(): ?string;
 
     /**
      * Devuelve el agente de usuario del cliente de la petición.

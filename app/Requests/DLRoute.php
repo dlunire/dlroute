@@ -190,6 +190,31 @@ final class DLRoute extends Route implements RouteInterface {
         return self::from();
     }
 
+    /**
+     * Registra la ruta asociado a la interfaz de línea de comandos
+     *
+     * @param string $route Patrón URI que se comparará con las solicitudes entrantes.
+     * @param callable|array|string $controller `callback` o controlador encargado de manejar la solictud
+     * @param string|null $mimetype Permite establecer el mimetype de respuesta al cliente CLI
+     * @return DLParamValueType
+     */
+    public static function cli(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
+        /** @var RouteGenerator $routes */
+        $routes = new RouteGenerator($route, Methods::OPTIONS);
+
+        $routes->load_routes(function (string $route, array $route_segments) use ($controller, $mimetype) {
+            self::request(
+                route: $route,
+                controller: $controller,
+                request: RouteMatcher::new(route_segments: $route_segments),
+                method: Methods::CLI,
+                mimetype: $mimetype
+            );
+        });
+
+        return self::from();
+    }
+
     public static function match(array $methods, RouteHandler $route): void {
 
         if (\count($methods) < 1) {

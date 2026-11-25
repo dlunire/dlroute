@@ -1,5 +1,8 @@
 <?php
-ini_set("display_errors", 1);
+ini_set(
+    option: "display_errors",
+    value: 1
+);
 
 use DLRoute\Errors\RouteException;
 use DLRoute\Requests\DLRoute;
@@ -14,12 +17,13 @@ try {
     //     route: '/api/v1/products///////////////////{page}/{rows?}',
     //     controller: fn() => ["status" => "Ok"]
     // );
-    DLRoute::get(
-        route: '/products/{name?}/{rows?}',
+    DLRoute::cli(
+        route: '/products/{firstname?}/{lastname?}',
         controller: [TestController::class, 'index']
     );
 } catch (RouteException $error) {
     echo $error->getMessage();
+    echo "\n\n";
 } finally {
-    echo "\n\nFinalmente, no hay más nada que mostrar\n";
+    echo "Finalmente, no hay más nada que mostrar\n";
 }

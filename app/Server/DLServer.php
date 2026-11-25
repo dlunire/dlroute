@@ -82,7 +82,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         return $method;
     }
 
-    public static function get_ipaddress(): string {
+    public static function get_ipaddress(): ?string {
         return self::get_ip();
     }
 

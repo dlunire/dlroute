@@ -78,9 +78,7 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
         // print_r("ROUTE - " . $request->get_context()->registered_route . "\n");
         // print_r("ROUTE - " . "{$route_to_register} → " . ($context->registered_route ?? 'NULL') . "\n");
 
-        // if ($request->get_context()->registered_route !== null) {
-        //     print_r($request->get_context());
-        // }
+        print_r($route_to_register . "\n");
 
         # Esto que está aquí es nuevo:
         $route_controller = new RouteController(
@@ -89,10 +87,6 @@ abstract class Route extends DLParamValueType implements RouteInterface, LexerSy
             params: self::$route_context,
             mimetype: $mimetype
         );
-
-        if (self::$route_context->registered_route !== null) {
-            print_r($route_controller);
-        }
     }
 
     /**

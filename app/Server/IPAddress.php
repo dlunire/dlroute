@@ -117,11 +117,15 @@ trait IPAddress {
             FILTER_VALIDATE_IP
         );
 
+        if ($ip === false) {
+            return null;
+        }
+
         if (!\is_string($ip)) {
             $ip = null;
         }
 
-        if (\is_string($ip) && empty(trim($ip))) {
+        if (\is_string($ip) && empty(\trim($ip))) {
             $ip = null;
         }
 
