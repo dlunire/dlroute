@@ -130,7 +130,8 @@ abstract class AbstractRoute extends DLParamValueType implements RouteInterface,
             DLOutput::not_found();
         }
 
-        // TODO: Esto que sigue por acá es una solución provisional que será modificada las próximas horas:
+        // TODO: Esto que sigue por acá es una solución provisional que será modificada las próximas horas
+        // para uso definitivo con las identidades de las rutas.
 
         $controller = $route_controller->controller;
 
