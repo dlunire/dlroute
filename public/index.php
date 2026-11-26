@@ -25,7 +25,7 @@ try {
         mimetype: 'application/json'
     );
     Route::cli(
-        route: '/add/{domain?}algo',   // llave sin cerrar, a propósito
+        route: '/add/{domain?}', // Una prueba para Claude
         controller: [TestController::class, 'index']
     );
 } catch (RouteException $error) {
@@ -35,7 +35,6 @@ try {
     echo $error->getMessage();
     echo "\n\n";
     exit;
+} finally {
+    AbstractRoute::dispatch();
 }
-
-
-AbstractRoute::dispatch();

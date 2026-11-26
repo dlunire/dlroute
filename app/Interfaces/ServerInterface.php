@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace DLRoute\Interfaces;
 
+use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 
 /**
@@ -199,6 +200,28 @@ interface ServerInterface {
     public static function get_dir(): string;
 
     /**
+     * Devuelve el catálogo de métodos HTTP que el motor reconoce, sin `CLI`.
+     *
+     * Es el catálogo global, no el de una ruta concreta. Sirve, por ejemplo, para el mensaje de un
+     * método desconocido. No debe enviarse tal cual en la cabecera `Allow` de un 405 sobre una ruta
+     * existente: esa lista debe salir de los métodos registrados para la ruta.
+     *
+     * @return list<non-empty-string>
+     */
+    public static function get_http_allow_methods(): array;
+
+    /**
+     * Devuelve el catálogo completo de métodos del motor, incluidos los especiales
+     * como `CLI`.
+     *
+     * Es de uso interno: no debe usarse en respuestas HTTP, donde `CLI` no es un
+     * método válido. Para HTTP, véase {@see self::get_http_allow_methods()}.
+     *
+     * @return list<non-empty-string>
+     */
+    public static function get_allow_methods(): array;
+
+    /**
      * Valor que identifica la ejecución desde la interfaz de línea de comandos (CLI).
      *
      * Coincide con el valor que toma `PHP_SAPI` cuando PHP se ejecuta desde la terminal. Se usa como
@@ -207,4 +230,20 @@ interface ServerInterface {
      * @var non-empty-string
      */
     public const CLI = 'cli';
+
+    /**
+     * Métodos especiales que no pertenecen al protocolo HTTP.
+     *
+     * Se excluyen cuando se solicita la lista de métodos HTTP. La clave es el nombre del caso
+     * de {@see Methods} (`->name`) y el valor indica si se excluye.
+     *
+     * Se usa el nombre (una cadena) y no el caso del enum porque las claves de un array solo pueden
+     * ser `int` o `string`; un caso de enum es un objeto y no es una clave válida. Por la misma razón,
+     * la consulta se hace con `$method->name`.
+     *
+     * @var array<non-empty-string, bool>
+     */
+    public const EXCLUDES_METHODS = [
+        Methods::CLI->name => true
+    ];
 }

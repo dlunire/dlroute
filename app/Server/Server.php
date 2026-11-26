@@ -34,8 +34,39 @@ use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\Routing\LexerSymbolInterface;
 use DLRoute\Interfaces\ServerInterface;
 
-class DLServer implements ServerInterface, LexerSymbolInterface {
+class Server implements ServerInterface, LexerSymbolInterface {
     use Domain, IPAddress, PortCandidate;
+
+    /**
+     * Devuelve el valor de cada caso de {@see Methods}, en el orden de declaración.
+     *
+     * Es una lista global: no depende de la ruta solicitada ni de `PHP_SAPI`, y no representa los
+     * métodos permitidos para una ruta concreta.
+     *
+     * @param bool $exclude_special_methods Si es `true`, omite los métodos de
+     *        {@see self::EXCLUDES_METHODS} (por ejemplo, `CLI`).
+     *
+     * @return list<non-empty-string>
+     */
+    private static function get_all_methods(bool $exclude_special_methods = false): array {
+        $methods = Methods::cases();
+        $processed_methods = [];
+
+        foreach ($methods as $method) {
+            if ((self::EXCLUDES_METHODS[$method->name] ?? false) && $exclude_special_methods) continue;
+            $processed_methods[] = $method->value;
+        }
+
+        return $processed_methods;
+    }
+
+    public static function get_http_allow_methods(): array {
+        return self::get_all_methods(exclude_special_methods: true);
+    }
+
+    public static function get_allow_methods(): array {
+        return self::get_all_methods();
+    }
 
     public static function get_uri(): string {
         return RequestURILexer::from()->get_uri();
@@ -76,6 +107,22 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         }
 
         if (Methods::tryFrom(value: $method) === null) {
+            $methods = Methods::cases();
+
+            /** @var non-empty-string[] $procesed_methods */
+            $procesed_methods = [];
+
+            foreach ($methods as $item) {
+                $procesed_methods[] = $item->value;
+            }
+
+            header(
+                header: 'Allow: ' . join(
+                    separator: ', ',
+                    array: $procesed_methods
+                )
+            );
+
             throw new RouteException("El método HTTP «{$method}» no está permitido. Métodos permitidos: QUERY, GET, HEAD, OPTIONS, POST, PUT, PATCH, DELETE.", 405);
         }
 
@@ -150,7 +197,7 @@ class DLServer implements ServerInterface, LexerSymbolInterface {
         $dir = self::get_dir();
 
         /** @var string $port */
-        $port = SELF::HIDDEN_PORT[self::get_port()] ?? false
+        $port = self::HIDDEN_PORT[self::get_port()] ?? false
             ? ""
             : ":" . self::get_port();
 

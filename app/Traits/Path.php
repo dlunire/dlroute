@@ -25,7 +25,7 @@
 
 namespace DLRoute\Traits;
 
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 trait Path {
 
@@ -80,7 +80,7 @@ trait Path {
          * 
          * @var string $root
          */
-        $root = DLServer::get_document_root();
+        $root = Server::get_document_root();
 
         /**
          * Ruta absoluta del archivo enviado al servidor

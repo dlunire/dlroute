@@ -29,7 +29,7 @@ namespace DLRoute\Test;
 
 use DLRoute\Config\Controller;
 use DLRoute\Core\Data\RouteData\RouteParam;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 /**
  * Es un controlador de prueba para verificar que el sistema

@@ -34,7 +34,7 @@ use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\RouteInterface;
 use DLRoute\Interfaces\Routing\LexerSymbolInterface;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 abstract class AbstractRoute extends DLParamValueType implements RouteInterface, LexerSymbolInterface {
     use RouteParams;
@@ -123,7 +123,7 @@ abstract class AbstractRoute extends DLParamValueType implements RouteInterface,
         $route_controller = self::$routes[(self::$is_valid_session
             ? RouteIdentity::PRIVATE->value
             : RouteIdentity::PUBLIC->value)
-            . DLServer::get_method() . "|"
+            . Server::get_method() . "|"
             . self::$route_context->registered_route] ?? null;
 
         if (!($route_controller instanceof RouteController)) {
@@ -135,9 +135,14 @@ abstract class AbstractRoute extends DLParamValueType implements RouteInterface,
 
         $controller = $route_controller->controller;
 
+        self::determine_controller_type($route_controller);
+
         if (!\is_array($controller)) {
             DLOutput::not_found();
         }
+
+        // TODO: Reescribir esta parte, pero sin eliminar toda la lógica, sino agregar algunos filtros necesarios
+        // para el funcionamiento pleno de los controladores.
 
         $classname = $controller[0] ?? null;
         $method_name = $controller[1] ?? null;
@@ -164,5 +169,8 @@ abstract class AbstractRoute extends DLParamValueType implements RouteInterface,
         } else {
             throw new RouteException("El controlador no está definido");
         }
+    }
+
+    private static function determine_controller_type(RouteController $controller): void {
     }
 }

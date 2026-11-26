@@ -29,7 +29,7 @@ namespace DLRoute\Requests;
 
 use DLRoute\Errors\OutputException;
 use DLRoute\Interfaces\OutputInterface;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 class DLOutput implements OutputInterface {
 
@@ -204,10 +204,10 @@ class DLOutput implements OutputInterface {
         echo self::to_json(
             content: [
                 "code" => 404,
-                "method" => DLServer::get_method(),
+                "method" => Server::get_method(),
                 "message" => "La ruta solicitada no existe",
-                "route" => DLServer::get_route(),
-                "uri" => DLServer::get_uri(),
+                "route" => Server::get_route(),
+                "uri" => Server::get_uri(),
                 "timestamp" => date(DATE_ATOM),
                 "hint" => "Verifica si la ruta que ha vistado es correcta"
             ],

@@ -27,7 +27,7 @@ namespace DLRoute\Requests;
 
 use DLRoute\Core\Data\Auth\RoutesAuth;
 use DLRoute\Interfaces\ParamTypeInterface;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 /**
  * Define el tipo de datos que se espera en los parámetros de la petición
@@ -95,7 +95,7 @@ abstract class DLParamValueType implements ParamTypeInterface {
      * @return void
      */
     public function filter_by_type(array $fields): void {
-        $method = DLServer::get_method();
+        $method = Server::get_method();
         $route = self::$route;
 
         foreach ($fields as $key => $value) {

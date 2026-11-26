@@ -29,7 +29,7 @@ namespace DLRoute\Core\Routing;
 
 use DLRoute\Core\Data\RouterData;
 use DLRoute\Errors\RouteException;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 /**
  * Clase principal para la gestión de rutas en la aplicación.
@@ -85,7 +85,7 @@ final class Router {
         self::normalize_route($route);
 
         /** @var non-empty-string $url_base */
-        $url_base = DLServer::get_base_url();
+        $url_base = Server::get_base_url();
 
         return ($route !== '/' && trim($route) !== '')
             ? "{$url_base}/{$route}"
@@ -120,7 +120,7 @@ final class Router {
      * @return RouterData Objeto con la telemetría de la ruta actual.
      */
     public static function from(): RouterData {
-        return new RouterData(self::to(DLServer::get_route()));
+        return new RouterData(self::to(Server::get_route()));
     }
 
     /**

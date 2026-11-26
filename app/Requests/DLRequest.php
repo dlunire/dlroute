@@ -26,7 +26,7 @@
 namespace DLRoute\Requests;
 
 use DLRoute\Interfaces\RequestInterface;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 /**
  * Procesa las peticiones del usuario.
@@ -42,9 +42,9 @@ class DLRequest implements RequestInterface {
     /**
      * Instancia de Server
      *
-     * @var DLServer|null
+     * @var Server|null
      */
-    private ?DLServer $server = null;
+    private ?Server $server = null;
 
     /**
      * Instancia de clase.
@@ -159,11 +159,11 @@ class DLRequest implements RequestInterface {
          */
         $request = [];
 
-        if (DLServer::is_post()) {
+        if (Server::is_post()) {
             $request = $_POST;
         }
 
-        if (DLServer::is_get()) {
+        if (Server::is_get()) {
             $request = $_GET;
         }
 
@@ -195,49 +195,49 @@ class DLRequest implements RequestInterface {
     }
 
     public function query(array $params): bool {
-        return !(DLServer::is_query())
+        return !(Server::is_query())
             ? false
             : $this->validate($params);
     }
 
     public function get(array $params): bool {
-        return !(DLServer::is_get())
+        return !(Server::is_get())
             ? false
             : $this->validate($params);
     }
 
     public function head(array $params): bool {
-        return !(DLServer::is_head())
+        return !(Server::is_head())
             ? false
             : $this->validate($params);
     }
 
     public function post(array $params): bool {
-        return !(DLServer::is_post())
+        return !(Server::is_post())
             ? false
             : $this->validate($params);
     }
 
     public function put(array $params): bool {
-        return !(DLServer::is_put())
+        return !(Server::is_put())
             ? false
             : $this->validate($params);
     }
 
     public function patch(array $params): bool {
-        return !(DLServer::is_patch())
+        return !(Server::is_patch())
             ? false
             : $this->validate($params);
     }
 
     public function options(array $params): bool {
-        return !(DLServer::is_options())
+        return !(Server::is_options())
             ? false
             : $this->validate($params);
     }
 
     public function delete(array $params): bool {
-        return !(DLServer::is_delete())
+        return !(Server::is_delete())
             ? false
             : $this->validate($params);
     }

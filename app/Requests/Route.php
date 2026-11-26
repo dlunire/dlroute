@@ -31,7 +31,7 @@ use DLRoute\Core\Routing\Automaton\Route\RouteGenerator;
 use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
 use DLRoute\Interfaces\RouteInterface;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 // TODO: pendiente por eliminar `self::$route = $route;` después de implementar el autómata.
 
@@ -198,15 +198,15 @@ final class Route extends AbstractRoute implements RouteInterface {
      * @return DLParamValueType
      */
     public static function cli(string $route, callable|array|string $controller, ?string $mimetype = null): DLParamValueType {
-        if (PHP_SAPI !== self::TERMINAL && DLServer::get_method() === "CLI") {
+        if (PHP_SAPI !== self::TERMINAL && Server::get_method() === "CLI") {
             throw new RouteException(
-                message: "El método «CLI» solo puede ejecutarse en la línea de comandos. Tampoco se permite registrar este método desde una petición HTTP.",
+                message: "El método «CLI» solo existe en la línea de comandos y no puede usarse en una petición HTTP.",
                 code: 403
             );
         }
 
         /** @var RouteGenerator $routes */
-        $routes = new RouteGenerator($route, Methods::OPTIONS);
+        $routes = new RouteGenerator($route, Methods::CLI);
 
         if (PHP_SAPI !== self::TERMINAL) {
             return self::from();

@@ -29,7 +29,7 @@ namespace DLRoute\Core\Routing\Automaton\Route;
 
 use DLRoute\Enums\Methods;
 use DLRoute\Errors\RouteException;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 /**
  * Generador de variantes de rutas a partir de parámetros opcionales.
@@ -249,7 +249,7 @@ final class RouteGenerator extends RouterLexer {
         $current_route = $this->routes[0] ?? null;
 
         /** @var non-empty-string $request_route  */
-        $request_route = DLServer::get_route();
+        $request_route = Server::get_route();
 
         if ($request_route === $current_route && $request_route === "/") {
             $callback($this->routes[0], $this->route_segments);

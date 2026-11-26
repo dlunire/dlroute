@@ -29,7 +29,7 @@ namespace DLRoute\Core\Data;
 
 use DLRoute\Core\Times\DLTime;
 use DLRoute\Server\DLHost;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 use DLRoute\Server\Domain;
 use DLRoute\Server\PortCandidate;
 use DLRoute\Server\SchemeHTTP;
@@ -148,18 +148,18 @@ final class RouterData {
     public readonly string $developer;
 
     public function __construct(string $url) {
-        $this->ip_client = DLServer::get_ipaddress();
-        $this->remote_addr = DLServer::get_remote_addr();
-        $this->user_agent = DLServer::get_user_agent();
+        $this->ip_client = Server::get_ipaddress();
+        $this->remote_addr = Server::get_remote_addr();
+        $this->user_agent = Server::get_user_agent();
         $this->url = trim($url);
         $this->port = self::get_port();
         $this->local_port = self::get_local_port();
         $this->scheme = self::get_scheme();
-        $this->dir = DLServer::get_dir();
-        $this->route = DLServer::get_route();
+        $this->dir = Server::get_dir();
+        $this->route = Server::get_route();
         $this->host = DLHost::get_domain();
-        $this->uri = DLServer::get_uri();
-        $this->method = DLServer::get_method();
+        $this->uri = Server::get_uri();
+        $this->method = Server::get_method();
         $this->time = DLTime::now_string();
         $this->developer = "David E Luna M";
     }

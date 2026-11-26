@@ -29,7 +29,7 @@ use DLRoute\Core\Auth\AuthApps;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Requests\DLRequest;
 use DLRoute\Requests\DLUpload;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 use DLRoute\Traits\Request;
 use DLRoute\Validates\DLValidates;
 use RuntimeException;
@@ -153,7 +153,7 @@ abstract class Controller {
      * @return string
      */
     protected function get_ip(): string {
-        return DLServer::get_ipaddress();
+        return Server::get_ipaddress();
     }
 
     /**
@@ -163,7 +163,7 @@ abstract class Controller {
      * @return string
      */
     protected function get_host(): string {
-        return DLServer::get_base_url();
+        return Server::get_base_url();
     }
 
     /**

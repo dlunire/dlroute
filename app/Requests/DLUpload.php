@@ -26,7 +26,7 @@
 namespace DLRoute\Requests;
 
 use DLRoute\Config\FileInfo;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 use DLRoute\Traits\ImageTrait;
 use finfo;
 use GdImage;
@@ -733,7 +733,7 @@ trait DLUpload {
          * 
          * @var string
          */
-        $root = DLServer::get_document_root();
+        $root = Server::get_document_root();
 
         /**
          * Directorio base para subir archivos.
@@ -1398,7 +1398,7 @@ trait DLUpload {
          * 
          * @var string $root
          */
-        $root = DLServer::get_document_root();
+        $root = Server::get_document_root();
 
         /**
          * Ruta absoluta de la aplicación

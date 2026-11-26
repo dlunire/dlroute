@@ -30,7 +30,7 @@ namespace DLRoute\Core\Data;
 use DLRoute\Core\Routing\Automaton\QueryParams\QueryParamComposer;
 use DLRoute\Core\Routing\Router;
 use DLRoute\Server\DLHost;
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 /**
  * Clase inmutable de telemetría y observabilidad del entorno.
@@ -184,20 +184,20 @@ final class Telemetry {
      */
     public function __construct(string $message) {
         $this->message    = trim($message);
-        $this->route      = DLServer::get_route();
-        $this->uri        = DLServer::get_uri();
-        $this->dir        = DLServer::get_dir();
-        $this->base_url   = DLServer::get_base_url();
+        $this->route      = Server::get_route();
+        $this->uri        = Server::get_uri();
+        $this->dir        = Server::get_dir();
+        $this->base_url   = Server::get_base_url();
         $this->domain     = DLHost::get_domain();
         $this->hostname   = DLHost::get_hostname();
         $this->is_https   = DLHost::is_https();
-        $this->port       = DLServer::get_port();
-        $this->local_port = DLServer::get_local_port();
+        $this->port       = Server::get_port();
+        $this->local_port = Server::get_local_port();
         $this->timestamp  = date(DATE_ATOM);
-        $this->cliente_ip = DLServer::get_ipaddress();
-        $this->method     = DLServer::get_method();
-        $this->user_agent = DLServer::get_user_agent();
-        $this->proxy      = DLServer::is_likely_proxy();
+        $this->cliente_ip = Server::get_ipaddress();
+        $this->method     = Server::get_method();
+        $this->user_agent = Server::get_user_agent();
+        $this->proxy      = Server::is_likely_proxy();
         $this->query_param = (new QueryParamComposer())->get_query_params();
         $this->from       = Router::from();
     }

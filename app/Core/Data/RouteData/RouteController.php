@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DLRoute\Core\Data\RouteData;
 
-use DLRoute\Server\DLServer;
+use DLRoute\Server\Server;
 
 /**
  * Representa el contexto resuelto de una petición HTTP contra la tabla de rutas registradas.
@@ -53,6 +53,6 @@ final class RouteController {
         public readonly RouteContext $params,
         public readonly ?string $mimetype = null
     ) {
-        $this->method = DLServer::get_method();
+        $this->method = Server::get_method();
     }
 }
