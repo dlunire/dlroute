@@ -222,6 +222,20 @@ interface ServerInterface {
     public static function get_allow_methods(): array;
 
     /**
+     * Devuelve el punto de entrada de ejecución de la aplicación.
+     *
+     * @return non-empty-string
+     */
+    public static function get_entry_point(): string;
+
+    /**
+     * Devuelve el nombre de archivo de entrada de ejecución de la aplicación.
+     *
+     * @return non-empty-string
+     */
+    public static function get_entry_point_file(): string;
+
+    /**
      * Valor que identifica la ejecución desde la interfaz de línea de comandos (CLI).
      *
      * Coincide con el valor que toma `PHP_SAPI` cuando PHP se ejecuta desde la terminal. Se usa como

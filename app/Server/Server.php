@@ -94,7 +94,7 @@ class Server implements ServerInterface, LexerSymbolInterface {
          *
          * @var non-empty-string $method
          */
-        $method = "CLI";
+        $method = Methods::CLI->value;
 
         /** @var non-empty-string|null $http_method */
         $http_method = $_SERVER['REQUEST_METHOD'] ?? NULL;
@@ -123,24 +123,29 @@ class Server implements ServerInterface, LexerSymbolInterface {
         return $method;
     }
 
+    /** {@inheritDoc} */
     public static function get_ipaddress(): ?string {
         return self::get_ip();
     }
 
+    /** {@inheritDoc} */
     public static function get_user_agent(): string {
         $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? \php_uname();
         return $user_agent;
     }
 
+    /** {@inheritDoc} */
     public static function get_document_root(): string {
         return RealPath::from()->get_document_root();
     }
 
-    public function get_entry_point(): string {
+    /** {@inheritDoc} */
+    public static function get_entry_point(): string {
         return RealPath::from()->get_entry_point();
     }
 
-    public function get_entry_point_file(): string {
+    /** {@inheritDoc} */
+    public static function get_entry_point_file(): string {
         return RealPath::from()->get_entry_point_file();
     }
 
