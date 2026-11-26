@@ -149,42 +149,52 @@ class Server implements ServerInterface, LexerSymbolInterface {
         return RealPath::from()->get_entry_point_file();
     }
 
+    /** {@inheritDoc} */
     public static function is_query(): bool {
         return self::get_method() === 'QUERY';
     }
 
+    /** {@inheritDoc} */
     public static function is_get(): bool {
         return self::get_method() === "GET";
     }
 
+    /** {@inheritDoc} */
     public static function is_post(): bool {
         return self::get_method() === "POST";
     }
 
+    /** {@inheritDoc} */
     public static function is_head(): bool {
         return self::get_method() === "HEAD";
     }
 
+    /** {@inheritDoc} */
     public static function is_options(): bool {
         return self::get_method() === "OPTIONS";
     }
 
+    /** {@inheritDoc} */
     public static function is_put(): bool {
         return self::get_method() === "PUT";
     }
 
+    /** {@inheritDoc} */
     public static function is_patch(): bool {
         return self::get_method() === "PATCH";
     }
 
+    /** {@inheritDoc} */
     public static function is_delete(): bool {
         return self::get_method() === "DELETE";
     }
 
+    /** {@inheritDoc} */
     public static function is_cli(): bool {
         return PHP_SAPI === self::CLI;
     }
 
+    /** {@inheritDoc} */
     public static function get_base_url(): string {
         /** @var string $http_host */
         $http_host = self::get_host();
@@ -212,6 +222,7 @@ class Server implements ServerInterface, LexerSymbolInterface {
         return $host;
     }
 
+    /** {@inheritDoc} */
     public static function get_route(): string {
         return RequestURILexer::from()->get_route();
     }
