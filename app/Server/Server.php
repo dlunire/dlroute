@@ -60,14 +60,17 @@ class Server implements ServerInterface, LexerSymbolInterface {
         return $processed_methods;
     }
 
+    /** {@inheritDoc} */
     public static function get_http_allow_methods(): array {
         return self::get_all_methods(exclude_special_methods: true);
     }
 
+    /** {@inheritDoc} */
     public static function get_allow_methods(): array {
         return self::get_all_methods();
     }
 
+    /** {@inheritDoc} */
     public static function get_uri(): string {
         return RequestURILexer::from()->get_uri();
     }
@@ -107,23 +110,14 @@ class Server implements ServerInterface, LexerSymbolInterface {
         }
 
         if (Methods::tryFrom(value: $method) === null) {
-            $methods = Methods::cases();
-
-            /** @var non-empty-string[] $procesed_methods */
-            $procesed_methods = [];
-
-            foreach ($methods as $item) {
-                $procesed_methods[] = $item->value;
-            }
-
-            header(
-                header: 'Allow: ' . join(
-                    separator: ', ',
-                    array: $procesed_methods
-                )
+            /** @var non-empty-string $allowed_methods */
+            $allowed_methods = join(
+                separator: ", ",
+                array: self::get_all_methods(exclude_special_methods: true)
             );
 
-            throw new RouteException("El método HTTP «{$method}» no está permitido. Métodos permitidos: QUERY, GET, HEAD, OPTIONS, POST, PUT, PATCH, DELETE.", 405);
+            header(header: "Allow: {$allowed_methods}");
+            throw new RouteException("El método HTTP «{$method}» no está permitido. Métodos permitidos: {$allowed_methods}.", 405);
         }
 
         return $method;
