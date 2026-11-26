@@ -47,25 +47,18 @@ final class TestController extends Controller {
    public function index(RouteParam $params): array {
 
       return [
-         "domain" => $params->domain->decoded_value
+         "domain" => $params->domain->decoded_value,
+         "route" => Server::get_route(),
       ];
-      // return [
-      //    "domain" => DLServer::get_base_url(),
-      //    "status" => true,
-      //    "author" => "David E Luna M",
-      //    "my-public-ip" => DLServer::get_ipaddress(),
-      //    "params" => $params,
-      //    "decoded_firstname" => $params->firstname->decoded_value,
-      //    "decoded_lastname" => $params->lastname->decoded_value,
-      //    "firstname" => $params->firstname->value,
-      //    "lastname" => $params->lastname->value
-      // ];
    }
 
    public function persons(RouteParam $params): array {
       return [
          "name" => $params->firstname->decoded_value,
-         "lastname" => $params->lastname->decoded_value
+         "lastname" => $params->lastname->decoded_value,
+         "route" => Server::get_route(),
+         "host" => Server::get_host(),
+         "server" => $_SERVER
       ];
    }
 }

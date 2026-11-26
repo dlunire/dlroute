@@ -59,8 +59,8 @@ trait Domain {
     private static ?string $hostname = null;
 
     private const KEYS = [
-        "HTTP_X_FORWARDED_HOST",
         "HTTP_HOST",
+        "HTTP_X_FORWARDED_HOST",
         "SERVER_NAME"
     ];
 
