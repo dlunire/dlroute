@@ -28,6 +28,11 @@ try {
         route: '/add/{domain?}', // Una prueba para Claude
         controller: [TestController::class, 'index']
     );
+
+    Route::cli(
+        route: '/binario',
+        controller: [TestController::class, 'binary_test']
+    );
 } catch (RouteException $error) {
     http_response_code(
         response_code: $error->getCode()

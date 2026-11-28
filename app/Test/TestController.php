@@ -61,4 +61,11 @@ final class TestController extends Controller {
          "server" => $_SERVER
       ];
    }
+
+   public function binary_test(): void {
+      BinaryTest::from()->execute_test();
+
+      echo PHP_EOL;
+      exit;
+   }
 }
